@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Feb 05, 2026 at 06:47 AM
+-- Generation Time: Feb 05, 2026 at 09:47 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -41,10 +41,10 @@ CREATE TABLE `location` (
 --
 
 INSERT INTO `location` (`location_id`, `location_name`, `location_type_id`, `parent_location_id`, `created_at`, `is_deleted`) VALUES
-(3, 'Office of the Department Manager', 1, NULL, '2025-02-16 00:02:03', '0'),
-(4, 'ICT Unit', 3, 3, '2025-02-16 00:02:03', '0'),
-(5, 'Public Relation Office Unit', 3, 3, '2025-02-16 00:02:03', '0'),
-(6, 'Legal Services', 3, 8, '2025-02-16 00:02:03', '0'),
+(3, 'Office of the Department Manager', 2, 34, '2025-02-16 00:02:03', '0'),
+(4, 'ICT Unit', 3, 34, '2025-02-16 00:02:03', '0'),
+(5, 'Public Relation Office Unit', 3, 34, '2025-02-16 00:02:03', '0'),
+(6, 'Legal Services', 3, 34, '2025-02-16 00:02:03', '0'),
 (7, 'Office of the EOD Manager', 2, 23, '2025-02-16 00:02:03', '0'),
 (8, 'Office of the ADFIN Manager', 2, 24, '2025-02-16 00:02:03', '0'),
 (9, 'Administrative Section', 2, 24, '2025-02-16 00:02:03', '0'),
@@ -59,14 +59,12 @@ INSERT INTO `location` (`location_id`, `location_name`, `location_type_id`, `par
 (19, 'Operation Section', 2, 23, '2025-02-16 00:02:03', '0'),
 (20, 'Equipment Management Section', 2, 23, '2025-02-16 00:02:03', '0'),
 (21, 'Institutional Development Section', 2, 23, '2025-02-16 00:02:03', '0'),
-(22, 'BAC Unit', 3, 3, '2025-02-17 23:24:43', '0'),
+(22, 'BAC Unit', 3, 34, '2025-02-17 23:24:43', '0'),
 (23, 'Engineering and Operation Division(EOD)', 1, NULL, '2025-03-02 22:38:42', '0'),
 (24, 'Administrative and Finance Division(ADFIN)', 1, NULL, '2025-03-02 22:44:12', '0'),
 (25, 'Personnel and Records Unit', 3, 9, '2025-03-03 00:28:04', '0'),
-(26, 'DM Secretary', 3, 3, '2025-03-03 00:30:12', '0'),
-(27, 'DM Secretary', 3, 7, '2025-03-03 00:30:12', '0'),
-(28, 'DM Secretary', 3, 8, '2025-03-03 00:30:12', '0'),
-(29, 'Accounting Unit', 3, 10, '2025-04-01 23:46:43', '0');
+(29, 'Accounting Unit', 3, 10, '2025-04-01 23:46:43', '0'),
+(34, 'Office of the Department Manager(ODM)', 1, NULL, '2026-02-05 06:02:54', '0');
 
 -- --------------------------------------------------------
 
@@ -171,10 +169,19 @@ CREATE TABLE `tbl_monitor` (
   `monitorId` int(11) NOT NULL,
   `monitorBrand` varchar(100) NOT NULL,
   `monitorSize` varchar(50) DEFAULT NULL,
-  `serial` varchar(255) NOT NULL,
+  `monitorSerial` varchar(255) NOT NULL,
   `yearAcquired` year(4) DEFAULT NULL,
   `employeeId` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `tbl_monitor`
+--
+
+INSERT INTO `tbl_monitor` (`monitorId`, `monitorBrand`, `monitorSize`, `monitorSerial`, `yearAcquired`, `employeeId`) VALUES
+(1, 'Samsung', '24-Inches', 'MMTX5042332', '2025', 20373),
+(2, 'Acer', '22-inches', 'KLKK0473923409', '2025', NULL),
+(3, 'Lenovo', '22-inches', '3907814', '2025', 1514);
 
 -- --------------------------------------------------------
 
@@ -190,6 +197,13 @@ CREATE TABLE `tbl_printer` (
   `yearAcquired` year(4) DEFAULT NULL,
   `employeeId` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `tbl_printer`
+--
+
+INSERT INTO `tbl_printer` (`printerId`, `printerBrand`, `printerModel`, `printerSerial`, `yearAcquired`, `employeeId`) VALUES
+(3, 'HP', 'v13', 'HP-PR-2025-004', '2025', NULL);
 
 -- --------------------------------------------------------
 
@@ -280,9 +294,9 @@ CREATE TABLE `tbl_systemunit` (
 --
 
 INSERT INTO `tbl_systemunit` (`systemunitId`, `systemUnitCategory`, `systemUnitBrand`, `specificationProcessor`, `specificationMemory`, `specificationGPU`, `specificationStorage`, `systemUnitSerial`, `yearAcquired`, `employeeId`) VALUES
-(1, NULL, 'Acer', 'i5', '32', 'RTX 3060', '512GB SSD', '8364633666', '2000', 20373),
-(2, NULL, '123', '123', '123', '123', '123', '123', '2024', 55555),
-(3, NULL, '2313', '123123', '123123', '21313', '123123', '1231312', '2000', 111),
+(1, 'Pre-Built', 'Acer', 'i5', '32', 'RTX 3060', '512GB SSD', '8364633666', '2000', 20373),
+(2, 'Pre-Built', '123', '123', '123', '123', '123', '123', '2024', 55555),
+(3, 'Custom Built', '2313', '123123', '123123', '21313', '123123', '1231312', '2000', 111),
 (9, NULL, 'sadfs', 'asfsdaf', '32', 'sdafs', 'asdfsadf', '4352353245', '2026', 41534),
 (11, NULL, 'Custom Built', 'Ryzen 7 7800X3D', '16', 'RTX 3060', '1TB SSD', '98646755464', '2000', 1514);
 
@@ -372,7 +386,7 @@ ALTER TABLE `tbl_systemunit`
 -- AUTO_INCREMENT for table `location`
 --
 ALTER TABLE `location`
-  MODIFY `location_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
+  MODIFY `location_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=35;
 
 --
 -- AUTO_INCREMENT for table `location_type`
@@ -402,7 +416,7 @@ ALTER TABLE `tbl_employee`
 -- AUTO_INCREMENT for table `tbl_monitor`
 --
 ALTER TABLE `tbl_monitor`
-  MODIFY `monitorId` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `monitorId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `tbl_section`

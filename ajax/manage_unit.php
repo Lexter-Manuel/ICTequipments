@@ -129,8 +129,7 @@ try {
             $stmt = $db->prepare("SELECT location_name FROM location WHERE location_id = ?");
             $stmt->execute([$unitId]);
             $unit = $stmt->fetch();
-            
-            // Soft delete unit (set is_deleted = '1')
+
             $stmt = $db->prepare("UPDATE location SET is_deleted = '1' WHERE location_id = ?");
             $stmt->execute([$unitId]);
             

@@ -37,6 +37,10 @@ require_once '../config/config.php';
                     <i class="fas fa-chart-line"></i>
                     <span>Dashboard</span>
                 </a>
+                <a href="#" class="nav-item" data-page="roster">
+                    <i class="fas fa-users"></i>
+                    <span>Emplopyee Roster</span>
+                </a>
             </div>
             
             <div class="nav-section">
@@ -174,6 +178,8 @@ require_once '../config/config.php';
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="assets/bootstrap/bootstrap.min.js"></script>
+
     <script src="assets/js/dashboard.js"></script>
+    <script src="assets/js/computer_management.js"></script>
 </body>
 </html>

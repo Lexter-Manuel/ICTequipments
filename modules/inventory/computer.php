@@ -1,174 +1,54 @@
 <?php
-// modules/inventory/computer.php
-// This page manages System Units, Monitors, and All-in-One PCs in a tabbed interface
+/**
+ * Computer Equipment Management Module
+ * Manages System Units, Monitors, and All-in-One PCs in a tabbed interface
+ * Database integrated with full CRUD operations
+ */
 
-// Sample data for testing (no database required)
-$sampleSystemUnits = [
-    [
-        'systemunitId' => 1,
-        'systemUnitCategory' => 'Pre-Built',
-        'systemUnitBrand' => 'Dell OptiPlex 7090',
-        'specificationProcessor' => 'Intel Core i7-11700',
-        'specificationMemory' => '16GB DDR4',
-        'specificationGPU' => 'Intel UHD Graphics 750',
-        'specificationStorage' => '512GB NVMe SSD',
-        'systemUnitSerial' => 'DL-SU-2024-001',
-        'yearAcquired' => 2024,
-        'employeeId' => 20373,
-        'employeeName' => 'Lexter N. Manuel',
-        'status' => 'Active'
-    ],
-    [
-        'systemunitId' => 2,
-        'systemUnitCategory' => 'Custom Built',
-        'systemUnitBrand' => 'Custom Workstation',
-        'specificationProcessor' => 'AMD Ryzen 9 5950X',
-        'specificationMemory' => '32GB DDR4',
-        'specificationGPU' => 'NVIDIA RTX 3060 Ti',
-        'specificationStorage' => '1TB NVMe SSD + 2TB HDD',
-        'systemUnitSerial' => 'CB-SU-2024-002',
-        'yearAcquired' => 2024,
-        'employeeId' => 111,
-        'employeeName' => 'Benjamin Abad',
-        'status' => 'Active'
-    ],
-    [
-        'systemunitId' => 3,
-        'systemUnitCategory' => 'Pre-Built',
-        'systemUnitBrand' => 'HP ProDesk 600 G6',
-        'specificationProcessor' => 'Intel Core i5-10500',
-        'specificationMemory' => '8GB DDR4',
-        'specificationGPU' => 'Intel UHD Graphics 630',
-        'specificationStorage' => '256GB SSD',
-        'systemUnitSerial' => 'HP-SU-2023-001',
-        'yearAcquired' => 2023,
-        'employeeId' => null,
-        'employeeName' => null,
-        'status' => 'Available'
-    ],
-    [
-        'systemunitId' => 4,
-        'systemUnitCategory' => 'Custom Built',
-        'systemUnitBrand' => 'Gaming Rig Pro',
-        'specificationProcessor' => 'Intel Core i9-12900K',
-        'specificationMemory' => '64GB DDR5',
-        'specificationGPU' => 'NVIDIA RTX 4070',
-        'specificationStorage' => '2TB NVMe SSD',
-        'systemUnitSerial' => 'GR-SU-2024-003',
-        'yearAcquired' => 2024,
-        'employeeId' => 1514,
-        'employeeName' => 'Mark Angelo Palacay',
-        'status' => 'Active'
-    ]
-];
+require_once '../../config/database.php';
 
-$sampleMonitors = [
-    [
-        'monitorId' => 1,
-        'monitorBrand' => 'Dell UltraSharp U2722DE',
-        'monitorSize' => '27 inches',
-        'serial' => 'DL-MON-2024-001',
-        'yearAcquired' => 2024,
-        'employeeId' => 20373,
-        'employeeName' => 'Lexter N. Manuel',
-        'resolution' => '2560x1440 (QHD)',
-        'panelType' => 'IPS',
-        'status' => 'Active'
-    ],
-    [
-        'monitorId' => 2,
-        'monitorBrand' => 'LG 24MK430H',
-        'monitorSize' => '24 inches',
-        'serial' => 'LG-MON-2023-002',
-        'yearAcquired' => 2023,
-        'employeeId' => 111,
-        'employeeName' => 'Benjamin Abad',
-        'resolution' => '1920x1080 (Full HD)',
-        'panelType' => 'IPS',
-        'status' => 'Active'
-    ],
-    [
-        'monitorId' => 3,
-        'monitorBrand' => 'Samsung S27R350',
-        'monitorSize' => '27 inches',
-        'serial' => 'SS-MON-2024-003',
-        'yearAcquired' => 2024,
-        'employeeId' => null,
-        'employeeName' => null,
-        'resolution' => '1920x1080 (Full HD)',
-        'panelType' => 'VA',
-        'status' => 'Available'
-    ],
-    [
-        'monitorId' => 4,
-        'monitorBrand' => 'ASUS ProArt PA279CV',
-        'monitorSize' => '27 inches',
-        'serial' => 'AS-MON-2024-004',
-        'yearAcquired' => 2024,
-        'employeeId' => 1514,
-        'employeeName' => 'Mark Angelo Palacay',
-        'resolution' => '3840x2160 (4K UHD)',
-        'panelType' => 'IPS',
-        'status' => 'Active'
-    ],
-    [
-        'monitorId' => 5,
-        'monitorBrand' => 'ViewSonic VX2476',
-        'monitorSize' => '24 inches',
-        'serial' => 'VS-MON-2023-005',
-        'yearAcquired' => 2023,
-        'employeeId' => null,
-        'employeeName' => null,
-        'resolution' => '1920x1080 (Full HD)',
-        'panelType' => 'IPS',
-        'status' => 'In Repair'
-    ]
-];
+$db = getDB();
 
-$sampleAllInOne = [
-    [
-        'allinoneId' => 1,
-        'allinoneBrand' => 'HP All-in-One 24-df1033',
-        'specificationProcessor' => 'Intel Core i5-1135G7',
-        'specificationMemory' => '8GB DDR4',
-        'specificationGPU' => 'Intel Iris Xe Graphics',
-        'specificationStorage' => '512GB SSD',
-        'serial' => 'HP-AIO-2024-001',
-        'yearAcquired' => 2024,
-        'screenSize' => '23.8 inches',
-        'employeeId' => 55555,
-        'employeeName' => 'asdasfsad asdsa',
-        'status' => 'Active'
-    ],
-    [
-        'allinoneId' => 2,
-        'allinoneBrand' => 'Dell Inspiron 27 7000',
-        'specificationProcessor' => 'Intel Core i7-1165G7',
-        'specificationMemory' => '16GB DDR4',
-        'specificationGPU' => 'NVIDIA GeForce MX450',
-        'specificationStorage' => '1TB SSD',
-        'serial' => 'DL-AIO-2024-002',
-        'yearAcquired' => 2024,
-        'screenSize' => '27 inches',
-        'employeeId' => null,
-        'employeeName' => null,
-        'status' => 'Available'
-    ],
-    [
-        'allinoneId' => 3,
-        'allinoneBrand' => 'Lenovo IdeaCentre AIO 3',
-        'specificationProcessor' => 'AMD Ryzen 5 5500U',
-        'specificationMemory' => '12GB DDR4',
-        'specificationGPU' => 'AMD Radeon Graphics',
-        'specificationStorage' => '256GB SSD + 1TB HDD',
-        'serial' => 'LN-AIO-2023-003',
-        'yearAcquired' => 2023,
-        'screenSize' => '24 inches',
-        'employeeId' => 41534,
-        'employeeName' => 'sdfsd sadfsdf Jr.',
-        'status' => 'Active'
-    ]
-];
+// Fetch System Units
+$stmtSU = $db->query("
+    SELECT 
+        s.*,
+        CONCAT_WS(' ', e.firstName, e.middleName, e.lastName) as employeeName
+    FROM tbl_systemunit s
+    LEFT JOIN tbl_employee e ON s.employeeId = e.employeeId
+    ORDER BY s.systemunitId DESC
+");
+$systemUnits = $stmtSU->fetchAll();
+
+// Fetch Monitors
+$stmtMon = $db->query("
+    SELECT 
+        m.*,
+        CONCAT_WS(' ', e.firstName, e.middleName, e.lastName) as employeeName
+    FROM tbl_monitor m
+    LEFT JOIN tbl_employee e ON m.employeeId = e.employeeId
+    ORDER BY m.monitorId DESC
+");
+$monitors = $stmtMon->fetchAll();
+
+// Fetch All-in-Ones
+$stmtAIO = $db->query("
+    SELECT 
+        a.*,
+        CONCAT_WS(' ', e.firstName, e.middleName, e.lastName) as employeeName
+    FROM tbl_allinone a
+    LEFT JOIN tbl_employee e ON a.employeeId = e.employeeId
+    ORDER BY a.allinoneId DESC
+");
+$allInOnes = $stmtAIO->fetchAll();
+
+// Fetch employees for dropdown
+$stmtEmployees = $db->query("
+    SELECT employeeId, CONCAT_WS(' ', firstName, middleName, lastName) as fullName
+    FROM tbl_employee
+    ORDER BY firstName, lastName
+");
+$employees = $stmtEmployees->fetchAll();
 ?>
 
 <style>
@@ -209,69 +89,25 @@ $sampleAllInOne = [
     border-radius: 0 12px 0 0;
 }
 
-.tab-btn:not(:last-child) {
-    border-right: 1px solid var(--border-color);
-}
-
-.tab-btn i {
-    font-size: 18px;
-}
-
-.tab-btn:hover {
-    background: var(--bg-light);
-    color: var(--text-dark);
-}
-
 .tab-btn.active {
-    background: var(--primary-green);
+    background: linear-gradient(135deg, var(--primary-green), var(--accent-green));
     color: white;
 }
 
-.tab-btn.active::after {
-    content: '';
-    position: absolute;
-    bottom: -1px;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: white;
+.tab-btn:not(.active):hover {
+    background: var(--bg-light);
 }
 
-.tab-badge {
-    background: rgba(255, 255, 255, 0.2);
-    padding: 3px 10px;
-    border-radius: 12px;
-    font-size: 13px;
-    font-weight: 700;
-}
-
-.tab-btn.active .tab-badge {
-    background: rgba(255, 255, 255, 0.3);
-}
-
-/* Tab Content */
 .tab-content {
     display: none;
     background: white;
     border: 1px solid var(--border-color);
     border-radius: 0 0 12px 12px;
-    padding: 32px;
-    animation: fadeInUp 0.4s ease;
+    padding: 24px;
 }
 
 .tab-content.active {
     display: block;
-}
-
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
 }
 
 /* Page Header */
@@ -279,12 +115,12 @@ $sampleAllInOne = [
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 32px;
+    margin-bottom: 24px;
 }
 
 .page-header h2 {
     font-family: 'Crimson Pro', serif;
-    font-size: 28px;
+    font-size: 22px;
     color: var(--text-dark);
     font-weight: 700;
 }
@@ -295,13 +131,12 @@ $sampleAllInOne = [
 }
 
 .btn {
-    padding: 12px 24px;
+    padding: 10px 18px;
     border: none;
     border-radius: 8px;
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s;
     display: inline-flex;
     align-items: center;
     gap: 8px;
@@ -312,59 +147,62 @@ $sampleAllInOne = [
     color: white;
 }
 
-.btn-primary:hover {
-    background: var(--primary-dark);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px var(--shadow-medium);
-}
-
 .btn-secondary {
     background: white;
     color: var(--text-dark);
     border: 1px solid var(--border-color);
 }
 
-.btn-secondary:hover {
-    background: var(--bg-light);
+/* Statistics Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
 }
 
-.btn-sm {
-    padding: 8px 14px;
+.stat-item {
+    background: var(--bg-light);
+    padding: 16px;
+    border-radius: 8px;
+    border-left: 4px solid var(--primary-green);
+}
+
+.stat-label {
     font-size: 13px;
+    color: var(--text-medium);
+    margin-bottom: 8px;
+}
+
+.stat-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-dark);
 }
 
 /* Filters */
 .filters-bar {
     background: var(--bg-light);
-    padding: 16px 20px;
+    padding: 12px;
     border-radius: 8px;
-    margin-bottom: 24px;
+    margin-bottom: 16px;
     display: flex;
-    gap: 16px;
+    gap: 12px;
     align-items: center;
-    flex-wrap: wrap;
 }
 
 .filter-group {
     display: flex;
     align-items: center;
-    gap: 10px;
-}
-
-.filter-group label {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text-dark);
+    gap: 8px;
 }
 
 .filter-group select,
 .filter-group input {
-    padding: 8px 14px;
+    padding: 8px 10px;
     border: 1px solid var(--border-color);
     border-radius: 6px;
-    font-size: 14px;
     background: white;
-    min-width: 150px;
 }
 
 /* Data Table */
@@ -377,7 +215,6 @@ $sampleAllInOne = [
 .data-table table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 14px;
 }
 
 .data-table thead {
@@ -386,16 +223,14 @@ $sampleAllInOne = [
 }
 
 .data-table th {
-    padding: 16px;
+    padding: 12px;
     text-align: left;
     font-weight: 600;
     font-size: 13px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
 }
 
 .data-table td {
-    padding: 16px;
+    padding: 12px;
     border-bottom: 1px solid var(--border-color);
     color: var(--text-dark);
 }
@@ -404,58 +239,54 @@ $sampleAllInOne = [
     background: var(--bg-light);
 }
 
-.data-table tbody tr:last-child td {
-    border-bottom: none;
+/* Specifications Display */
+.spec-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+    font-size: 12px;
+    color: var(--text-medium);
+}
+
+.spec-item i {
+    width: 14px;
+    color: var(--primary-green);
+}
+
+.spec-value {
+    font-weight: 500;
+    color: var(--text-dark);
 }
 
 /* Status Badges */
 .status-badge {
     display: inline-block;
-    padding: 5px 12px;
+    padding: 6px 10px;
     border-radius: 12px;
     font-size: 12px;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.3px;
 }
 
 .status-active {
-    background: rgba(34, 197, 94, 0.15);
+    background: rgba(34, 197, 94, 0.12);
     color: #16a34a;
 }
 
 .status-available {
-    background: rgba(59, 130, 246, 0.15);
+    background: rgba(59, 130, 246, 0.12);
     color: #2563eb;
 }
 
-.status-repair {
-    background: rgba(245, 158, 11, 0.15);
+.status-inrepair {
+    background: rgba(245, 158, 11, 0.12);
     color: #d97706;
 }
 
-/* Spec Tags */
-.spec-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 13px;
-    margin-bottom: 4px;
-}
-
-.spec-item i {
-    color: var(--primary-green);
-    font-size: 12px;
-}
-
-.spec-label {
-    color: var(--text-light);
-    font-weight: 500;
-}
-
-.spec-value {
-    color: var(--text-dark);
-    font-weight: 600;
+.status-retired {
+    background: rgba(220, 38, 38, 0.08);
+    color: #dc2626;
 }
 
 /* Action Buttons */
@@ -465,18 +296,16 @@ $sampleAllInOne = [
 }
 
 .btn-icon {
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
     padding: 0;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
     border-radius: 6px;
     border: 1px solid var(--border-color);
     background: white;
-    color: var(--text-medium);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
-    transition: all 0.2s;
 }
 
 .btn-icon:hover {
@@ -485,104 +314,10 @@ $sampleAllInOne = [
     border-color: var(--primary-green);
 }
 
-.btn-icon.btn-danger:hover {
+.btn-danger:hover {
     background: #dc2626;
     border-color: #dc2626;
-}
-
-/* Statistics Cards */
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 16px;
-    margin-bottom: 24px;
-}
-
-.stat-item {
-    background: linear-gradient(135deg, rgba(45, 122, 79, 0.05), rgba(61, 155, 107, 0.05));
-    padding: 16px 20px;
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
-}
-
-.stat-label {
-    font-size: 12px;
-    color: var(--text-medium);
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 6px;
-}
-
-.stat-value {
-    font-size: 24px;
-    font-weight: 700;
-    color: var(--primary-green);
-    font-family: 'Crimson Pro', serif;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-    .tab-navigation {
-        flex-direction: column;
-    }
-    
-    .tab-btn {
-        border-right: none !important;
-        border-bottom: 1px solid var(--border-color);
-    }
-    
-    .tab-btn:first-child {
-        border-radius: 12px 12px 0 0;
-    }
-    
-    .tab-btn:last-child {
-        border-radius: 0;
-        border-bottom: none;
-    }
-    
-    .filters-bar {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    
-    .filter-group {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    
-    .filter-group select,
-    .filter-group input {
-        width: 100%;
-    }
-    
-    .data-table {
-        font-size: 12px;
-    }
-    
-    .data-table th,
-    .data-table td {
-        padding: 10px;
-    }
-}
-
-/* Empty State */
-.empty-state {
-    text-align: center;
-    padding: 60px 20px;
-    color: var(--text-medium);
-}
-
-.empty-state i {
-    font-size: 48px;
-    color: var(--text-light);
-    margin-bottom: 16px;
-}
-
-.empty-state h3 {
-    font-size: 18px;
-    margin-bottom: 8px;
-    color: var(--text-dark);
+    color: white !important;
 }
 </style>
 
@@ -597,29 +332,22 @@ $sampleAllInOne = [
             <i class="fas fa-download"></i>
             Export
         </button>
-        <button class="btn btn-primary" onclick="openAddModal()">
-            <i class="fas fa-plus"></i>
-            Add Equipment
-        </button>
     </div>
 </div>
 
 <!-- Tab Navigation -->
 <div class="tab-navigation">
     <button class="tab-btn active" onclick="switchTab('systemunits')">
-        <i class="fas fa-server"></i>
-        <span>System Units</span>
-        <span class="tab-badge"><?php echo count($sampleSystemUnits); ?></span>
+        <i class="fas fa-tower-broadcast"></i>
+        System Units
     </button>
     <button class="tab-btn" onclick="switchTab('monitors')">
         <i class="fas fa-tv"></i>
-        <span>Monitors</span>
-        <span class="tab-badge"><?php echo count($sampleMonitors); ?></span>
+        Monitors
     </button>
     <button class="tab-btn" onclick="switchTab('allinone')">
-        <i class="fas fa-laptop"></i>
-        <span>All-in-One PCs</span>
-        <span class="tab-badge"><?php echo count($sampleAllInOne); ?></span>
+        <i class="fas fa-computer"></i>
+        All-in-One PCs
     </button>
 </div>
 
@@ -628,54 +356,38 @@ $sampleAllInOne = [
     <!-- Statistics -->
     <div class="stats-grid">
         <div class="stat-item">
-            <div class="stat-label">Total Units</div>
-            <div class="stat-value"><?php echo count($sampleSystemUnits); ?></div>
+            <div class="stat-label">Total System Units</div>
+            <div class="stat-value"><?php echo count($systemUnits); ?></div>
         </div>
         <div class="stat-item">
             <div class="stat-label">Active</div>
-            <div class="stat-value"><?php echo count(array_filter($sampleSystemUnits, fn($u) => $u['status'] === 'Active')); ?></div>
+            <div class="stat-value"><?php echo count(array_filter($systemUnits, fn($s) => $s['employeeId'] != null)); ?></div>
         </div>
         <div class="stat-item">
             <div class="stat-label">Available</div>
-            <div class="stat-value"><?php echo count(array_filter($sampleSystemUnits, fn($u) => $u['status'] === 'Available')); ?></div>
-        </div>
-        <div class="stat-item">
-            <div class="stat-label">Pre-Built</div>
-            <div class="stat-value"><?php echo count(array_filter($sampleSystemUnits, fn($u) => $u['systemUnitCategory'] === 'Pre-Built')); ?></div>
+            <div class="stat-value"><?php echo count(array_filter($systemUnits, fn($s) => $s['employeeId'] == null)); ?></div>
         </div>
     </div>
-    
-    <!-- Filters -->
+
+    <!-- Header Actions -->
     <div class="filters-bar">
-        <div class="filter-group">
-            <label><i class="fas fa-filter"></i> Category:</label>
-            <select>
-                <option value="">All Categories</option>
-                <option value="Pre-Built">Pre-Built</option>
-                <option value="Custom Built">Custom Built</option>
-            </select>
-        </div>
-        <div class="filter-group">
-            <label><i class="fas fa-circle-check"></i> Status:</label>
-            <select>
-                <option value="">All Status</option>
-                <option value="Active">Active</option>
-                <option value="Available">Available</option>
-            </select>
-        </div>
-        <div class="filter-group">
+        <div class="filter-group" style="flex:1">
             <label><i class="fas fa-search"></i> Search:</label>
-            <input type="text" placeholder="Serial, brand, processor...">
+            <input type="text" id="systemunitSearch" placeholder="Serial, brand, processor..." oninput="filterSystemUnits()">
         </div>
+        <button class="btn btn-primary" onclick="openAddSystemUnit()">
+            <i class="fas fa-plus"></i>
+            Add System Unit
+        </button>
     </div>
-    
+
     <!-- Data Table -->
     <div class="data-table">
         <table>
             <thead>
                 <tr>
                     <th>Serial Number</th>
-                    <th>Brand / Category</th>
+                    <th>Brand & Category</th>
                     <th>Specifications</th>
                     <th>Year</th>
                     <th>Assigned To</th>
@@ -683,55 +395,53 @@ $sampleAllInOne = [
                     <th>Actions</th>
                 </tr>
             </thead>
-            <tbody>
-                <?php foreach ($sampleSystemUnits as $unit): ?>
+            <tbody id="systemunitTableBody">
+                <?php foreach ($systemUnits as $s): ?>
+                <?php $status = $s['employeeId'] ? 'Active' : 'Available'; ?>
                 <tr>
                     <td>
-                        <strong style="color: var(--primary-green);"><?php echo $unit['systemUnitSerial']; ?></strong>
+                        <strong style="color: var(--primary-green);"><?php echo htmlspecialchars($s['systemUnitSerial']); ?></strong>
                     </td>
                     <td>
-                        <div style="font-weight: 600; margin-bottom: 4px;"><?php echo $unit['systemUnitBrand']; ?></div>
+                        <div style="font-weight: 600;"><?php echo htmlspecialchars($s['systemUnitBrand']); ?></div>
                         <div style="font-size: 12px; color: var(--text-light);">
-                            <i class="fas fa-tag"></i> <?php echo $unit['systemUnitCategory']; ?>
+                            <i class="fas fa-tag"></i> <?php echo htmlspecialchars($s['systemUnitCategory'] ?? 'Pre-Built'); ?>
                         </div>
                     </td>
                     <td>
                         <div class="spec-item">
                             <i class="fas fa-microchip"></i>
-                            <span class="spec-value"><?php echo $unit['specificationProcessor']; ?></span>
+                            <span class="spec-value"><?php echo htmlspecialchars($s['specificationProcessor']); ?></span>
                         </div>
                         <div class="spec-item">
                             <i class="fas fa-memory"></i>
-                            <span class="spec-value"><?php echo $unit['specificationMemory']; ?></span>
+                            <span class="spec-value"><?php echo htmlspecialchars($s['specificationMemory']); ?></span>
                         </div>
                         <div class="spec-item">
                             <i class="fas fa-hdd"></i>
-                            <span class="spec-value"><?php echo $unit['specificationStorage']; ?></span>
+                            <span class="spec-value"><?php echo htmlspecialchars($s['specificationStorage']); ?></span>
                         </div>
                     </td>
-                    <td><?php echo $unit['yearAcquired']; ?></td>
+                    <td><?php echo htmlspecialchars($s['yearAcquired'] ?? 'N/A'); ?></td>
                     <td>
-                        <?php if ($unit['employeeName']): ?>
-                            <div style="font-weight: 600;"><?php echo $unit['employeeName']; ?></div>
-                            <div style="font-size: 12px; color: var(--text-light);">ID: <?php echo $unit['employeeId']; ?></div>
+                        <?php if ($s['employeeName']): ?>
+                            <div style="font-weight: 600;"><?php echo htmlspecialchars($s['employeeName']); ?></div>
+                            <div style="font-size: 12px; color: var(--text-light);">ID: <?php echo htmlspecialchars($s['employeeId']); ?></div>
                         <?php else: ?>
                             <span style="color: var(--text-light); font-style: italic;">Unassigned</span>
                         <?php endif; ?>
                     </td>
                     <td>
-                        <span class="status-badge status-<?php echo strtolower($unit['status']); ?>">
-                            <?php echo $unit['status']; ?>
+                        <span class="status-badge status-<?php echo strtolower($status); ?>">
+                            <?php echo $status; ?>
                         </span>
                     </td>
                     <td>
                         <div class="action-buttons">
-                            <button class="btn-icon" title="View Details">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                            <button class="btn-icon" title="Edit">
+                            <button class="btn-icon" title="Edit" onclick="editSystemUnit(<?php echo $s['systemunitId']; ?>)">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button class="btn-icon btn-danger" title="Delete">
+                            <button class="btn-icon btn-danger" style="color: black" title="Delete" onclick="deleteSystemUnit(<?php echo $s['systemunitId']; ?>)">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </div>
@@ -749,47 +459,30 @@ $sampleAllInOne = [
     <div class="stats-grid">
         <div class="stat-item">
             <div class="stat-label">Total Monitors</div>
-            <div class="stat-value"><?php echo count($sampleMonitors); ?></div>
+            <div class="stat-value"><?php echo count($monitors); ?></div>
         </div>
         <div class="stat-item">
             <div class="stat-label">Active</div>
-            <div class="stat-value"><?php echo count(array_filter($sampleMonitors, fn($m) => $m['status'] === 'Active')); ?></div>
+            <div class="stat-value"><?php echo count(array_filter($monitors, fn($m) => $m['employeeId'] != null)); ?></div>
         </div>
         <div class="stat-item">
             <div class="stat-label">Available</div>
-            <div class="stat-value"><?php echo count(array_filter($sampleMonitors, fn($m) => $m['status'] === 'Available')); ?></div>
-        </div>
-        <div class="stat-item">
-            <div class="stat-label">In Repair</div>
-            <div class="stat-value"><?php echo count(array_filter($sampleMonitors, fn($m) => $m['status'] === 'In Repair')); ?></div>
+            <div class="stat-value"><?php echo count(array_filter($monitors, fn($m) => $m['employeeId'] == null)); ?></div>
         </div>
     </div>
-    
-    <!-- Filters -->
+
+    <!-- Header Actions -->
     <div class="filters-bar">
-        <div class="filter-group">
-            <label><i class="fas fa-expand"></i> Size:</label>
-            <select>
-                <option value="">All Sizes</option>
-                <option value="24">24 inches</option>
-                <option value="27">27 inches</option>
-            </select>
-        </div>
-        <div class="filter-group">
-            <label><i class="fas fa-circle-check"></i> Status:</label>
-            <select>
-                <option value="">All Status</option>
-                <option value="Active">Active</option>
-                <option value="Available">Available</option>
-                <option value="In Repair">In Repair</option>
-            </select>
-        </div>
-        <div class="filter-group">
+        <div class="filter-group" style="flex:1">
             <label><i class="fas fa-search"></i> Search:</label>
-            <input type="text" placeholder="Serial, brand...">
+            <input type="text" id="monitorSearch" placeholder="Serial, brand, size..." oninput="filterMonitors()">
         </div>
+        <button class="btn btn-primary" onclick="openAddMonitor()">
+            <i class="fas fa-plus"></i>
+            Add Monitor
+        </button>
     </div>
-    
+
     <!-- Data Table -->
     <div class="data-table">
         <table>
@@ -797,59 +490,44 @@ $sampleAllInOne = [
                 <tr>
                     <th>Serial Number</th>
                     <th>Brand & Model</th>
-                    <th>Display Info</th>
+                    <th>Size</th>
                     <th>Year</th>
                     <th>Assigned To</th>
                     <th>Status</th>
                     <th>Actions</th>
                 </tr>
             </thead>
-            <tbody>
-                <?php foreach ($sampleMonitors as $monitor): ?>
+            <tbody id="monitorTableBody">
+                <?php foreach ($monitors as $m): ?>
+                <?php $status = $m['employeeId'] ? 'Active' : 'Available'; ?>
                 <tr>
                     <td>
-                        <strong style="color: var(--primary-green);"><?php echo $monitor['serial']; ?></strong>
+                        <strong style="color: var(--primary-green);"><?php echo htmlspecialchars($m['monitorSerial']); ?></strong>
                     </td>
                     <td>
-                        <div style="font-weight: 600;"><?php echo $monitor['monitorBrand']; ?></div>
+                        <div style="font-weight: 600;"><?php echo htmlspecialchars($m['monitorBrand']); ?></div>
                     </td>
+                    <td><?php echo htmlspecialchars($m['monitorSize'] ?? 'N/A'); ?></td>
+                    <td><?php echo htmlspecialchars($m['yearAcquired'] ?? 'N/A'); ?></td>
                     <td>
-                        <div class="spec-item">
-                            <i class="fas fa-expand-arrows-alt"></i>
-                            <span class="spec-value"><?php echo $monitor['monitorSize']; ?></span>
-                        </div>
-                        <div class="spec-item">
-                            <i class="fas fa-desktop"></i>
-                            <span class="spec-value"><?php echo $monitor['resolution']; ?></span>
-                        </div>
-                        <div class="spec-item">
-                            <i class="fas fa-palette"></i>
-                            <span class="spec-value"><?php echo $monitor['panelType']; ?> Panel</span>
-                        </div>
-                    </td>
-                    <td><?php echo $monitor['yearAcquired']; ?></td>
-                    <td>
-                        <?php if ($monitor['employeeName']): ?>
-                            <div style="font-weight: 600;"><?php echo $monitor['employeeName']; ?></div>
-                            <div style="font-size: 12px; color: var(--text-light);">ID: <?php echo $monitor['employeeId']; ?></div>
+                        <?php if ($m['employeeName']): ?>
+                            <div style="font-weight: 600;"><?php echo htmlspecialchars($m['employeeName']); ?></div>
+                            <div style="font-size: 12px; color: var(--text-light);">ID: <?php echo htmlspecialchars($m['employeeId']); ?></div>
                         <?php else: ?>
                             <span style="color: var(--text-light); font-style: italic;">Unassigned</span>
                         <?php endif; ?>
                     </td>
                     <td>
-                        <span class="status-badge status-<?php echo strtolower(str_replace(' ', '', $monitor['status'])); ?>">
-                            <?php echo $monitor['status']; ?>
+                        <span class="status-badge status-<?php echo strtolower($status); ?>">
+                            <?php echo $status; ?>
                         </span>
                     </td>
                     <td>
                         <div class="action-buttons">
-                            <button class="btn-icon" title="View Details">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                            <button class="btn-icon" title="Edit">
+                            <button class="btn-icon" title="Edit" onclick="editMonitor(<?php echo $m['monitorId']; ?>)">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button class="btn-icon btn-danger" title="Delete">
+                            <button class="btn-icon btn-danger" style="color: black" title="Delete" onclick="deleteMonitor(<?php echo $m['monitorId']; ?>)">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </div>
@@ -867,100 +545,82 @@ $sampleAllInOne = [
     <div class="stats-grid">
         <div class="stat-item">
             <div class="stat-label">Total All-in-One</div>
-            <div class="stat-value"><?php echo count($sampleAllInOne); ?></div>
+            <div class="stat-value"><?php echo count($allInOnes); ?></div>
         </div>
         <div class="stat-item">
             <div class="stat-label">Active</div>
-            <div class="stat-value"><?php echo count(array_filter($sampleAllInOne, fn($a) => $a['status'] === 'Active')); ?></div>
+            <div class="stat-value"><?php echo count(array_filter($allInOnes, fn($a) => $a['employeeId'] != null)); ?></div>
         </div>
         <div class="stat-item">
             <div class="stat-label">Available</div>
-            <div class="stat-value"><?php echo count(array_filter($sampleAllInOne, fn($a) => $a['status'] === 'Available')); ?></div>
-        </div>
-        <div class="stat-item">
-            <div class="stat-label">Average Year</div>
-            <div class="stat-value"><?php echo round(array_sum(array_column($sampleAllInOne, 'yearAcquired')) / count($sampleAllInOne)); ?></div>
+            <div class="stat-value"><?php echo count(array_filter($allInOnes, fn($a) => $a['employeeId'] == null)); ?></div>
         </div>
     </div>
-    
-    <!-- Filters -->
+
+    <!-- Header Actions -->
     <div class="filters-bar">
-        <div class="filter-group">
-            <label><i class="fas fa-circle-check"></i> Status:</label>
-            <select>
-                <option value="">All Status</option>
-                <option value="Active">Active</option>
-                <option value="Available">Available</option>
-            </select>
-        </div>
-        <div class="filter-group">
+        <div class="filter-group" style="flex:1">
             <label><i class="fas fa-search"></i> Search:</label>
-            <input type="text" placeholder="Serial, brand, processor...">
+            <input type="text" id="allinoneSearch" placeholder="Brand, processor..." oninput="filterAllInOnes()">
         </div>
+        <button class="btn btn-primary" onclick="openAddAllInOne()">
+            <i class="fas fa-plus"></i>
+            Add All-in-One
+        </button>
     </div>
-    
+
     <!-- Data Table -->
     <div class="data-table">
         <table>
             <thead>
                 <tr>
-                    <th>Serial Number</th>
                     <th>Brand & Model</th>
                     <th>Specifications</th>
-                    <th>Screen Size</th>
-                    <th>Year</th>
                     <th>Assigned To</th>
                     <th>Status</th>
                     <th>Actions</th>
                 </tr>
             </thead>
-            <tbody>
-                <?php foreach ($sampleAllInOne as $aio): ?>
+            <tbody id="allinoneTableBody">
+                <?php foreach ($allInOnes as $a): ?>
+                <?php $status = $a['employeeId'] ? 'Active' : 'Available'; ?>
                 <tr>
                     <td>
-                        <strong style="color: var(--primary-green);"><?php echo $aio['serial']; ?></strong>
-                    </td>
-                    <td>
-                        <div style="font-weight: 600;"><?php echo $aio['allinoneBrand']; ?></div>
+                        <div style="font-weight: 600;"><?php echo htmlspecialchars($a['allinoneBrand']); ?></div>
                     </td>
                     <td>
                         <div class="spec-item">
                             <i class="fas fa-microchip"></i>
-                            <span class="spec-value"><?php echo $aio['specificationProcessor']; ?></span>
+                            <span class="spec-value"><?php echo htmlspecialchars($a['specificationProcessor']); ?></span>
                         </div>
                         <div class="spec-item">
                             <i class="fas fa-memory"></i>
-                            <span class="spec-value"><?php echo $aio['specificationMemory']; ?></span>
+                            <span class="spec-value"><?php echo htmlspecialchars($a['specificationMemory']); ?></span>
                         </div>
                         <div class="spec-item">
                             <i class="fas fa-hdd"></i>
-                            <span class="spec-value"><?php echo $aio['specificationStorage']; ?></span>
+                            <span class="spec-value"><?php echo htmlspecialchars($a['specificationStorage']); ?></span>
                         </div>
                     </td>
-                    <td><?php echo $aio['screenSize']; ?></td>
-                    <td><?php echo $aio['yearAcquired']; ?></td>
                     <td>
-                        <?php if ($aio['employeeName']): ?>
-                            <div style="font-weight: 600;"><?php echo $aio['employeeName']; ?></div>
-                            <div style="font-size: 12px; color: var(--text-light);">ID: <?php echo $aio['employeeId']; ?></div>
+                        <?php if ($a['employeeName']): ?>
+                            <div style="font-weight: 600;"><?php echo htmlspecialchars($a['employeeName']); ?></div>
+                            <div style="font-size: 12px; color: var(--text-light);">ID: <?php echo htmlspecialchars($a['employeeId']); ?></div>
                         <?php else: ?>
                             <span style="color: var(--text-light); font-style: italic;">Unassigned</span>
                         <?php endif; ?>
                     </td>
                     <td>
-                        <span class="status-badge status-<?php echo strtolower($aio['status']); ?>">
-                            <?php echo $aio['status']; ?>
+                        <span class="status-badge status-<?php echo strtolower($status); ?>">
+                            <?php echo $status; ?>
                         </span>
                     </td>
                     <td>
                         <div class="action-buttons">
-                            <button class="btn-icon" title="View Details">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                            <button class="btn-icon" title="Edit">
+                            <button class="btn-icon" title="Edit" onclick="editAllInOne(<?php echo $a['allinoneId']; ?>)">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button class="btn-icon btn-danger" title="Delete">
+                            <button class="btn-icon btn-danger" style="color: black" title="Delete" onclick="deleteAllInOne(<?php echo $a['allinoneId']; ?>)">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </div>
@@ -972,40 +632,185 @@ $sampleAllInOne = [
     </div>
 </div>
 
-<script>
-function switchTab(tabName) {
-    // Hide all tabs
-    const tabs = document.querySelectorAll('.tab-content');
-    tabs.forEach(tab => tab.classList.remove('active'));
-    
-    // Remove active state from all buttons
-    const btns = document.querySelectorAll('.tab-btn');
-    btns.forEach(btn => btn.classList.remove('active'));
-    
-    // Show selected tab
-    document.getElementById(tabName + '-tab').classList.add('active');
-    
-    // Set active button
-    event.target.closest('.tab-btn').classList.add('active');
-}
+<!-- System Unit Modal -->
+<div class="modal fade" id="systemunitModal" tabindex="-1" aria-labelledby="systemunitModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title" id="systemunitModalTitle">Add New System Unit</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="systemunitForm">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="suCategory" class="form-label">Category *</label>
+                            <select class="form-select" id="suCategory" required>
+                                <option value="">Select Category</option>
+                                <option value="Pre-Built">Pre-Built</option>
+                                <option value="Custom Built">Custom Built</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="suBrand" class="form-label">Brand *</label>
+                            <input type="text" class="form-control" id="suBrand" required>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="suProcessor" class="form-label">Processor *</label>
+                            <input type="text" class="form-control" id="suProcessor" required placeholder="e.g., Intel Core i7-11700">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="suMemory" class="form-label">Memory (RAM) *</label>
+                            <input type="text" class="form-control" id="suMemory" required placeholder="e.g., 16GB DDR4">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="suGPU" class="form-label">GPU *</label>
+                            <input type="text" class="form-control" id="suGPU" required placeholder="e.g., NVIDIA RTX 3060">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="suStorage" class="form-label">Storage *</label>
+                            <input type="text" class="form-control" id="suStorage" required placeholder="e.g., 512GB NVMe SSD">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="suSerial" class="form-label">Serial Number *</label>
+                            <input type="text" class="form-control" id="suSerial" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="suYear" class="form-label">Year Acquired *</label>
+                            <input type="number" class="form-control" id="suYear" required min="2000" max="2030">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <label for="suEmployee" class="form-label">Assigned Employee</label>
+                            <select class="form-select" id="suEmployee">
+                                <option value="">Unassigned</option>
+                                <?php foreach ($employees as $emp): ?>
+                                    <option value="<?php echo $emp['employeeId']; ?>"><?php echo htmlspecialchars($emp['fullName']); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-top">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveSystemUnit()" style="background-color: var(--primary-green); border-color: var(--primary-green);">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
 
-function openAddModal() {
-    alert('Add Equipment modal would open here. This is a demo with sample data only.');
-}
+<!-- Monitor Modal -->
+<div class="modal fade" id="monitorModal" tabindex="-1" aria-labelledby="monitorModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title" id="monitorModalTitle">Add New Monitor</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="monitorForm">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="monBrand" class="form-label">Brand *</label>
+                            <input type="text" class="form-control" id="monBrand" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="monSize" class="form-label">Size *</label>
+                            <input type="text" class="form-control" id="monSize" required placeholder="e.g., 24 inches">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="monSerial" class="form-label">Serial Number *</label>
+                            <input type="text" class="form-control" id="monSerial" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="monYear" class="form-label">Year Acquired *</label>
+                            <input type="number" class="form-control" id="monYear" required min="2000" max="2030">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <label for="monEmployee" class="form-label">Assigned Employee</label>
+                            <select class="form-select" id="monEmployee">
+                                <option value="">Unassigned</option>
+                                <?php foreach ($employees as $emp): ?>
+                                    <option value="<?php echo $emp['employeeId']; ?>"><?php echo htmlspecialchars($emp['fullName']); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-top">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveMonitor()" style="background-color: var(--primary-green); border-color: var(--primary-green);">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
 
-// Demo: Add some interactivity to action buttons
-document.addEventListener('click', function(e) {
-    if (e.target.closest('.btn-icon')) {
-        const btn = e.target.closest('.btn-icon');
-        const title = btn.getAttribute('title');
-        
-        if (title === 'Delete') {
-            if (confirm('Are you sure you want to delete this item? (Demo only)')) {
-                alert('Item would be deleted. This is a demo with sample data only.');
-            }
-        } else {
-            alert(`${title} action triggered. This is a demo with sample data only.`);
-        }
-    }
-});
-</script>
+<!-- All-in-One Modal -->
+<div class="modal fade" id="allinoneModal" tabindex="-1" aria-labelledby="allinoneModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title" id="allinoneModalTitle">Add New All-in-One</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="allinoneForm">
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <label for="aioBrand" class="form-label">Brand & Model *</label>
+                            <input type="text" class="form-control" id="aioBrand" required placeholder="e.g., HP All-in-One 24-df1033">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="aioProcessor" class="form-label">Processor *</label>
+                            <input type="text" class="form-control" id="aioProcessor" required placeholder="e.g., Intel Core i5-1135G7">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="aioMemory" class="form-label">Memory (RAM) *</label>
+                            <input type="text" class="form-control" id="aioMemory" required placeholder="e.g., 8GB DDR4">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="aioGPU" class="form-label">GPU *</label>
+                            <input type="text" class="form-control" id="aioGPU" required placeholder="e.g., Intel Iris Xe Graphics">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="aioStorage" class="form-label">Storage *</label>
+                            <input type="text" class="form-control" id="aioStorage" required placeholder="e.g., 512GB SSD">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <label for="aioEmployee" class="form-label">Assigned Employee</label>
+                            <select class="form-select" id="aioEmployee">
+                                <option value="">Unassigned</option>
+                                <?php foreach ($employees as $emp): ?>
+                                    <option value="<?php echo $emp['employeeId']; ?>"><?php echo htmlspecialchars($emp['fullName']); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-top">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveAllInOne()" style="background-color: var(--primary-green); border-color: var(--primary-green);">Save</button>
+            </div>
+        </div>
+    </div>
+</div>

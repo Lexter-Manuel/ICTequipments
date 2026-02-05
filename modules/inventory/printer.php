@@ -1,61 +1,34 @@
 <?php
-// modules/inventory/printer.php
-// Printer management fragment using same design as computer.php (sample data only)
+/**
+ * Printer Management Module - Database Integrated
+ * Full CRUD operations with database backend
+ */
 
-$samplePrinters = [
-	[
-		'printerId' => 1,
-		'name' => 'Printer A',
-		'brand' => 'HP',
-		'model' => 'LaserJet Pro M404dn',
-		'serial' => 'HP-PR-2024-001',
-		'location' => 'IT Room',
-		'yearAcquired' => 2024,
-		'employeeId' => 20373,
-		'employeeName' => 'Lexter N. Manuel',
-		'status' => 'Working'
-	],
-	[
-		'printerId' => 2,
-		'name' => 'Printer B',
-		'brand' => 'Canon',
-		'model' => 'imageCLASS LBP6030',
-		'serial' => 'CN-PR-2024-002',
-		'location' => 'Office 101',
-		'yearAcquired' => 2023,
-		'employeeId' => 111,
-		'employeeName' => 'Benjamin Abad',
-		'status' => 'Needs Toner'
-	],
-	[
-		'printerId' => 3,
-		'name' => 'Printer C',
-		'brand' => 'Epson',
-		'model' => 'WorkForce WF-2860',
-		'serial' => 'EP-PR-2024-003',
-		'location' => 'Reception',
-		'yearAcquired' => 2024,
-		'employeeId' => null,
-		'employeeName' => null,
-		'status' => 'Available'
-	],
-	[
-		'printerId' => 4,
-		'name' => 'Printer D',
-		'brand' => 'Brother',
-		'model' => 'HL-L2395DW',
-		'serial' => 'BR-PR-2023-004',
-		'location' => 'Warehouse',
-		'yearAcquired' => 2022,
-		'employeeId' => null,
-		'employeeName' => null,
-		'status' => 'Offline'
-	]
-];
+require_once '../../config/database.php';
+
+$db = getDB();
+
+// Fetch printers with employee data
+$stmt = $db->query("
+    SELECT 
+        p.*,
+        CONCAT_WS(' ', e.firstName, e.middleName, e.lastName) as employeeName
+    FROM tbl_printer p
+    LEFT JOIN tbl_employee e ON p.employeeId = e.employeeId
+    ORDER BY p.printerId DESC
+");
+$printers = $stmt->fetchAll();
+
+// Fetch employees for dropdown
+$stmtEmployees = $db->query("
+    SELECT employeeId, CONCAT_WS(' ', firstName, middleName, lastName) as fullName
+    FROM tbl_employee
+    ORDER BY firstName, lastName
+");
+$employees = $stmtEmployees->fetchAll();
 ?>
 
 <style>
-/* Reused styles (page header, filters, table, badges, buttons) */
 .page-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
 .page-header h2{font-family:'Crimson Pro',serif;font-size:22px;color:var(--text-dark);font-weight:700}
 .header-actions{display:flex;gap:12px}
@@ -77,6 +50,8 @@ $samplePrinters = [
 .status-offline{background:rgba(220,38,38,0.08);color:#dc2626}
 .action-buttons{display:flex;gap:8px}
 .btn-icon{width:36px;height:36px;padding:0;border-radius:6px;border:1px solid var(--border-color);background:white;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.btn-icon:hover{background:var(--primary-green);color:white;border-color:var(--primary-green)}
+.btn-danger:hover{background:#dc2626;border-color:#dc2626;color:white !important}
 </style>
 
 <!-- Page Header -->
@@ -99,19 +74,9 @@ $samplePrinters = [
 
 <!-- Filters -->
 <div class="filters-bar">
-	<div class="filter-group">
-		<label><i class="fas fa-circle-check"></i> Status:</label>
-		<select id="statusFilter">
-			<option value="">All Status</option>
-			<option value="Working">Working</option>
-			<option value="Available">Available</option>
-			<option value="Needs Toner">Needs Toner</option>
-			<option value="Offline">Offline</option>
-		</select>
-	</div>
 	<div class="filter-group" style="flex:1">
 		<label><i class="fas fa-search"></i> Search:</label>
-		<input type="text" id="printerSearch" placeholder="Serial, name, brand, model, location..." />
+		<input type="text" id="printerSearch" placeholder="Serial, brand, model..." oninput="filterPrinters()" />
 	</div>
 </div>
 
@@ -121,9 +86,7 @@ $samplePrinters = [
 		<thead>
 			<tr>
 				<th>Serial</th>
-				<th>Name / Brand</th>
-				<th>Model</th>
-				<th>Location</th>
+				<th>Brand / Model</th>
 				<th>Year</th>
 				<th>Assigned To</th>
 				<th>Status</th>
@@ -131,35 +94,31 @@ $samplePrinters = [
 			</tr>
 		</thead>
 		<tbody id="printerTableBody">
-			<?php foreach ($samplePrinters as $p): ?>
+			<?php foreach ($printers as $p): ?>
+			<?php $status = $p['employeeId'] ? 'Working' : 'Available'; ?>
 			<tr>
-				<td><strong style="color:var(--primary-green)"><?php echo $p['serial']; ?></strong></td>
+				<td><strong style="color:var(--primary-green)"><?php echo htmlspecialchars($p['printerSerial'] ?? 'N/A'); ?></strong></td>
 				<td>
-					<div style="font-weight:600"><?php echo $p['name']; ?></div>
-					<div style="font-size:12px;color:var(--text-light)"><i class="fas fa-tag"></i> <?php echo $p['brand']; ?></div>
+					<div style="font-weight:600"><?php echo htmlspecialchars($p['printerBrand']); ?></div>
+					<div style="font-size:12px;color:var(--text-light)"><i class="fas fa-tag"></i> <?php echo htmlspecialchars($p['printerModel']); ?></div>
 				</td>
-				<td><?php echo $p['model']; ?></td>
-				<td><?php echo $p['location']; ?></td>
-				<td><?php echo $p['yearAcquired']; ?></td>
+				<td><?php echo htmlspecialchars($p['yearAcquired'] ?? 'N/A'); ?></td>
 				<td>
 					<?php if ($p['employeeName']): ?>
-						<div style="font-weight:600"><?php echo $p['employeeName']; ?></div>
-						<div style="font-size:12px;color:var(--text-light)">ID: <?php echo $p['employeeId']; ?></div>
+						<div style="font-weight:600"><?php echo htmlspecialchars($p['employeeName']); ?></div>
+						<div style="font-size:12px;color:var(--text-light)">ID: <?php echo htmlspecialchars($p['employeeId']); ?></div>
 					<?php else: ?>
 						<span style="color:var(--text-light);font-style:italic">Unassigned</span>
 					<?php endif; ?>
 				</td>
 				<td>
-					<?php
-						$cls = strtolower(str_replace(' ', '', $p['status']));
-					?>
-					<span class="status-badge status-<?php echo $cls; ?>"><?php echo $p['status']; ?></span>
+					<?php $cls = strtolower(str_replace(' ', '', $status)); ?>
+					<span class="status-badge status-<?php echo $cls; ?>"><?php echo htmlspecialchars($status); ?></span>
 				</td>
 				<td>
 					<div class="action-buttons">
-						<button class="btn-icon" title="View"><i class="fas fa-eye"></i></button>
 						<button class="btn-icon" title="Edit" onclick="editPrinter(<?php echo $p['printerId']; ?>)"><i class="fas fa-edit"></i></button>
-						<button class="btn-icon" title="Delete" onclick="deletePrinter(<?php echo $p['printerId']; ?>)"><i class="fas fa-trash"></i></button>
+						<button class="btn-icon btn-danger" style="color: black" title="Delete" onclick="deletePrinter(<?php echo $p['printerId']; ?>)"><i class="fas fa-trash"></i></button>
 					</div>
 				</td>
 			</tr>
@@ -169,114 +128,133 @@ $samplePrinters = [
 </div>
 
 <script>
-	// Client-side sample manipulation (in-memory)
-	let printers = <?php echo json_encode($samplePrinters, JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_AMP|JSON_HEX_QUOT); ?>;
+// Filter printers with AJAX
+function filterPrinters() {
+	const search = document.getElementById('printerSearch').value;
+	
+	fetch(`../../ajax/manage_printer.php?action=list&search=${encodeURIComponent(search)}`)
+		.then(response => response.json())
+		.then(data => {
+			if (data.success) {
+				renderPrinters(data.data);
+			} else {
+				alert('Error: ' + data.message);
+			}
+		})
+		.catch(error => alert('Error loading printers: ' + error));
+}
 
-	function renderPrinters(){
-		const tbody = document.getElementById('printerTableBody');
-		const q = document.getElementById('printerSearch').value.trim().toLowerCase();
-		const status = document.getElementById('statusFilter').value;
-		tbody.innerHTML = '';
-		const list = printers.filter(p => {
-			if(status && p.status !== status) return false;
-			if(!q) return true;
-			return [p.serial,p.name,p.brand,p.model,p.location,p.status].join(' ').toLowerCase().includes(q);
-		});
-		if(list.length === 0){
-			tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text-medium);padding:20px">No printers found</td></tr>';
-			return;
-		}
-		list.forEach(p => {
-			const tr = document.createElement('tr');
-			const cls = p.status.toLowerCase().replace(/\s+/g,'');
-			tr.innerHTML = `
-				<td><strong style="color:var(--primary-green)">${escapeHtml(p.serial)}</strong></td>
-				<td><div style="font-weight:600">${escapeHtml(p.name)}</div><div style="font-size:12px;color:var(--text-light)"><i class="fas fa-tag"></i> ${escapeHtml(p.brand)}</div></td>
-				<td>${escapeHtml(p.model)}</td>
-				<td>${escapeHtml(p.location)}</td>
-				<td>${escapeHtml(p.yearAcquired)}</td>
-				<td>${p.employeeName ? `<div style="font-weight:600">${escapeHtml(p.employeeName)}</div><div style="font-size:12px;color:var(--text-light)">ID: ${escapeHtml(p.employeeId)}</div>` : '<span style="color:var(--text-light);font-style:italic">Unassigned</span>'}</td>
-				<td><span class="status-badge status-${cls}">${escapeHtml(p.status)}</span></td>
-				<td><div class="action-buttons"><button class="btn-icon" title="View"><i class="fas fa-eye"></i></button><button class="btn-icon" title="Edit" onclick="editPrinter(${p.printerId})"><i class="fas fa-edit"></i></button><button class="btn-icon" title="Delete" onclick="deletePrinter(${p.printerId})"><i class="fas fa-trash"></i></button></div></td>
-			`;
-			tbody.appendChild(tr);
-		});
+function renderPrinters(printers) {
+	const tbody = document.getElementById('printerTableBody');
+	tbody.innerHTML = '';
+	
+	if (printers.length === 0) {
+		tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-medium);padding:20px">No printers found</td></tr>';
+		return;
 	}
+	
+	printers.forEach(p => {
+		const cls = p.status.toLowerCase().replace(/\s+/g,'');
+		const tr = document.createElement('tr');
+		tr.innerHTML = `
+			<td><strong style="color:var(--primary-green)">${escapeHtml(p.serial_number)}</strong></td>
+			<td><div style="font-weight:600">${escapeHtml(p.brand)}</div><div style="font-size:12px;color:var(--text-light)"><i class="fas fa-tag"></i> ${escapeHtml(p.model)}</div></td>
+			<td>${escapeHtml(p.year_acquired)}</td>
+			<td>${p.employee_name ? `<div style="font-weight:600">${escapeHtml(p.employee_name)}</div><div style="font-size:12px;color:var(--text-light)">ID: ${escapeHtml(p.employee_id)}</div>` : '<span style="color:var(--text-light);font-style:italic">Unassigned</span>'}</td>
+			<td><span class="status-badge status-${cls}">${escapeHtml(p.status)}</span></td>
+			<td><div class="action-buttons"><button class="btn-icon" title="Edit" onclick="editPrinter(${p.printer_id})"><i class="fas fa-edit"></i></button><button class="btn-icon btn-danger" style="color: black" title="Delete" onclick="deletePrinter(${p.printer_id})"><i class="fas fa-trash"></i></button></div></td>
+		`;
+		tbody.appendChild(tr);
+	});
+}
 
-	function escapeHtml(s){
-		return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-	}
+function escapeHtml(text) {
+	const div = document.createElement('div');
+	div.textContent = text;
+	return div.innerHTML;
+}
 
-	let currentEditId = null;
+let currentEditId = null;
 
-	function openAddPrinter(){
-		currentEditId = null;
-		document.getElementById('printerModalTitle').textContent = 'Add New Printer';
-		document.getElementById('printerForm').reset();
-		const modal = new bootstrap.Modal(document.getElementById('printerModal'));
-		modal.show();
-	}
+function openAddPrinter() {
+	currentEditId = null;
+	document.getElementById('printerModalTitle').textContent = 'Add New Printer';
+	document.getElementById('printerForm').reset();
+	const modal = new bootstrap.Modal(document.getElementById('printerModal'));
+	modal.show();
+}
 
-	function editPrinter(id){
-		const p = printers.find(x=>x.printerId===id);
-		if(!p) return alert('Printer not found');
-		currentEditId = id;
-		document.getElementById('printerModalTitle').textContent = 'Edit Printer';
-		document.getElementById('printerName').value = p.name;
-		document.getElementById('printerBrand').value = p.brand;
-		document.getElementById('printerModel').value = p.model;
-		document.getElementById('printerSerial').value = p.serial;
-		document.getElementById('printerLocation').value = p.location;
-		document.getElementById('printerYear').value = p.yearAcquired;
-		document.getElementById('printerStatus').value = p.status;
-		const modal = new bootstrap.Modal(document.getElementById('printerModal'));
-		modal.show();
-	}
+function editPrinter(id) {
+	fetch(`../../ajax/manage_printer.php?action=get&printer_id=${id}`)
+		.then(response => response.json())
+		.then(data => {
+			if (data.success) {
+				currentEditId = id;
+				const p = data.data;
+				document.getElementById('printerModalTitle').textContent = 'Edit Printer';
+				document.getElementById('printerBrand').value = p.brand;
+				document.getElementById('printerModel').value = p.model;
+				document.getElementById('printerSerial').value = p.serial_number;
+				document.getElementById('printerYear').value = p.year_acquired;
+				document.getElementById('printerEmployee').value = p.employee_id || '';
+				const modal = new bootstrap.Modal(document.getElementById('printerModal'));
+				modal.show();
+			} else {
+				alert('Error: ' + data.message);
+			}
+		})
+		.catch(error => alert('Error loading printer: ' + error));
+}
 
-	function savePrinter(){
-		const name = document.getElementById('printerName').value.trim();
-		const brand = document.getElementById('printerBrand').value.trim();
-		const model = document.getElementById('printerModel').value.trim();
-		const serial = document.getElementById('printerSerial').value.trim();
-		const location = document.getElementById('printerLocation').value.trim();
-		const year = document.getElementById('printerYear').value.trim();
-		const status = document.getElementById('printerStatus').value;
-
-		if(!name || !brand || !model || !serial || !location || !year){
-			alert('Please fill in all fields');
-			return;
-		}
-
-		if(currentEditId !== null){
-			const p = printers.find(x=>x.printerId===currentEditId);
-			p.name = name;
-			p.brand = brand;
-			p.model = model;
-			p.serial = serial;
-			p.location = location;
-			p.yearAcquired = year;
-			p.status = status;
+function savePrinter() {
+	const formData = new FormData();
+	formData.append('action', currentEditId ? 'update' : 'create');
+	if (currentEditId) formData.append('printer_id', currentEditId);
+	formData.append('brand', document.getElementById('printerBrand').value);
+	formData.append('model', document.getElementById('printerModel').value);
+	formData.append('serial_number', document.getElementById('printerSerial').value);
+	formData.append('year_acquired', document.getElementById('printerYear').value);
+	formData.append('employee_id', document.getElementById('printerEmployee').value);
+	
+	fetch('../../ajax/manage_printer.php', {
+		method: 'POST',
+		body: formData
+	})
+	.then(response => response.json())
+	.then(data => {
+		if (data.success) {
+			alert(data.message);
+			bootstrap.Modal.getInstance(document.getElementById('printerModal')).hide();
+			location.reload(); // Reload to show updated data
 		} else {
-			const id = printers.length ? Math.max(...printers.map(p=>p.printerId)) + 1 : 1;
-			printers.push({printerId:id,name:name,brand:brand,model:model,serial:serial,location:location,yearAcquired:year,employeeId:null,employeeName:null,status:status});
+			alert('Error: ' + data.message);
 		}
+	})
+	.catch(error => alert('Error saving printer: ' + error));
+}
 
-		renderPrinters();
-		bootstrap.Modal.getInstance(document.getElementById('printerModal')).hide();
-	}
-
-	function deletePrinter(id){
-		if(!confirm('Are you sure you want to delete this printer?')) return;
-		printers = printers.filter(x=>x.printerId!==id);
-		renderPrinters();
-	}
-
-	document.getElementById('printerSearch').addEventListener('input', renderPrinters);
-	document.getElementById('statusFilter').addEventListener('change', renderPrinters);
-	document.getElementById('savePrinterBtn').addEventListener('click', savePrinter);
-
-	// Initial render
-	renderPrinters();
+function deletePrinter(id) {
+	if (!confirm('Are you sure you want to delete this printer?')) return;
+	
+	const formData = new FormData();
+	formData.append('action', 'delete');
+	formData.append('printer_id', id);
+	
+	fetch('../../ajax/manage_printer.php', {
+		method: 'POST',
+		body: formData
+	})
+	.then(response => response.json())
+	.then(data => {
+		if (data.success) {
+			alert(data.message);
+			location.reload(); // Reload to show updated data
+		} else {
+			alert('Error: ' + data.message);
+		}
+	})
+	.catch(error => alert('Error deleting printer: ' + error));
+}
 </script>
 
 <!-- Bootstrap Modal for Add/Edit Printer -->
@@ -291,43 +269,32 @@ $samplePrinters = [
 				<form id="printerForm">
 					<div class="row mb-3">
 						<div class="col-md-6">
-							<label for="printerName" class="form-label">Printer Name *</label>
-							<input type="text" class="form-control" id="printerName" placeholder="e.g., Printer A" required>
-						</div>
-						<div class="col-md-6">
 							<label for="printerBrand" class="form-label">Brand *</label>
-							<input type="text" class="form-control" id="printerBrand" placeholder="e.g., HP, Canon" required>
+							<input type="text" class="form-control" id="printerBrand" required>
 						</div>
-					</div>
-					<div class="row mb-3">
 						<div class="col-md-6">
 							<label for="printerModel" class="form-label">Model *</label>
-							<input type="text" class="form-control" id="printerModel" placeholder="e.g., LaserJet Pro M404dn" required>
-						</div>
-						<div class="col-md-6">
-							<label for="printerSerial" class="form-label">Serial Number *</label>
-							<input type="text" class="form-control" id="printerSerial" placeholder="e.g., HP-PR-2024-001" required>
+							<input type="text" class="form-control" id="printerModel" required>
 						</div>
 					</div>
 					<div class="row mb-3">
 						<div class="col-md-6">
-							<label for="printerLocation" class="form-label">Location *</label>
-							<input type="text" class="form-control" id="printerLocation" placeholder="e.g., IT Room" required>
+							<label for="printerSerial" class="form-label">Serial Number *</label>
+							<input type="text" class="form-control" id="printerSerial" required>
 						</div>
 						<div class="col-md-6">
 							<label for="printerYear" class="form-label">Year Acquired *</label>
-							<input type="number" class="form-control" id="printerYear" placeholder="e.g., 2024" required>
+							<input type="number" class="form-control" id="printerYear" required min="2000" max="2030">
 						</div>
 					</div>
 					<div class="row mb-3">
 						<div class="col-md-12">
-							<label for="printerStatus" class="form-label">Status *</label>
-							<select class="form-select" id="printerStatus" required>
-								<option value="">Select Status</option>
-								<option value="Working">Working</option>
-								<option value="Available">Available</option>
-								<option value="Needs Toner">Needs Toner</option>
-								<option value="Offline">Offline</option>
+							<label for="printerEmployee" class="form-label">Assigned Employee</label>
+							<select class="form-select" id="printerEmployee">
+								<option value="">Unassigned</option>
+								<?php foreach ($employees as $emp): ?>
+									<option value="<?php echo $emp['employeeId']; ?>"><?php echo htmlspecialchars($emp['fullName']); ?></option>
+								<?php endforeach; ?>
 							</select>
 						</div>
 					</div>
@@ -335,7 +302,7 @@ $samplePrinters = [
 			</div>
 			<div class="modal-footer border-top">
 				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-				<button type="button" class="btn btn-primary" id="savePrinterBtn" style="background-color: var(--primary-green); border-color: var(--primary-green);">Save Printer</button>
+				<button type="button" class="btn btn-primary" onclick="savePrinter()" style="background-color: var(--primary-green); border-color: var(--primary-green);">Save Printer</button>
 			</div>
 		</div>
 	</div>
