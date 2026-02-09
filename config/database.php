@@ -13,6 +13,7 @@ class Database {
     private $dbname = 'nia-inventory';
     private $username = 'root';
     private $password = '';
+    private $port = 3310;
     private $charset = 'utf8mb4';
     
     /**
@@ -20,7 +21,7 @@ class Database {
      */
     private function __construct() {
         try {
-            $dsn = "mysql:host={$this->host};dbname={$this->dbname};charset={$this->charset}";
+            $dsn = "mysql:host={$this->host};port={$this->port};dbname={$this->dbname};charset={$this->charset}";
             
             $options = [
                 PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,

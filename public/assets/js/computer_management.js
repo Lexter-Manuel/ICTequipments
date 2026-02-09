@@ -127,7 +127,7 @@ function saveSystemUnit() {
         if (data.success) {
             alert(data.message);
             bootstrap.Modal.getInstance(document.getElementById('systemunitModal')).hide();
-            location.reload();
+            refreshCurrentTab();
         } else {
             alert('Error: ' + data.message);
         }
@@ -150,7 +150,7 @@ function deleteSystemUnit(id) {
     .then(data => {
         if (data.success) {
             alert(data.message);
-            location.reload();
+            refreshCurrentTab();
         } else {
             alert('Error: ' + data.message);
         }
@@ -251,7 +251,7 @@ function saveMonitor() {
         if (data.success) {
             alert(data.message);
             bootstrap.Modal.getInstance(document.getElementById('monitorModal')).hide();
-            location.reload();
+            refreshCurrentTab();
         } else {
             alert('Error: ' + data.message);
         }
@@ -274,7 +274,7 @@ function deleteMonitor(id) {
     .then(data => {
         if (data.success) {
             alert(data.message);
-            location.reload();
+            refreshCurrentTab();
         } else {
             alert('Error: ' + data.message);
         }
@@ -379,7 +379,7 @@ function saveAllInOne() {
         if (data.success) {
             alert(data.message);
             bootstrap.Modal.getInstance(document.getElementById('allinoneModal')).hide();
-            location.reload();
+            refreshCurrentTab();
         } else {
             alert('Error: ' + data.message);
         }
@@ -402,7 +402,7 @@ function deleteAllInOne(id) {
     .then(data => {
         if (data.success) {
             alert(data.message);
-            location.reload();
+            refreshCurrentTab();
         } else {
             alert('Error: ' + data.message);
         }
@@ -413,6 +413,27 @@ function deleteAllInOne(id) {
 // ========================================
 // UTILITY FUNCTIONS
 // ========================================
+function refreshCurrentTab() {
+    const suTab = document.getElementById('systemunit-tab');
+    const monTab = document.getElementById('monitor-tab');
+    const aioTab = document.getElementById('allinone-tab');
+
+    if (suTab && suTab.classList.contains('active')) {
+        filterSystemUnits();
+        return;
+    }
+    if (monTab && monTab.classList.contains('active')) {
+        filterMonitors();
+        return;
+    }
+    if (aioTab && aioTab.classList.contains('active')) {
+        filterAllInOnes();
+        return;
+    }
+    // fallback: refresh system units
+    if (typeof filterSystemUnits === 'function') filterSystemUnits();
+}
+
 function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;

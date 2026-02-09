@@ -12,8 +12,8 @@ require_once '../config/config.php';
     <title>Admin Dashboard - NIA UPRIIS</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="assets/css/dashboard.css">
     <link rel="stylesheet" href="assets/bootstrap/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/css/dashboard.css?v=<?php echo time()?>">
 </head>
 <body>
     <!-- Sidebar -->
@@ -179,7 +179,7 @@ require_once '../config/config.php';
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="assets/bootstrap/bootstrap.min.js"></script>
 
-    <script src="assets/js/dashboard.js"></script>
-    <script src="assets/js/computer_management.js"></script>
+    <script src="assets/js/dashboard.js?v=<?php echo time()?>"></script>
+    <script src="assets/js/computer_management.js?v=<?php echo time()?>"></script>
 </body>
 </html>
