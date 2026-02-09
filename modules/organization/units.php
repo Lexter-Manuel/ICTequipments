@@ -20,7 +20,7 @@ $stmt = $db->query("
     FROM location u
     LEFT JOIN location p ON u.parent_location_id = p.location_id
     LEFT JOIN location gp ON p.parent_location_id = gp.location_id
-    LEFT JOIN tbl_employee e ON u.location_id = e.sectionId
+    LEFT JOIN tbl_employee e ON u.location_id = e.location_id
     WHERE u.location_type_id = 3 AND u.is_deleted = '0'
     GROUP BY u.location_id
     ORDER BY 
@@ -43,16 +43,19 @@ foreach ($units as $unit) {
         $divisionName = $unit['parentName'];
         $sectionName = 'Direct Units';
         $divisionId = $unit['parentId'];
+        $parentIdForFilter = $unit['parentId']; // For "direct" filter
     } elseif ($unit['parentTypeId'] == 2) {
         // Unit under Section
         $divisionName = $unit['grandparentName'] ?: 'Unassigned';
         $sectionName = $unit['parentName'];
         $divisionId = $unit['grandparentId'];
+        $parentIdForFilter = $unit['parentId']; // Section ID
     } else {
-        // Orphaned unit
+        // Orphaned unit (no parent)
         $divisionName = 'Unassigned';
-        $sectionName = $unit['parentName'] ?: 'Direct Units';
+        $sectionName = 'Direct Units';
         $divisionId = null;
+        $parentIdForFilter = null;
     }
     
     if (!isset($unitsByHierarchy[$divisionName])) {
@@ -64,8 +67,9 @@ foreach ($units as $unit) {
     
     if (!isset($unitsByHierarchy[$divisionName]['sections'][$sectionName])) {
         $unitsByHierarchy[$divisionName]['sections'][$sectionName] = [
-            'parentId' => $unit['parentId'],
+            'parentId' => $parentIdForFilter,
             'parentType' => $unit['parentTypeId'],
+            'isDirect' => ($unit['parentTypeId'] == 1),
             'units' => []
         ];
     }
@@ -366,50 +370,52 @@ $sections = $db->query("
 }
 
 .parent-type-toggle {
-    margin-bottom: 20px;
-}
-
-.parent-type-toggle label {
-    display: block;
-    margin-bottom: 8px;
-    color: var(--text-dark);
-    font-weight: 600;
-    font-size: 14px;
-}
-
-.parent-type-buttons {
     display: flex;
-    gap: 12px;
+    gap: 8px;
+    margin-bottom: 20px;
+    background: var(--bg-light);
+    padding: 4px;
+    border-radius: 8px;
 }
 
-.parent-type-btn {
+.parent-type-toggle button {
     flex: 1;
-    padding: 12px 16px;
-    border: 2px solid var(--border-color);
-    border-radius: 8px;
-    background: white;
+    padding: 10px;
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    font-weight: 600;
     cursor: pointer;
     transition: all 0.3s;
-    text-align: center;
-    font-weight: 600;
+    color: var(--text-medium);
 }
 
-.parent-type-btn:hover {
-    border-color: var(--primary-green);
+.parent-type-toggle button.active {
+    background: white;
+    color: var(--primary-green);
+    box-shadow: 0 2px 4px var(--shadow-soft);
+}
+
+.hierarchy-info {
     background: rgba(45, 122, 79, 0.05);
+    border-left: 3px solid var(--primary-green);
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    color: var(--text-medium);
 }
 
-.parent-type-btn.active {
-    border-color: var(--primary-green);
-    background: var(--primary-green);
-    color: white;
+.hierarchy-info i {
+    color: var(--primary-green);
+    margin-right: 8px;
 }
 </style>
 
 <!-- Page Header -->
 <div class="page-header">
     <h2>Units Management</h2>
-    <button class="btn btn-primary" onclick="openAddModal()">
+    <button class="btn btn-primary" onclick="UnitsManager.openAddModal()">
         <i class="fas fa-plus"></i>
         Add Unit
     </button>
@@ -421,62 +427,49 @@ $sections = $db->query("
 <!-- Filters -->
 <?php if (count($divisions) > 0): ?>
 <div class="filter-container">
-    <select id="divisionFilter" onchange="filterUnits()">
+    <select id="divisionFilter" onchange="UnitsManager.filterUnits()">
         <option value="all">All Divisions</option>
         <?php foreach ($divisions as $div): ?>
-        <option value="<?php echo htmlspecialchars($div['divisionName']); ?>">
+        <option value="<?php echo $div['divisionId']; ?>">
             <?php echo htmlspecialchars($div['divisionName']); ?>
         </option>
         <?php endforeach; ?>
     </select>
     
-    <select id="parentFilter" onchange="filterUnits()">
-        <option value="all">All Parents (Sections & Direct)</option>
+    <select id="parentFilter" onchange="UnitsManager.filterUnits()">
+        <option value="all">All Parents (Divisions & Sections)</option>
         <option value="direct">Direct Units Only</option>
-        <?php 
-        $groupedSections = [];
-        foreach ($sections as $sec) {
-            $divName = $sec['divisionName'] ?: 'Unassigned';
-            if (!isset($groupedSections[$divName])) {
-                $groupedSections[$divName] = [];
-            }
-            $groupedSections[$divName][] = $sec;
-        }
-        
-        foreach ($groupedSections as $divName => $secs): 
-        ?>
-            <optgroup label="<?php echo htmlspecialchars($divName); ?>">
-                <?php foreach ($secs as $sec): ?>
-                <option value="<?php echo htmlspecialchars($sec['sectionName']); ?>">
-                    <?php echo htmlspecialchars($sec['sectionName']); ?>
-                </option>
-                <?php endforeach; ?>
-            </optgroup>
+        <?php foreach ($sections as $sec): ?>
+        <option value="<?php echo $sec['sectionId']; ?>">
+            <?php echo htmlspecialchars($sec['divisionName']); ?> > <?php echo htmlspecialchars($sec['sectionName']); ?>
+        </option>
         <?php endforeach; ?>
     </select>
 </div>
 <?php endif; ?>
 
-<!-- Units by Division and Parent -->
+<!-- Units by Hierarchy -->
 <?php if (count($unitsByHierarchy) > 0): ?>
     <?php foreach ($unitsByHierarchy as $divName => $divData): ?>
-    <div class="division-group" data-division="<?php echo htmlspecialchars($divName); ?>">
+    <div class="division-group" data-division="<?php echo htmlspecialchars($divName); ?>" data-division-id="<?php echo $divData['divisionId']; ?>">
         <div class="division-group-header">
             <h3><?php echo htmlspecialchars($divName); ?></h3>
         </div>
         
-        <?php foreach ($divData['sections'] as $parentName => $parentData): ?>
-        <div class="section-subgroup" data-parent="<?php echo htmlspecialchars($parentName); ?>">
-            <div class="section-header <?php echo $parentName === 'Direct Units' ? 'direct-units' : ''; ?>">
-                <?php if ($parentName === 'Direct Units'): ?>
-                    <i class="fas fa-link"></i> <?php echo htmlspecialchars($parentName); ?> (directly under division)
-                <?php else: ?>
-                    <i class="fas fa-layer-group"></i> <?php echo htmlspecialchars($parentName); ?>
-                <?php endif; ?>
-                <span style="opacity: 0.7; font-weight: 400; font-size: 14px;"> (<?php echo count($parentData['units']); ?> unit<?php echo count($parentData['units']) != 1 ? 's' : ''; ?>)</span>
+        <?php foreach ($divData['sections'] as $sectionName => $sectionData): ?>
+        <div class="section-subgroup" 
+             data-parent="<?php echo htmlspecialchars($sectionName); ?>" 
+             data-parent-id="<?php echo $sectionData['parentId']; ?>"
+             data-is-direct="<?php echo $sectionData['isDirect'] ? '1' : '0'; ?>">
+            <div class="section-header <?php echo $sectionName === 'Direct Units' ? 'direct-units' : ''; ?>">
+                <i class="fas fa-<?php echo $sectionName === 'Direct Units' ? 'layer-group' : 'sitemap'; ?>"></i>
+                <?php echo htmlspecialchars($sectionName); ?>
+                <span style="margin-left: auto; font-weight: normal; font-size: 13px;">
+                    <?php echo count($sectionData['units']); ?> Unit(s)
+                </span>
             </div>
             <div class="units-container">
-                <?php foreach ($parentData['units'] as $unit): ?>
+                <?php foreach ($sectionData['units'] as $unit): ?>
                 <div class="unit-item">
                     <div class="unit-info">
                         <div class="unit-badge">UNIT</div>
@@ -489,10 +482,10 @@ $sections = $db->query("
                         </div>
                     </div>
                     <div class="unit-actions">
-                        <button class="btn btn-sm btn-secondary" onclick="editUnit(<?php echo $unit['unitId']; ?>)">
+                        <button class="btn btn-sm btn-secondary" onclick="UnitsManager.editUnit(<?php echo $unit['unitId']; ?>)">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteUnit(<?php echo $unit['unitId']; ?>, '<?php echo htmlspecialchars($unit['unitName']); ?>')">
+                        <button class="btn btn-sm btn-danger" onclick="UnitsManager.deleteUnit(<?php echo $unit['unitId']; ?>, '<?php echo htmlspecialchars($unit['unitName']); ?>')">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
@@ -505,10 +498,10 @@ $sections = $db->query("
     <?php endforeach; ?>
 <?php else: ?>
 <div class="empty-state">
-    <i class="fas fa-cubes"></i>
+    <i class="fas fa-layer-group"></i>
     <h3>No Units Found</h3>
     <p>Get started by adding your first unit</p>
-    <button class="btn btn-primary" onclick="openAddModal()">
+    <button class="btn btn-primary" onclick="UnitsManager.openAddModal()">
         <i class="fas fa-plus"></i>
         Add First Unit
     </button>
@@ -516,33 +509,38 @@ $sections = $db->query("
 <?php endif; ?>
 
 <!-- Add/Edit Modal -->
-<div class="modal fade" id="unitModal" tabindex="-1" aria-labelledby="unitModalTitle" aria-hidden="true">
+<div class="modal fade" id="unitModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" aria-labelledby="unitModalTitle" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header border-bottom">
                 <h5 class="modal-title" id="unitModalTitle">Add Unit</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="unitForm" onsubmit="handleSubmit(event)">
+            <form id="unitForm" onsubmit="UnitsManager.handleSubmit(event)">
                 <div class="modal-body">
                     <input type="hidden" id="unitId" name="unitId">
                     <input type="hidden" id="parentId" name="parentId">
                     
-                    <div class="parent-type-toggle">
-                        <label>Unit Location *</label>
-                        <div class="parent-type-buttons">
-                            <div class="parent-type-btn active" onclick="setParentType('division')" id="divisionTypeBtn">
-                                <i class="fas fa-building"></i> Under Division
-                            </div>
-                            <div class="parent-type-btn" onclick="setParentType('section')" id="sectionTypeBtn">
-                                <i class="fas fa-layer-group"></i> Under Section
-                            </div>
+                    <div class="hierarchy-info">
+                        <i class="fas fa-info-circle"></i>
+                        Units can be placed directly under a <strong>Division</strong> or under a <strong>Section</strong> within a division.
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Parent Type *</label>
+                        <div class="parent-type-toggle">
+                            <button type="button" id="divisionTypeBtn" class="active" onclick="setParentType('division')">
+                                <i class="fas fa-building"></i> Division
+                            </button>
+                            <button type="button" id="sectionTypeBtn" onclick="setParentType('section')">
+                                <i class="fas fa-sitemap"></i> Section
+                            </button>
                         </div>
                     </div>
                     
                     <div class="form-group">
                         <label for="divisionSelect">Division *</label>
-                        <select class="form-control" id="divisionSelect" required onchange="handleDivisionChange()">
+                        <select class="form-control" id="divisionSelect" name="divisionSelect" required onchange="handleDivisionChange()">
                             <option value="">Select Division</option>
                             <?php foreach ($divisions as $div): ?>
                             <option value="<?php echo $div['divisionId']; ?>">
@@ -554,14 +552,14 @@ $sections = $db->query("
                     
                     <div class="form-group" id="sectionGroup" style="display: none;">
                         <label for="sectionSelect">Section *</label>
-                        <select class="form-control" id="sectionSelect">
-                            <option value="">Select Division First</option>
+                        <select class="form-control" id="sectionSelect" name="sectionSelect" onchange="document.getElementById('parentId').value = this.value">
+                            <option value="">Select Section</option>
                         </select>
                     </div>
                     
                     <div class="form-group">
                         <label for="unitName">Unit Name *</label>
-                        <textarea class="form-control" id="unitName" name="unitName" required maxlength="255" placeholder="e.g., ICT Unit, Property Unit"></textarea>
+                        <textarea class="form-control" id="unitName" name="unitName" required maxlength="255" placeholder="e.g., ICT Unit"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer border-top">
@@ -577,230 +575,306 @@ $sections = $db->query("
 </div>
 
 <script>
-let editMode = false;
-let currentParentType = 'division'; // 'division' or 'section'
+// Global data arrays for form population
+const divisionsData = <?php echo json_encode($divisions); ?>;
 const sectionsData = <?php echo json_encode($sections); ?>;
 
-function openAddModal() {
-    editMode = false;
-    currentParentType = 'division';
-    document.getElementById('unitModalTitle').textContent = 'Add Unit';
-    document.getElementById('unitForm').reset();
-    document.getElementById('unitId').value = '';
-    document.getElementById('parentId').value = '';
-    document.getElementById('sectionSelect').innerHTML = '<option value="">Select Division First</option>';
-    document.getElementById('sectionGroup').style.display = 'none';
-    document.getElementById('divisionTypeBtn').classList.add('active');
-    document.getElementById('sectionTypeBtn').classList.remove('active');
-    document.getElementById('submitBtn').innerHTML = '<i class="fas fa-save"></i> Save Unit';
-    const modal = new bootstrap.Modal(document.getElementById('unitModal'));
-    modal.show();
-}
-
+// Helper functions for parent type selection
 function setParentType(type) {
-    currentParentType = type;
+    const divisionBtn = document.getElementById('divisionTypeBtn');
+    const sectionBtn = document.getElementById('sectionTypeBtn');
+    const divisionSelect = document.getElementById('divisionSelect');
+    const sectionGroup = document.getElementById('sectionGroup');
     
     if (type === 'division') {
-        document.getElementById('divisionTypeBtn').classList.add('active');
-        document.getElementById('sectionTypeBtn').classList.remove('active');
-        document.getElementById('sectionGroup').style.display = 'none';
-        document.getElementById('sectionSelect').removeAttribute('required');
-    } else {
-        document.getElementById('divisionTypeBtn').classList.remove('active');
-        document.getElementById('sectionTypeBtn').classList.add('active');
-        document.getElementById('sectionGroup').style.display = 'block';
-        document.getElementById('sectionSelect').setAttribute('required', 'required');
-        handleDivisionChange(); // Load sections for selected division
+        divisionBtn.classList.add('active');
+        sectionBtn.classList.remove('active');
+        divisionSelect.parentElement.style.display = 'block';
+        sectionGroup.style.display = 'none';
+        document.getElementById('parentId').value = '';
+    } else if (type === 'section') {
+        divisionBtn.classList.remove('active');
+        sectionBtn.classList.add('active');
+        divisionSelect.parentElement.style.display = 'block';
+        sectionGroup.style.display = 'block';
+        document.getElementById('parentId').value = '';
     }
 }
 
 function handleDivisionChange() {
     const divisionId = document.getElementById('divisionSelect').value;
     const sectionSelect = document.getElementById('sectionSelect');
+    const sectionBtn = document.getElementById('sectionTypeBtn');
     
-    if (currentParentType === 'division') {
-        // Set parentId to division
-        document.getElementById('parentId').value = divisionId;
-    } else {
-        // Load sections for the division
-        sectionSelect.innerHTML = '<option value="">Select Section</option>';
+    sectionSelect.innerHTML = '<option value="">Select Section</option>';
+    document.getElementById('parentId').value = '';
+    
+    if (divisionId) {
+        // Populate sections for selected division with hierarchy
+        sectionsData.forEach(sec => {
+            if (String(sec.divisionId) === divisionId) {
+                const option = document.createElement('option');
+                option.value = sec.sectionId;
+                option.textContent = `${sec.divisionName} > ${sec.sectionName}`;
+                sectionSelect.appendChild(option);
+            }
+        });
         
-        if (divisionId) {
-            const filteredSections = sectionsData.filter(s => s.divisionId == divisionId);
-            
-            if (filteredSections.length > 0) {
-                filteredSections.forEach(section => {
-                    const option = document.createElement('option');
-                    option.value = section.sectionId;
-                    option.textContent = section.sectionName;
-                    sectionSelect.appendChild(option);
+        // Set parent to this division if in division mode
+        const divisionBtn = document.getElementById('divisionTypeBtn');
+        if (divisionBtn.classList.contains('active')) {
+            document.getElementById('parentId').value = divisionId;
+        }
+    }
+}
+
+// Units Manager - Singleton Pattern
+const UnitsManager = (function() {
+    let modalInstance = null;
+    let editMode = false;
+    
+    function getModalInstance() {
+        if (!modalInstance) {
+            const modalElement = document.getElementById('unitModal');
+            if (modalElement) {
+                modalInstance = new bootstrap.Modal(modalElement, {
+                    backdrop: 'static',
+                    keyboard: false
                 });
+                
+                modalElement.addEventListener('hidden.bs.modal', function() {
+                    document.getElementById('unitForm').reset();
+                    editMode = false;
+                });
+            }
+        }
+        return modalInstance;
+    }
+    
+    function openAddModal() {
+        editMode = false;
+        document.getElementById('unitModalTitle').textContent = 'Add Unit';
+        document.getElementById('unitForm').reset();
+        document.getElementById('unitId').value = '';
+        document.getElementById('submitBtn').innerHTML = '<i class="fas fa-save"></i> Save Unit';
+        
+        // Reset parent type to 'division' by default
+        setParentType('division');
+        
+        const modal = getModalInstance();
+        if (modal) modal.show();
+    }
+    
+    async function editUnit(id) {
+        editMode = true;
+        document.getElementById('unitModalTitle').textContent = 'Edit Unit';
+        document.getElementById('submitBtn').innerHTML = '<i class="fas fa-save"></i> Update Unit';
+        
+        try {
+            const response = await fetch(`../../ajax/get_unit.php?id=${id}`);
+            const result = await response.json();
+            
+            if (result.success) {
+                const unit = result.data;
+                document.getElementById('unitId').value = unit.unitId;
+                document.getElementById('unitName').value = unit.unitName;
+                document.getElementById('parentId').value = unit.parentId;
+                
+                // Determine parent type and set accordingly
+                const parentTypeId = unit.parentTypeId;
+                if (parentTypeId === 1) {
+                    // Direct under division
+                    setParentType('division');
+                    document.getElementById('divisionSelect').value = unit.parentId;
+                } else if (parentTypeId === 2) {
+                    // Under section
+                    setParentType('section');
+                    // Find the division ID for this section
+                    const section = sectionsData.find(s => s.sectionId === unit.parentId);
+                    if (section) {
+                        document.getElementById('divisionSelect').value = section.divisionId;
+                        handleDivisionChange();
+                        setTimeout(() => {
+                            document.getElementById('sectionSelect').value = unit.parentId;
+                        }, 100);
+                    }
+                }
+                
+                const modal = getModalInstance();
+                if (modal) modal.show();
             } else {
-                sectionSelect.innerHTML = '<option value="">No sections available</option>';
+                showAlert('Error loading unit data', 'error');
             }
+        } catch (error) {
+            showAlert('Failed to load unit data', 'error');
         }
     }
-}
-
-async function editUnit(id) {
-    editMode = true;
-    document.getElementById('unitModalTitle').textContent = 'Edit Unit';
-    document.getElementById('submitBtn').innerHTML = '<i class="fas fa-save"></i> Update Unit';
     
-    try {
-        const response = await fetch(`../../ajax/get_unit.php?id=${id}`);
-        const unit = await response.json();
+    async function deleteUnit(id, name) {
+        if (!confirm(`Are you sure you want to delete unit "${name}"?\n\nThis will affect all employees assigned to this unit.`)) {
+            return;
+        }
         
-        if (unit.success) {
-            document.getElementById('unitId').value = unit.data.unitId;
-            document.getElementById('unitName').value = unit.data.unitName;
+        try {
+            const formData = new FormData();
+            formData.append('action', 'delete');
+            formData.append('unitId', id);
             
-            // Determine if unit is under division or section
-            if (unit.data.parentTypeId == 1) {
-                // Unit under Division
-                setParentType('division');
-                document.getElementById('divisionSelect').value = unit.data.parentId;
-                document.getElementById('parentId').value = unit.data.parentId;
-            } else if (unit.data.parentTypeId == 2) {
-                // Unit under Section
-                setParentType('section');
-                document.getElementById('divisionSelect').value = unit.data.divisionId;
-                handleDivisionChange();
-                setTimeout(() => {
-                    document.getElementById('sectionSelect').value = unit.data.parentId;
-                    document.getElementById('parentId').value = unit.data.parentId;
-                }, 100);
+            const response = await fetch('../../ajax/manage_unit.php', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                showAlert(result.message, 'success');
+                setTimeout(() => reloadCurrentPage(), 1500);
+            } else {
+                showAlert(result.message, 'error');
             }
+        } catch (error) {
+            showAlert('Failed to delete unit', 'error');
+        }
+    }
+    
+    async function handleSubmit(event) {
+        event.preventDefault();
+        
+        const formData = new FormData(event.target);
+        formData.append('action', editMode ? 'update' : 'create');
+        
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        
+        try {
+            const response = await fetch('../../ajax/manage_unit.php', {
+                method: 'POST',
+                body: formData
+            });
             
-            const modal = new bootstrap.Modal(document.getElementById('unitModal'));
-            modal.show();
-        } else {
-            showAlert('Error loading unit data', 'error');
-        }
-    } catch (error) {
-        showAlert('Failed to load unit data', 'error');
-    }
-}
-
-async function deleteUnit(id, name) {
-    if (!confirm(`Are you sure you want to delete unit "${name}"?\n\nThis will affect all employees assigned to this unit.`)) {
-        return;
-    }
-    
-    try {
-        const formData = new FormData();
-        formData.append('action', 'delete');
-        formData.append('unitId', id);
-        
-        const response = await fetch('../../ajax/manage_unit.php', {
-            method: 'POST',
-            body: formData
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            showAlert(result.message, 'success');
-            setTimeout(() => reloadCurrentPage(), 1500);
-        } else {
-            showAlert(result.message, 'error');
-        }
-    } catch (error) {
-        showAlert('Failed to delete unit', 'error');
-    }
-}
-
-async function handleSubmit(event) {
-    event.preventDefault();
-    
-    // Set the correct parentId based on parent type
-    if (currentParentType === 'division') {
-        document.getElementById('parentId').value = document.getElementById('divisionSelect').value;
-    } else {
-        document.getElementById('parentId').value = document.getElementById('sectionSelect').value;
-    }
-    
-    const formData = new FormData(event.target);
-    formData.append('action', editMode ? 'update' : 'create');
-    
-    const submitBtn = document.getElementById('submitBtn');
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-    
-    try {
-        const response = await fetch('../../ajax/manage_unit.php', {
-            method: 'POST',
-            body: formData
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            showAlert(result.message, 'success');
-            bootstrap.Modal.getInstance(document.getElementById('unitModal')).hide();
-            setTimeout(() => reloadCurrentPage(), 1500);
-        } else {
-            showAlert(result.message, 'error');
+            const result = await response.json();
+            
+            if (result.success) {
+                showAlert(result.message, 'success');
+                const modal = getModalInstance();
+                if (modal) modal.hide();
+                setTimeout(() => reloadCurrentPage(), 1500);
+            } else {
+                showAlert(result.message, 'error');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = editMode ? '<i class="fas fa-save"></i> Update Unit' : '<i class="fas fa-save"></i> Save Unit';
+            }
+        } catch (error) {
+            showAlert('Failed to save unit', 'error');
             submitBtn.disabled = false;
             submitBtn.innerHTML = editMode ? '<i class="fas fa-save"></i> Update Unit' : '<i class="fas fa-save"></i> Save Unit';
         }
-    } catch (error) {
-        showAlert('Failed to save unit', 'error');
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = editMode ? '<i class="fas fa-save"></i> Update Unit' : '<i class="fas fa-save"></i> Save Unit';
     }
-}
-
-function showAlert(message, type) {
-    const alertContainer = document.getElementById('alertContainer');
-    const alertClass = type === 'success' ? 'alert-success' : 'alert-error';
-    const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
     
-    alertContainer.innerHTML = `
-        <div class="alert ${alertClass}">
-            <i class="fas ${icon}"></i>
-            <span>${message}</span>
-        </div>
-    `;
+    function handleParentTypeChange() {
+        // This function is no longer used - parent type is managed via setParentType()
+    }
     
-    setTimeout(() => {
-        alertContainer.innerHTML = '';
-    }, 5000);
-}
-
-function filterUnits() {
-    const divisionFilter = document.getElementById('divisionFilter').value;
-    const parentFilter = document.getElementById('parentFilter').value;
-    
-    const divisionGroups = document.querySelectorAll('.division-group');
-    
-    divisionGroups.forEach(group => {
-        const divName = group.dataset.division;
-        const parentSubgroups = group.querySelectorAll('.section-subgroup');
-        let hasVisibleParents = false;
+    function showAlert(message, type) {
+        const alertContainer = document.getElementById('alertContainer');
+        const alertClass = type === 'success' ? 'alert-success' : 'alert-error';
+        const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
         
-        parentSubgroups.forEach(subgroup => {
-            const parentName = subgroup.dataset.parent;
-            const matchesDivision = divisionFilter === 'all' || divName === divisionFilter;
+        alertContainer.innerHTML = `
+            <div class="alert ${alertClass}">
+                <i class="fas ${icon}"></i>
+                <span>${message}</span>
+            </div>
+        `;
+        
+        setTimeout(() => {
+            alertContainer.innerHTML = '';
+        }, 5000);
+    }
+    
+    function filterUnits() {
+        const divisionFilter = document.getElementById('divisionFilter').value;
+        const parentFilter = document.getElementById('parentFilter').value;
+        const groups = document.querySelectorAll('.division-group');
+        
+        let hasVisibleGroups = false;
+        
+        groups.forEach(group => {
+            const divisionMatch = divisionFilter === 'all' || group.dataset.divisionId === divisionFilter;
+            const subgroups = group.querySelectorAll('.section-subgroup');
+            let hasVisibleSubgroups = false;
             
-            let matchesParent = false;
-            if (parentFilter === 'all') {
-                matchesParent = true;
-            } else if (parentFilter === 'direct') {
-                matchesParent = parentName === 'Direct Units';
-            } else {
-                matchesParent = parentName === parentFilter;
-            }
+            subgroups.forEach(subgroup => {
+                let parentMatch = false;
+                
+                if (parentFilter === 'all') {
+                    parentMatch = true;
+                } else if (parentFilter === 'direct') {
+                    parentMatch = subgroup.dataset.isDirect === '1';
+                } else {
+                    parentMatch = subgroup.dataset.parentId === parentFilter;
+                }
+                
+                if (parentMatch) {
+                    subgroup.style.display = 'block';
+                    hasVisibleSubgroups = true;
+                } else {
+                    subgroup.style.display = 'none';
+                }
+            });
             
-            if (matchesDivision && matchesParent) {
-                subgroup.style.display = 'block';
-                hasVisibleParents = true;
+            if (divisionMatch && hasVisibleSubgroups) {
+                group.style.display = 'block';
+                hasVisibleGroups = true;
             } else {
-                subgroup.style.display = 'none';
+                group.style.display = 'none';
             }
         });
         
-        group.style.display = hasVisibleParents ? 'block' : 'none';
-    });
-}
+        // Show/hide empty state if no results
+        const emptyState = document.querySelector('.empty-state');
+        if (emptyState) {
+            emptyState.style.display = hasVisibleGroups ? 'none' : 'block';
+        }
+    }
+    
+    function destroy() {
+        if (modalInstance) {
+            try {
+                const modalElement = document.getElementById('unitModal');
+                if (modalElement) {
+                    modalInstance.hide();
+                }
+                modalInstance.dispose();
+            } catch(e) {}
+            modalInstance = null;
+        }
+        
+        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+    }
+    
+    return {
+        openAddModal,
+        editUnit,
+        deleteUnit,
+        handleSubmit,
+        filterUnits,
+        destroy
+    };
+})();
+
+document.addEventListener('visibilitychange', function() {
+    if (document.hidden) {
+        UnitsManager.destroy();
+    }
+});
+
+window.addEventListener('beforeunload', function() {
+    UnitsManager.destroy();
+});
 </script>

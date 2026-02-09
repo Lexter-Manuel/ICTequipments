@@ -236,7 +236,7 @@ $divisions = $stmt->fetchAll();
 <!-- Page Header -->
 <div class="page-header">
     <h2>Divisions Management</h2>
-    <button class="btn btn-primary" onclick="openAddModal()">
+    <button class="btn btn-primary" onclick="DivisionsManager.openAddModal()">
         <i class="fas fa-plus"></i>
         Add Division
     </button>
@@ -253,10 +253,10 @@ $divisions = $stmt->fetchAll();
         <div class="division-header">
             <div class="division-badge">DIVISION</div>
             <div class="division-actions">
-                <button class="btn btn-sm btn-secondary" onclick="editDivision(<?php echo $division['divisionId']; ?>)">
+                <button class="btn btn-sm btn-secondary" onclick="DivisionsManager.editDivision(<?php echo $division['divisionId']; ?>)">
                     <i class="fas fa-edit"></i>
                 </button>
-                <button class="btn btn-sm btn-danger" onclick="deleteDivision(<?php echo $division['divisionId']; ?>, '<?php echo htmlspecialchars($division['divisionName']); ?>')">
+                <button class="btn btn-sm btn-danger" onclick="DivisionsManager.deleteDivision(<?php echo $division['divisionId']; ?>, '<?php echo htmlspecialchars($division['divisionName'], ENT_QUOTES); ?>')">
                     <i class="fas fa-trash"></i>
                 </button>
             </div>
@@ -276,7 +276,7 @@ $divisions = $stmt->fetchAll();
     <i class="fas fa-building"></i>
     <h3>No Divisions Found</h3>
     <p>Get started by adding your first division</p>
-    <button class="btn btn-primary" onclick="openAddModal()">
+    <button class="btn btn-primary" onclick="DivisionsManager.openAddModal()">
         <i class="fas fa-plus"></i>
         Add First Division
     </button>
@@ -284,14 +284,14 @@ $divisions = $stmt->fetchAll();
 <?php endif; ?>
 
 <!-- Add/Edit Modal -->
-<div class="modal fade" id="divisionModal" tabindex="-1" aria-labelledby="divisionModalTitle" aria-hidden="true">
+<div class="modal fade" id="divisionModal" tabindex="-1" aria-labelledby="divisionModalTitle" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header border-bottom">
                 <h5 class="modal-title" id="divisionModalTitle">Add Division</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="divisionForm" onsubmit="handleSubmit(event)">
+            <form id="divisionForm" onsubmit="DivisionsManager.handleSubmit(event)">
                 <div class="modal-body">
                     <input type="hidden" id="divisionId" name="divisionId">
                     
@@ -313,116 +313,172 @@ $divisions = $stmt->fetchAll();
 </div>
 
 <script>
-let editMode = false;
-
-function openAddModal() {
-    editMode = false;
-    document.getElementById('divisionModalTitle').textContent = 'Add Division';
-    document.getElementById('divisionForm').reset();
-    document.getElementById('divisionId').value = '';
-    document.getElementById('submitBtn').innerHTML = '<i class="fas fa-save"></i> Save Division';
-    const modal = new bootstrap.Modal(document.getElementById('divisionModal'));
-    modal.show();
-}
-
-async function editDivision(id) {
-    editMode = true;
-    document.getElementById('divisionModalTitle').textContent = 'Edit Division';
-    document.getElementById('submitBtn').innerHTML = '<i class="fas fa-save"></i> Update Division';
+// Divisions Manager - Singleton pattern to prevent multiple initializations
+const DivisionsManager = (function() {
+    let modalInstance = null;
+    let editMode = false;
     
-    try {
-        const response = await fetch(`../../ajax/get_division.php?id=${id}`);
-        const division = await response.json();
-        
-        if (division.success) {
-            document.getElementById('divisionId').value = division.data.divisionId;
-            document.getElementById('divisionName').value = division.data.divisionName;
-            const modal = new bootstrap.Modal(document.getElementById('divisionModal'));
-            modal.show();
-        } else {
-            showAlert('Error loading division data', 'error');
+    // Initialize modal once when tab is loaded
+    function initModal() {
+        const modalElement = document.getElementById('divisionModal');
+        if (modalElement && !modalInstance) {
+            modalInstance = new bootstrap.Modal(modalElement);
+            
+            // Cleanup on modal hidden
+            modalElement.addEventListener('hidden.bs.modal', function() {
+                document.getElementById('divisionForm').reset();
+                editMode = false;
+            });
         }
-    } catch (error) {
-        showAlert('Failed to load division data', 'error');
-    }
-}
-
-async function deleteDivision(id, name) {
-    if (!confirm(`Are you sure you want to delete division "${name}"?\n\nThis will also affect all sections under this division.`)) {
-        return;
+        return modalInstance;
     }
     
-    try {
-        const formData = new FormData();
-        formData.append('action', 'delete');
-        formData.append('divisionId', id);
+    function openAddModal() {
+        editMode = false;
+        document.getElementById('divisionModalTitle').textContent = 'Add Division';
+        document.getElementById('divisionForm').reset();
+        document.getElementById('divisionId').value = '';
+        document.getElementById('submitBtn').innerHTML = '<i class="fas fa-save"></i> Save Division';
         
-        const response = await fetch('../../ajax/manage_division.php', {
-            method: 'POST',
-            body: formData
-        });
+        const modal = initModal();
+        if (modal) modal.show();
+    }
+    
+    async function editDivision(id) {
+        editMode = true;
+        document.getElementById('divisionModalTitle').textContent = 'Edit Division';
+        document.getElementById('submitBtn').innerHTML = '<i class="fas fa-save"></i> Update Division';
         
-        const result = await response.json();
-        
-        if (result.success) {
-            showAlert(result.message, 'success');
-            setTimeout(() => reloadCurrentPage(), 1500);
-        } else {
-            showAlert(result.message, 'error');
+        try {
+            const response = await fetch(`../../ajax/get_division.php?id=${id}`);
+            const division = await response.json();
+            
+            if (division.success) {
+                document.getElementById('divisionId').value = division.data.divisionId;
+                document.getElementById('divisionName').value = division.data.divisionName;
+                
+                const modal = initModal();
+                if (modal) modal.show();
+            } else {
+                showAlert('Error loading division data', 'error');
+            }
+        } catch (error) {
+            showAlert('Failed to load division data', 'error');
         }
-    } catch (error) {
-        showAlert('Failed to delete division', 'error');
     }
-}
-
-async function handleSubmit(event) {
-    event.preventDefault();
     
-    const formData = new FormData(event.target);
-    formData.append('action', editMode ? 'update' : 'create');
-    
-    const submitBtn = document.getElementById('submitBtn');
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-    
-    try {
-        const response = await fetch('../../ajax/manage_division.php', {
-            method: 'POST',
-            body: formData
-        });
+    async function deleteDivision(id, name) {
+        if (!confirm(`Are you sure you want to delete division "${name}"?\n\nThis will also affect all sections under this division.`)) {
+            return;
+        }
         
-        const result = await response.json();
+        try {
+            const formData = new FormData();
+            formData.append('action', 'delete');
+            formData.append('divisionId', id);
+            
+            const response = await fetch('../../ajax/manage_division.php', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                showAlert(result.message, 'success');
+                setTimeout(() => reloadCurrentPage(), 1500);
+            } else {
+                showAlert(result.message, 'error');
+            }
+        } catch (error) {
+            showAlert('Failed to delete division', 'error');
+        }
+    }
+    
+    async function handleSubmit(event) {
+        event.preventDefault();
         
-        if (result.success) {
-            showAlert(result.message, 'success');
-            bootstrap.Modal.getInstance(document.getElementById('divisionModal')).hide();
-            setTimeout(() => reloadCurrentPage(), 1500);
-        } else {
-            showAlert(result.message, 'error');
+        const formData = new FormData(event.target);
+        formData.append('action', editMode ? 'update' : 'create');
+        
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        
+        try {
+            const response = await fetch('../../ajax/manage_division.php', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                showAlert(result.message, 'success');
+                if (modalInstance) modalInstance.hide();
+                setTimeout(() => reloadCurrentPage(), 1500);
+            } else {
+                showAlert(result.message, 'error');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = editMode ? '<i class="fas fa-save"></i> Update Division' : '<i class="fas fa-save"></i> Save Division';
+            }
+        } catch (error) {
+            showAlert('Failed to save division', 'error');
             submitBtn.disabled = false;
             submitBtn.innerHTML = editMode ? '<i class="fas fa-save"></i> Update Division' : '<i class="fas fa-save"></i> Save Division';
         }
-    } catch (error) {
-        showAlert('Failed to save division', 'error');
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = editMode ? '<i class="fas fa-save"></i> Update Division' : '<i class="fas fa-save"></i> Save Division';
     }
-}
+    
+    function showAlert(message, type) {
+        const alertContainer = document.getElementById('alertContainer');
+        const alertClass = type === 'success' ? 'alert-success' : 'alert-error';
+        const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+        
+        alertContainer.innerHTML = `
+            <div class="alert ${alertClass}">
+                <i class="fas ${icon}"></i>
+                <span>${message}</span>
+            </div>
+        `;
+        
+        setTimeout(() => {
+            alertContainer.innerHTML = '';
+        }, 5000);
+    }
+    
+    // Cleanup function to destroy modal when tab is switched
+    function cleanup() {
+        if (modalInstance) {
+            const modalElement = document.getElementById('divisionModal');
+            if (modalElement) {
+                // Hide modal if it's open
+                modalInstance.hide();
+                // Remove backdrop
+                const backdrop = document.querySelector('.modal-backdrop');
+                if (backdrop) backdrop.remove();
+                // Reset body class
+                document.body.classList.remove('modal-open');
+                document.body.style.overflow = '';
+                document.body.style.paddingRight = '';
+            }
+            modalInstance = null;
+        }
+    }
+    
+    // Public API
+    return {
+        openAddModal,
+        editDivision,
+        deleteDivision,
+        handleSubmit,
+        cleanup
+    };
+})();
 
-function showAlert(message, type) {
-    const alertContainer = document.getElementById('alertContainer');
-    const alertClass = type === 'success' ? 'alert-success' : 'alert-error';
-    const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
-    
-    alertContainer.innerHTML = `
-        <div class="alert ${alertClass}">
-            <i class="fas ${icon}"></i>
-            <span>${message}</span>
-        </div>
-    `;
-    
-    setTimeout(() => {
-        alertContainer.innerHTML = '';
-    }, 5000);
-}
+// Cleanup when tab is switched or page is unloaded
+document.addEventListener('visibilitychange', function() {
+    if (document.hidden) {
+        DivisionsManager.cleanup();
+    }
+});
 </script>

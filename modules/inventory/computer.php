@@ -51,276 +51,6 @@ $stmtEmployees = $db->query("
 $employees = $stmtEmployees->fetchAll();
 ?>
 
-<style>
-/* Tab Navigation */
-.tab-navigation {
-    background: white;
-    border-radius: 12px 12px 0 0;
-    border: 1px solid var(--border-color);
-    border-bottom: none;
-    padding: 0;
-    display: flex;
-    gap: 0;
-    margin-bottom: 0;
-}
-
-.tab-btn {
-    flex: 1;
-    padding: 18px 24px;
-    border: none;
-    background: transparent;
-    color: var(--text-medium);
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s;
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-}
-
-.tab-btn:first-child {
-    border-radius: 12px 0 0 0;
-}
-
-.tab-btn:last-child {
-    border-radius: 0 12px 0 0;
-}
-
-.tab-btn.active {
-    background: linear-gradient(135deg, var(--primary-green), var(--accent-green));
-    color: white;
-}
-
-.tab-btn:not(.active):hover {
-    background: var(--bg-light);
-}
-
-.tab-content {
-    display: none;
-    background: white;
-    border: 1px solid var(--border-color);
-    border-radius: 0 0 12px 12px;
-    padding: 24px;
-}
-
-.tab-content.active {
-    display: block;
-}
-
-/* Page Header */
-.page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 24px;
-}
-
-.page-header h2 {
-    font-family: 'Crimson Pro', serif;
-    font-size: 22px;
-    color: var(--text-dark);
-    font-weight: 700;
-}
-
-.header-actions {
-    display: flex;
-    gap: 12px;
-}
-
-.btn {
-    padding: 10px 18px;
-    border: none;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.btn-primary {
-    background: var(--primary-green);
-    color: white;
-}
-
-.btn-secondary {
-    background: white;
-    color: var(--text-dark);
-    border: 1px solid var(--border-color);
-}
-
-/* Statistics Grid */
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 16px;
-    margin-bottom: 20px;
-}
-
-.stat-item {
-    background: var(--bg-light);
-    padding: 16px;
-    border-radius: 8px;
-    border-left: 4px solid var(--primary-green);
-}
-
-.stat-label {
-    font-size: 13px;
-    color: var(--text-medium);
-    margin-bottom: 8px;
-}
-
-.stat-value {
-    font-size: 28px;
-    font-weight: 700;
-    color: var(--text-dark);
-}
-
-/* Filters */
-.filters-bar {
-    background: var(--bg-light);
-    padding: 12px;
-    border-radius: 8px;
-    margin-bottom: 16px;
-    display: flex;
-    gap: 12px;
-    align-items: center;
-}
-
-.filter-group {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.filter-group select,
-.filter-group input {
-    padding: 8px 10px;
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
-    background: white;
-}
-
-/* Data Table */
-.data-table {
-    overflow-x: auto;
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
-}
-
-.data-table table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.data-table thead {
-    background: linear-gradient(135deg, var(--primary-green), var(--accent-green));
-    color: white;
-}
-
-.data-table th {
-    padding: 12px;
-    text-align: left;
-    font-weight: 600;
-    font-size: 13px;
-}
-
-.data-table td {
-    padding: 12px;
-    border-bottom: 1px solid var(--border-color);
-    color: var(--text-dark);
-}
-
-.data-table tbody tr:hover {
-    background: var(--bg-light);
-}
-
-/* Specifications Display */
-.spec-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 4px;
-    font-size: 12px;
-    color: var(--text-medium);
-}
-
-.spec-item i {
-    width: 14px;
-    color: var(--primary-green);
-}
-
-.spec-value {
-    font-weight: 500;
-    color: var(--text-dark);
-}
-
-/* Status Badges */
-.status-badge {
-    display: inline-block;
-    padding: 6px 10px;
-    border-radius: 12px;
-    font-size: 12px;
-    font-weight: 700;
-    text-transform: uppercase;
-}
-
-.status-active {
-    background: rgba(34, 197, 94, 0.12);
-    color: #16a34a;
-}
-
-.status-available {
-    background: rgba(59, 130, 246, 0.12);
-    color: #2563eb;
-}
-
-.status-inrepair {
-    background: rgba(245, 158, 11, 0.12);
-    color: #d97706;
-}
-
-.status-retired {
-    background: rgba(220, 38, 38, 0.08);
-    color: #dc2626;
-}
-
-/* Action Buttons */
-.action-buttons {
-    display: flex;
-    gap: 8px;
-}
-
-.btn-icon {
-    width: 36px;
-    height: 36px;
-    padding: 0;
-    border-radius: 6px;
-    border: 1px solid var(--border-color);
-    background: white;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-}
-
-.btn-icon:hover {
-    background: var(--primary-green);
-    color: white;
-    border-color: var(--primary-green);
-}
-
-.btn-danger:hover {
-    background: #dc2626;
-    border-color: #dc2626;
-    color: white !important;
-}
-</style>
-
 <!-- Page Header -->
 <div class="page-header">
     <h2>
@@ -441,7 +171,7 @@ $employees = $stmtEmployees->fetchAll();
                             <button class="btn-icon" title="Edit" onclick="editSystemUnit(<?php echo $s['systemunitId']; ?>)">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button class="btn-icon btn-danger" style="color: black" title="Delete" onclick="deleteSystemUnit(<?php echo $s['systemunitId']; ?>)">
+                            <button class="btn-icon btn-danger" title="Delete" onclick="deleteSystemUnit(<?php echo $s['systemunitId']; ?>)">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </div>
@@ -527,7 +257,7 @@ $employees = $stmtEmployees->fetchAll();
                             <button class="btn-icon" title="Edit" onclick="editMonitor(<?php echo $m['monitorId']; ?>)">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button class="btn-icon btn-danger" style="color: black" title="Delete" onclick="deleteMonitor(<?php echo $m['monitorId']; ?>)">
+                            <button class="btn-icon btn-danger" title="Delete" onclick="deleteMonitor(<?php echo $m['monitorId']; ?>)">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </div>
@@ -620,7 +350,7 @@ $employees = $stmtEmployees->fetchAll();
                             <button class="btn-icon" title="Edit" onclick="editAllInOne(<?php echo $a['allinoneId']; ?>)">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button class="btn-icon btn-danger" style="color: black" title="Delete" onclick="deleteAllInOne(<?php echo $a['allinoneId']; ?>)">
+                            <button class="btn-icon btn-danger" title="Delete" onclick="deleteAllInOne(<?php echo $a['allinoneId']; ?>)">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </div>

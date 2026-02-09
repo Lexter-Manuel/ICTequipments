@@ -20,7 +20,6 @@ class DashboardApp {
     init() {
         this.setupNavigation();
         this.setupMobileMenu();
-        this.setupSearch();
         this.loadInitialPage();
         this.setupAnimations();
     }
@@ -153,13 +152,13 @@ class DashboardApp {
         const pageNames = {
             'home': 'Dashboard',
             'employees': 'Employees',
-            'systemunits': 'System Units',
-            'monitors': 'Monitors',
-            'printers': 'Printers',
+            'computer': 'Computers',
+            'printer': 'Printers',
             'allinone': 'All-in-One PCs',
             'software': 'Software Licenses',
             'divisions': 'Divisions',
             'sections': 'Sections',
+            'units': 'Units',
             'schedule': 'Maintenance Schedule',
             'history': 'Maintenance History',
             'notifications': 'Notifications',
@@ -269,25 +268,6 @@ class DashboardApp {
     }
     
     /**
-     * Setup global search functionality
-     */
-    setupSearch() {
-        const searchInput = document.getElementById('globalSearch');
-        let searchTimeout;
-        
-        searchInput.addEventListener('input', (e) => {
-            clearTimeout(searchTimeout);
-            const query = e.target.value.trim();
-            
-            if (query.length >= 3) {
-                searchTimeout = setTimeout(() => {
-                    this.performSearch(query);
-                }, 500); // Debounce search
-            }
-        });
-    }
-    
-    /**
      * Perform global search
      * @param {string} query - Search query
      */
@@ -377,3 +357,36 @@ function navigateToPage(pageName) {
         window.dashboardApp.loadPage(pageName);
     }
 }
+
+        // Update date and time
+        function updateDateTime() {
+            const now = new Date();
+            
+            // Format date: February 09, 2026
+            const dateOptions = { 
+                year: 'numeric', 
+                month: 'long', 
+                day: '2-digit',
+                weekday: 'long'
+            };
+            const dateString = now.toLocaleDateString('en-US', dateOptions);
+            
+            // Format time: 10:30:45 AM
+            const timeOptions = {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: true
+            };
+            const timeString = now.toLocaleTimeString('en-US', timeOptions);
+            
+            // Update the display
+            document.getElementById('currentDate').textContent = dateString;
+            document.getElementById('currentTime').textContent = timeString;
+        }
+        
+        // Update immediately
+        updateDateTime();
+        
+        // Update every second
+        setInterval(updateDateTime, 1000);

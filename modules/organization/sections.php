@@ -7,7 +7,7 @@ $db = Database::getInstance()->getConnection();
 // Fetch all sections (location_type_id = 2) with division information
 $stmt = $db->query("
     SELECT 
-        s.location_id as sectionId,
+        s.location_id as location_id,
         s.location_name as sectionName,
         s.parent_location_id as divisionId,
         s.created_at as createdAt,
@@ -15,7 +15,7 @@ $stmt = $db->query("
         COUNT(e.employeeId) as employee_count
     FROM location s
     LEFT JOIN location d ON s.parent_location_id = d.location_id
-    LEFT JOIN tbl_employee e ON s.location_id = e.sectionId
+    LEFT JOIN tbl_employee e ON s.location_id = e.location_id
     WHERE s.location_type_id = 2 AND s.is_deleted = '0'
     GROUP BY s.location_id
     ORDER BY d.location_name ASC, s.location_name ASC
@@ -296,7 +296,7 @@ $divisions = $db->query("
 <!-- Page Header -->
 <div class="page-header">
     <h2>Sections Management</h2>
-    <button class="btn btn-primary" onclick="openAddModal()">
+    <button class="btn btn-primary" onclick="SectionsManager.openAddModal()">
         <i class="fas fa-plus"></i>
         Add Section
     </button>
@@ -308,10 +308,10 @@ $divisions = $db->query("
 <!-- Filter -->
 <?php if (count($divisions) > 0): ?>
 <div class="filter-container">
-    <select id="divisionFilter" onchange="filterSections()">
+    <select id="divisionFilter" onchange="SectionsManager.filterSections()">
         <option value="all">All Divisions</option>
         <?php foreach ($divisions as $div): ?>
-        <option value="<?php echo htmlspecialchars($div['divisionName']); ?>">
+        <option value="<?php echo $div['divisionId']; ?>">
             <?php echo htmlspecialchars($div['divisionName']); ?>
         </option>
         <?php endforeach; ?>
@@ -322,7 +322,7 @@ $divisions = $db->query("
 <!-- Sections by Division -->
 <?php if (count($sectionsByDivision) > 0): ?>
     <?php foreach ($sectionsByDivision as $divName => $divData): ?>
-    <div class="division-group" data-division="<?php echo htmlspecialchars($divName); ?>">
+    <div class="division-group" data-division="<?php echo htmlspecialchars($divName); ?>" data-division-id="<?php echo $divData['divisionId']; ?>">
         <div class="division-group-header">
             <h3><?php echo htmlspecialchars($divName); ?></h3>
             <p><?php echo count($divData['sections']); ?> Section(s)</p>
@@ -341,10 +341,10 @@ $divisions = $db->query("
                     </div>
                 </div>
                 <div class="section-actions">
-                    <button class="btn btn-sm btn-secondary" onclick="editSection(<?php echo $section['sectionId']; ?>)">
+                    <button class="btn btn-sm btn-secondary" onclick="SectionsManager.editSection(<?php echo $section['location_id']; ?>)">
                         <i class="fas fa-edit"></i>
                     </button>
-                    <button class="btn btn-sm btn-danger" onclick="deleteSection(<?php echo $section['sectionId']; ?>, '<?php echo htmlspecialchars($section['sectionName']); ?>')">
+                    <button class="btn btn-sm btn-danger" onclick="SectionsManager.deleteSection(<?php echo $section['location_id']; ?>, '<?php echo htmlspecialchars($section['sectionName']); ?>')">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
@@ -358,7 +358,7 @@ $divisions = $db->query("
     <i class="fas fa-sitemap"></i>
     <h3>No Sections Found</h3>
     <p>Get started by adding your first section</p>
-    <button class="btn btn-primary" onclick="openAddModal()">
+    <button class="btn btn-primary" onclick="SectionsManager.openAddModal()">
         <i class="fas fa-plus"></i>
         Add First Section
     </button>
@@ -366,14 +366,14 @@ $divisions = $db->query("
 <?php endif; ?>
 
 <!-- Add/Edit Modal -->
-<div class="modal fade" id="sectionModal" tabindex="-1" aria-labelledby="sectionModalTitle" aria-hidden="true">
+<div class="modal fade" id="sectionModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" aria-labelledby="sectionModalTitle" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header border-bottom">
                 <h5 class="modal-title" id="sectionModalTitle">Add Section</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="sectionForm" onsubmit="handleSubmit(event)">
+            <form id="sectionForm" onsubmit="SectionsManager.handleSubmit(event)">
                 <div class="modal-body">
                     <input type="hidden" id="sectionId" name="sectionId">
                     
@@ -407,130 +407,192 @@ $divisions = $db->query("
 </div>
 
 <script>
-let editMode = false;
-
-function openAddModal() {
-    editMode = false;
-    document.getElementById('sectionModalTitle').textContent = 'Add Section';
-    document.getElementById('sectionForm').reset();
-    document.getElementById('sectionId').value = '';
-    document.getElementById('submitBtn').innerHTML = '<i class="fas fa-save"></i> Save Section';
-    const modal = new bootstrap.Modal(document.getElementById('sectionModal'));
-    modal.show();
-}
-
-async function editSection(id) {
-    editMode = true;
-    document.getElementById('sectionModalTitle').textContent = 'Edit Section';
-    document.getElementById('submitBtn').innerHTML = '<i class="fas fa-save"></i> Update Section';
+// Sections Manager - Singleton Pattern
+const SectionsManager = (function() {
+    let modalInstance = null;
+    let editMode = false;
     
-    try {
-        const response = await fetch(`../../ajax/get_section.php?id=${id}`);
-        const section = await response.json();
-        
-        if (section.success) {
-            document.getElementById('sectionId').value = section.data.sectionId;
-            document.getElementById('sectionName').value = section.data.sectionName;
-            document.getElementById('divisionId').value = section.data.divisionId;
-            const modal = new bootstrap.Modal(document.getElementById('sectionModal'));
-            modal.show();
-        } else {
-            showAlert('Error loading section data', 'error');
+    function getModalInstance() {
+        if (!modalInstance) {
+            const modalElement = document.getElementById('sectionModal');
+            if (modalElement) {
+                modalInstance = new bootstrap.Modal(modalElement, {
+                    backdrop: 'static',
+                    keyboard: false
+                });
+                
+                modalElement.addEventListener('hidden.bs.modal', function() {
+                    document.getElementById('sectionForm').reset();
+                    editMode = false;
+                });
+            }
         }
-    } catch (error) {
-        showAlert('Failed to load section data', 'error');
-    }
-}
-
-async function deleteSection(id, name) {
-    if (!confirm(`Are you sure you want to delete section "${name}"?\n\nThis will affect all employees assigned to this section.`)) {
-        return;
+        return modalInstance;
     }
     
-    try {
-        const formData = new FormData();
-        formData.append('action', 'delete');
-        formData.append('sectionId', id);
+    function openAddModal() {
+        editMode = false;
+        document.getElementById('sectionModalTitle').textContent = 'Add Section';
+        document.getElementById('sectionForm').reset();
+        document.getElementById('sectionId').value = '';
+        document.getElementById('submitBtn').innerHTML = '<i class="fas fa-save"></i> Save Section';
         
-        const response = await fetch('../../ajax/manage_section.php', {
-            method: 'POST',
-            body: formData
-        });
+        const modal = getModalInstance();
+        if (modal) modal.show();
+    }
+    
+    async function editSection(id) {
+        editMode = true;
+        document.getElementById('sectionModalTitle').textContent = 'Edit Section';
+        document.getElementById('submitBtn').innerHTML = '<i class="fas fa-save"></i> Update Section';
         
-        const result = await response.json();
-        
-        if (result.success) {
-            showAlert(result.message, 'success');
-            setTimeout(() => reloadCurrentPage(), 1500);
-        } else {
-            showAlert(result.message, 'error');
+        try {
+            const response = await fetch(`../../ajax/get_section.php?id=${id}`);
+            const section = await response.json();
+            
+            if (section.success) {
+                document.getElementById('sectionId').value = section.data.sectionId;
+                document.getElementById('sectionName').value = section.data.sectionName;
+                document.getElementById('divisionId').value = section.data.divisionId;
+                
+                const modal = getModalInstance();
+                if (modal) modal.show();
+            } else {
+                showAlert('Error loading section data', 'error');
+            }
+        } catch (error) {
+            showAlert('Failed to load section data', 'error');
         }
-    } catch (error) {
-        showAlert('Failed to delete section', 'error');
     }
-}
-
-async function handleSubmit(event) {
-    event.preventDefault();
     
-    const formData = new FormData(event.target);
-    formData.append('action', editMode ? 'update' : 'create');
-    
-    const submitBtn = document.getElementById('submitBtn');
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-    
-    try {
-        const response = await fetch('../../ajax/manage_section.php', {
-            method: 'POST',
-            body: formData
-        });
+    async function deleteSection(id, name) {
+        if (!confirm(`Are you sure you want to delete section "${name}"?\n\nThis will affect all employees assigned to this section.`)) {
+            return;
+        }
         
-        const result = await response.json();
+        try {
+            const formData = new FormData();
+            formData.append('action', 'delete');
+            formData.append('sectionId', id);
+            
+            const response = await fetch('../../ajax/manage_section.php', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                showAlert(result.message, 'success');
+                setTimeout(() => reloadCurrentPage(), 1500);
+            } else {
+                showAlert(result.message, 'error');
+            }
+        } catch (error) {
+            showAlert('Failed to delete section', 'error');
+        }
+    }
+    
+    async function handleSubmit(event) {
+        event.preventDefault();
         
-        if (result.success) {
-            showAlert(result.message, 'success');
-            bootstrap.Modal.getInstance(document.getElementById('sectionModal')).hide();
-            setTimeout(() => reloadCurrentPage(), 1500);
-        } else {
-            showAlert(result.message, 'error');
+        const formData = new FormData(event.target);
+        formData.append('action', editMode ? 'update' : 'create');
+        
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        
+        try {
+            const response = await fetch('../../ajax/manage_section.php', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                showAlert(result.message, 'success');
+                const modal = getModalInstance();
+                if (modal) modal.hide();
+                setTimeout(() => reloadCurrentPage(), 1500);
+            } else {
+                showAlert(result.message, 'error');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = editMode ? '<i class="fas fa-save"></i> Update Section' : '<i class="fas fa-save"></i> Save Section';
+            }
+        } catch (error) {
+            showAlert('Failed to save section', 'error');
             submitBtn.disabled = false;
             submitBtn.innerHTML = editMode ? '<i class="fas fa-save"></i> Update Section' : '<i class="fas fa-save"></i> Save Section';
         }
-    } catch (error) {
-        showAlert('Failed to save section', 'error');
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = editMode ? '<i class="fas fa-save"></i> Update Section' : '<i class="fas fa-save"></i> Save Section';
     }
-}
-
-function showAlert(message, type) {
-    const alertContainer = document.getElementById('alertContainer');
-    const alertClass = type === 'success' ? 'alert-success' : 'alert-error';
-    const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
     
-    alertContainer.innerHTML = `
-        <div class="alert ${alertClass}">
-            <i class="fas ${icon}"></i>
-            <span>${message}</span>
-        </div>
-    `;
+    function showAlert(message, type) {
+        const alertContainer = document.getElementById('alertContainer');
+        const alertClass = type === 'success' ? 'alert-success' : 'alert-error';
+        const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+        
+        alertContainer.innerHTML = `
+            <div class="alert ${alertClass}">
+                <i class="fas ${icon}"></i>
+                <span>${message}</span>
+            </div>
+        `;
+        
+        setTimeout(() => {
+            alertContainer.innerHTML = '';
+        }, 5000);
+    }
     
-    setTimeout(() => {
-        alertContainer.innerHTML = '';
-    }, 5000);
-}
-
-function filterSections() {
-    const filter = document.getElementById('divisionFilter').value;
-    const groups = document.querySelectorAll('.division-group');
+    function filterSections() {
+        const filter = document.getElementById('divisionFilter').value;
+        const groups = document.querySelectorAll('.division-group');
+        
+        groups.forEach(group => {
+            if (filter === 'all' || group.dataset.divisionId === filter) {
+                group.style.display = 'block';
+            } else {
+                group.style.display = 'none';
+            }
+        });
+    }
     
-    groups.forEach(group => {
-        if (filter === 'all' || group.dataset.division === filter) {
-            group.style.display = 'block';
-        } else {
-            group.style.display = 'none';
+    function destroy() {
+        if (modalInstance) {
+            try {
+                const modalElement = document.getElementById('sectionModal');
+                if (modalElement) {
+                    modalInstance.hide();
+                }
+                modalInstance.dispose();
+            } catch(e) {}
+            modalInstance = null;
         }
-    });
-}
+        
+        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+    }
+    
+    return {
+        openAddModal,
+        editSection,
+        deleteSection,
+        handleSubmit,
+        filterSections,
+        destroy
+    };
+})();
+
+document.addEventListener('visibilitychange', function() {
+    if (document.hidden) {
+        SectionsManager.destroy();
+    }
+});
+
+window.addEventListener('beforeunload', function() {
+    SectionsManager.destroy();
+});
 </script>

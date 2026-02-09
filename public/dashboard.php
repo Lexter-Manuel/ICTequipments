@@ -14,6 +14,9 @@ require_once '../config/config.php';
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="assets/bootstrap/bootstrap.min.css">
     <link rel="stylesheet" href="assets/css/dashboard.css?v=<?php echo time()?>">
+    <link rel="stylesheet" href="assets/css/computer.css?v=<?php echo time()?>">
+    <link rel="stylesheet" href="assets/css/employees.css?v=<?php echo time()?>">
+    <link rel="stylesheet" href="assets/css/software.css?v=<?php echo time()?>">
 </head>
 <body>
     <!-- Sidebar -->
@@ -143,17 +146,15 @@ require_once '../config/config.php';
                     <span class="current">Dashboard</span>
                 </div>
                 <div class="header-actions">
-                    <div class="search-box">
-                        <i class="fas fa-search"></i>
-                        <input type="text" id="globalSearch" placeholder="Search equipment, employees...">
-                    </div>
-                    <div class="user-menu">
-                        <div class="user-avatar"></div>
-                        <div class="user-info">
-                            <span class="user-name"></span>
-                            <span class="user-role"></span>
+                    <div class="datetime-display">
+                        <div class="date-info">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span id="currentDate"></span>
                         </div>
-                        <i class="fas fa-chevron-down" style="color: var(--text-light); font-size: 12px;"></i>
+                        <div class="time-info">
+                            <i class="fas fa-clock"></i>
+                            <span id="currentTime"></span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -178,8 +179,10 @@ require_once '../config/config.php';
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="assets/bootstrap/bootstrap.min.js"></script>
-
     <script src="assets/js/dashboard.js?v=<?php echo time()?>"></script>
     <script src="assets/js/computer_management.js?v=<?php echo time()?>"></script>
+    <script src="assets/js/printer.js?v=<?php echo time()?>"></script>
+    
+
 </body>
 </html>
