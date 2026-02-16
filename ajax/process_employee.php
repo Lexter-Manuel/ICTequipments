@@ -1,11 +1,8 @@
 <?php
 // ajax/process_employee.php
-// Handles employee form submission (Add, Edit, Delete)
-// Returns JSON response for AJAX requests
+// Backend processing for employee management with CropperJS image handling
 
-header('Content-Type: application/json');
-
-// Start session if not already started
+// Start session
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -13,221 +10,327 @@ if (session_status() === PHP_SESSION_NONE) {
 // Include database connection
 require_once '../config/database.php';
 
+// Set JSON header for AJAX responses
+header('Content-Type: application/json');
+
+// Get database connection
 $db = Database::getInstance()->getConnection();
 
-$response = [
-    'success' => false,
-    'message' => '',
-    'data' => null
-];
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
-    if ($_POST['action'] === 'add') {
-        // Validation and Sanitization
-        $errors = [];   
-        $response['action'] = 'add';
+/**
+ * Handle cropped image upload from base64 data
+ */
+function handleCroppedImage($base64Data, $employeeId) {
+    // Create upload directory if it doesn't exist
+    $uploadDir = '../public/uploads/';
+    if (!is_dir($uploadDir)) {
+        mkdir($uploadDir, 0755, true);
+    }
+    
+    // Extract base64 image data
+    if (preg_match('/^data:image\/(\w+);base64,/', $base64Data, $type)) {
+        $base64Data = substr($base64Data, strpos($base64Data, ',') + 1);
+        $type = strtolower($type[1]); // jpg, png, gif
         
-        // Required fields validation
-        $employeeId = filter_input(INPUT_POST, 'employeeId', FILTER_VALIDATE_INT);
-        $firstName = trim(filter_input(INPUT_POST, 'firstName', FILTER_SANITIZE_SPECIAL_CHARS));
-        $middleName = trim(filter_input(INPUT_POST, 'middleName', FILTER_SANITIZE_SPECIAL_CHARS));
-        $lastName = trim(filter_input(INPUT_POST, 'lastName', FILTER_SANITIZE_SPECIAL_CHARS));
-        $suffixName = trim(filter_input(INPUT_POST, 'suffixName', FILTER_SANITIZE_SPECIAL_CHARS));
-        $position = trim(filter_input(INPUT_POST, 'position', FILTER_SANITIZE_SPECIAL_CHARS));
-        $birthDate = filter_input(INPUT_POST, 'birthDate', FILTER_SANITIZE_SPECIAL_CHARS);
-        $sex = filter_input(INPUT_POST, 'sex', FILTER_SANITIZE_SPECIAL_CHARS);
-        $employmentStatus = filter_input(INPUT_POST, 'employmentStatus', FILTER_SANITIZE_SPECIAL_CHARS);
-        $locationId = filter_input(INPUT_POST, 'locationId', FILTER_VALIDATE_INT);
-        
-        // Validate required fields
-        if (!$employeeId || $employeeId <= 0) {
-            $errors[] = "Employee ID is required and must be a positive number.";
+        // Validate image type
+        if (!in_array($type, ['jpg', 'jpeg', 'png'])) {
+            return ['success' => false, 'message' => 'Invalid image type. Only JPG and PNG are allowed.'];
         }
         
-        if (empty($firstName) || strlen($firstName) > 100) {
-            $errors[] = "First Name is required and must not exceed 100 characters.";
+        // Decode base64
+        $imageData = base64_decode($base64Data);
+        
+        if ($imageData === false) {
+            return ['success' => false, 'message' => 'Failed to decode image data.'];
         }
         
-        if (!empty($middleName) && strlen($middleName) > 100) {
-            $errors[] = "Middle Name must not exceed 100 characters.";
-        }
+        // Generate unique filename
+        $filename = 'employee_' . $employeeId . '_' . time() . '.' . $type;
+        $filepath = $uploadDir . $filename;
         
-        if (empty($lastName) || strlen($lastName) > 100) {
-            $errors[] = "Last Name is required and must not exceed 100 characters.";
-        }
-        
-        if (!empty($suffixName) && strlen($suffixName) > 50) {
-            $errors[] = "Suffix must not exceed 50 characters.";
-        }
-        
-        if (empty($position) || strlen($position) > 100) {
-            $errors[] = "Position is required and must not exceed 100 characters.";
-        }
-        
-        if (empty($birthDate)) {
-            $errors[] = "Birth Date is required.";
+        // Save the file
+        if (file_put_contents($filepath, $imageData)) {
+            // Return only filename for database storage
+            return ['success' => true, 'path' => $filename];
         } else {
-            // Validate date format and age
-            $birthDateTime = DateTime::createFromFormat('Y-m-d', $birthDate);
-            if (!$birthDateTime) {
-                $errors[] = "Invalid birth date format.";
-            } else {
-                $age = (new DateTime())->diff($birthDateTime)->y;
-                if ($age < 18) {
-                    $errors[] = "Employee must be at least 18 years old.";
-                } elseif ($age > 100) {
-                    $errors[] = "Invalid birth date - age exceeds 100 years.";
-                }
-            }
+            return ['success' => false, 'message' => 'Failed to save image file.'];
         }
-        
-        if (!in_array($sex, ['Male', 'Female', 'Other'])) {
-            $errors[] = "Invalid sex selection.";
-        }
-        
-        if (!in_array($employmentStatus, ['Permanent', 'Casual', 'Job Order'])) {
-            $errors[] = "Invalid employment status selection.";
-        }
-        
-        if (!$locationId || $locationId <= 0) {
-            $errors[] = "Location is required. Please select a Division, Section, or Unit.";
-        }
-        
-        // Check if Employee ID already exists
-        if (empty($errors)) {
-            try {
-                $checkStmt = $db->prepare("SELECT employeeId FROM tbl_employee WHERE employeeId = ?");
-                $checkStmt->execute([$employeeId]);
-                if ($checkStmt->fetch()) {
-                    $errors[] = "Employee ID {$employeeId} already exists. Please use a different ID.";
-                }
-            } catch (PDOException $e) {
-                error_log("Employee ID Check Error: " . $e->getMessage());
-                $errors[] = "Database error occurred while checking Employee ID.";
-            }
-        }
-        
-        // Handle photo upload
-        $photoPath = null;
-        if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
-            $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
-            $maxFileSize = 5 * 1024 * 1024; // 5MB
-            
-            $fileType = $_FILES['photo']['type'];
-            $fileSize = $_FILES['photo']['size'];
-            
-            if (!in_array($fileType, $allowedTypes)) {
-                $errors[] = "Photo must be a JPEG or PNG image.";
-            }
-            
-            if ($fileSize > $maxFileSize) {
-                $errors[] = "Photo size must not exceed 5MB.";
-            }
-            
-            if (empty($errors)) {
-                // Generate unique filename
-                $extension = pathinfo($_FILES['photo']['name'], PATHINFO_EXTENSION);
-                $photoPath = 'profile_' . uniqid() . '.' . uniqid() . '.' . $extension;
-                
-                // Create upload directory if it doesn't exist
-                $uploadDir = '../public/uploads/employees/';
-                if (!file_exists($uploadDir)) {
-                    mkdir($uploadDir, 0777, true);
-                }
-                
-                // Move uploaded file
-                if (!move_uploaded_file($_FILES['photo']['tmp_name'], $uploadDir . $photoPath)) {
-                    $errors[] = "Failed to upload photo. Please try again.";
-                    $photoPath = null;
-                }
-            }
-        }
-        
-        // If no errors, insert into database
-        if (empty($errors)) {
-            try {
-                // Verify that locationId exists in location table
-                $locationCheckStmt = $db->prepare("
-                    SELECT l.location_id, l.location_name, lt.name as location_type
-                    FROM location l
-                    JOIN location_type lt ON l.location_type_id = lt.id
-                    WHERE l.location_id = ? AND l.is_deleted = '0'
-                ");
-                $locationCheckStmt->execute([$locationId]);
-                $locationData = $locationCheckStmt->fetch(PDO::FETCH_ASSOC);
-                
-                if (!$locationData) {
-                    $errors[] = "Invalid location selected. Please refresh the page and try again.";
-                } else {
-                    // Insert employee record
-                    $insertStmt = $db->prepare("
-                        INSERT INTO tbl_employee 
-                        (employeeId, firstName, middleName, lastName, suffixName, position, 
-                         birthDate, sex, employmentStatus, photoPath, location_id) 
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    ");
-                    
-                    $result = $insertStmt->execute([
-                        $employeeId,
-                        $firstName,
-                        empty($middleName) ? null : $middleName,
-                        $lastName,
-                        empty($suffixName) ? null : $suffixName,
-                        $position,
-                        $birthDate,
-                        $sex,
-                        $employmentStatus,
-                        $photoPath,
-                        $locationId
-                    ]);
-                    
-                    if ($result) {
-                        $response['success'] = true;
-                        $response['message'] = "Employee added successfully! Employee ID: {$employeeId} - {$firstName} {$lastName} assigned to {$locationData['location_name']} ({$locationData['location_type']})";
-                        $response['data'] = [
-                            'employeeId' => $employeeId,
-                            'fullName' => "{$firstName} {$lastName}",
-                            'location' => $locationData['location_name']
-                        ];
-                    } else {
-                        $errors[] = "Failed to add employee. Please try again.";
-                    }
-                }
-            } catch (PDOException $e) {
-                // Log the actual error for debugging
-                error_log("Employee Insert Error: " . $e->getMessage());
-                error_log("Error Code: " . $e->getCode());
-                if (isset($e->errorInfo[0])) {
-                    error_log("SQL State: " . $e->errorInfo[0]);
-                }
-                
-                // User-friendly error message
-                if ($e->getCode() == 23000) {
-                    // Integrity constraint violation
-                    if (strpos($e->getMessage(), 'Duplicate entry') !== false) {
-                        $errors[] = "Duplicate entry detected. Employee ID may already exist.";
-                    } elseif (strpos($e->getMessage(), 'foreign key constraint') !== false) {
-                        $errors[] = "Invalid location selected. The location may no longer exist.";
-                    } else {
-                        $errors[] = "Database integrity error. Please check your input.";
-                    }
-                } else {
-                    $errors[] = "Database error occurred. Please contact the administrator. Error Code: " . $e->getCode();
-                }
-            }
-        }
-        
-        // If there are errors, return them in response
-        if (!empty($errors)) {
-            $response['success'] = false;
-            $response['message'] = implode(' | ', $errors);
-            echo json_encode($response);
-            exit();
+    }
+    
+    return ['success' => false, 'message' => 'Invalid base64 image data.'];
+}
+
+/**
+ * Delete old employee photo
+ */
+function deleteOldPhoto($photoPath) {
+    if (!empty($photoPath)) {
+        $fullPath = '../public/uploads/' . $photoPath;
+        if (file_exists($fullPath)) {
+            unlink($fullPath);
         }
     }
 }
 
-// Return response as JSON
-echo json_encode($response);
-exit();
+// Check if form was submitted
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $action = $_POST['action'] ?? '';
+    
+    try {
+        switch ($action) {
+            case 'add':
+                // Validate required fields
+                $employeeId = filter_input(INPUT_POST, 'employeeId', FILTER_VALIDATE_INT);
+                $firstName = trim($_POST['firstName'] ?? '');
+                $lastName = trim($_POST['lastName'] ?? '');
+                $position = trim($_POST['position'] ?? '');
+                $birthDate = $_POST['birthDate'] ?? '';
+                $sex = $_POST['sex'] ?? '';
+                $employmentStatus = $_POST['employmentStatus'] ?? '';
+                $locationId = filter_input(INPUT_POST, 'locationId', FILTER_VALIDATE_INT);
+                
+                // Validate required fields
+                if (!$employeeId || empty($firstName) || empty($lastName) || empty($position) || 
+                    empty($birthDate) || empty($sex) || empty($employmentStatus) || !$locationId) {
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Please fill in all required fields.'
+                    ]);
+                    exit;
+                }
+                
+                // Check if employee ID already exists
+                $checkStmt = $db->prepare("SELECT employeeId FROM tbl_employee WHERE employeeId = ?");
+                $checkStmt->execute([$employeeId]);
+                if ($checkStmt->fetch()) {
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Employee ID already exists. Please use a different ID.'
+                    ]);
+                    exit;
+                }
+                
+                // Handle cropped image if provided
+                $photoPath = null;
+                if (!empty($_POST['croppedImage'])) {
+                    $imageResult = handleCroppedImage($_POST['croppedImage'], $employeeId);
+                    if ($imageResult['success']) {
+                        $photoPath = $imageResult['path'];
+                    } else {
+                        echo json_encode([
+                            'success' => false,
+                            'message' => $imageResult['message']
+                        ]);
+                        exit;
+                    }
+                }
+                
+                // Prepare optional fields
+                $middleName = trim($_POST['middleName'] ?? '');
+                $suffixName = $_POST['suffixName'] ?? null;
+                
+                // Insert employee into database
+                $sql = "INSERT INTO tbl_employee (
+                    employeeId, firstName, middleName, lastName, suffixName,
+                    position, birthDate, sex, employmentStatus, location_id, photoPath,
+                    createdAt, updatedAt
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())";
+                
+                $stmt = $db->prepare($sql);
+                $stmt->execute([
+                    $employeeId,
+                    $firstName,
+                    $middleName ?: null,
+                    $lastName,
+                    $suffixName,
+                    $position,
+                    $birthDate,
+                    $sex,
+                    $employmentStatus,
+                    $locationId,
+                    $photoPath
+                ]);
+                
+                // Set success message in session
+                $_SESSION['employee_message'] = 'Employee added successfully!';
+                $_SESSION['employee_message_type'] = 'success';
+                
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Employee added successfully!'
+                ]);
+                break;
+                
+            case 'update':
+                // Get employee ID
+                $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
+                if (!$id) {
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Invalid employee ID.'
+                    ]);
+                    exit;
+                }
+                
+                // Validate required fields
+                $employeeId = filter_input(INPUT_POST, 'employeeId', FILTER_VALIDATE_INT);
+                $firstName = trim($_POST['firstName'] ?? '');
+                $lastName = trim($_POST['lastName'] ?? '');
+                $position = trim($_POST['position'] ?? '');
+                $birthDate = $_POST['birthDate'] ?? '';
+                $sex = $_POST['sex'] ?? '';
+                $employmentStatus = $_POST['employmentStatus'] ?? '';
+                $locationId = filter_input(INPUT_POST, 'locationId', FILTER_VALIDATE_INT);
+                
+                if (!$employeeId || empty($firstName) || empty($lastName) || empty($position) || 
+                    empty($birthDate) || empty($sex) || empty($employmentStatus) || !$locationId) {
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Please fill in all required fields.'
+                    ]);
+                    exit;
+                }
+                
+                // Check if employee ID exists for another record
+                $checkStmt = $db->prepare("SELECT id, photoPath FROM tbl_employee WHERE employeeId = ? AND id != ?");
+                $checkStmt->execute([$employeeId, $id]);
+                if ($checkStmt->fetch()) {
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Employee ID already exists for another employee.'
+                    ]);
+                    exit;
+                }
+                
+                // Get current employee data for photo path
+                $currentStmt = $db->prepare("SELECT photoPath FROM tbl_employee WHERE id = ?");
+                $currentStmt->execute([$id]);
+                $currentEmployee = $currentStmt->fetch(PDO::FETCH_ASSOC);
+                $photoPath = $currentEmployee['photoPath'];
+                
+                // Handle cropped image if provided
+                if (!empty($_POST['croppedImage'])) {
+                    // Delete old photo if exists
+                    if ($photoPath) {
+                        deleteOldPhoto($photoPath);
+                    }
+                    
+                    $imageResult = handleCroppedImage($_POST['croppedImage'], $employeeId);
+                    if ($imageResult['success']) {
+                        $photoPath = $imageResult['path'];
+                    } else {
+                        echo json_encode([
+                            'success' => false,
+                            'message' => $imageResult['message']
+                        ]);
+                        exit;
+                    }
+                }
+                
+                // Prepare optional fields
+                $middleName = trim($_POST['middleName'] ?? '');
+                $suffixName = $_POST['suffixName'] ?? null;
+                
+                // Update employee in database
+                $sql = "UPDATE tbl_employee SET
+                    employeeId = ?,
+                    firstName = ?,
+                    middleName = ?,
+                    lastName = ?,
+                    suffixName = ?,
+                    position = ?,
+                    birthDate = ?,
+                    sex = ?,
+                    employmentStatus = ?,
+                    location_id = ?,
+                    photoPath = ?,
+                    updated_at = NOW()
+                    WHERE id = ?";
+                
+                $stmt = $db->prepare($sql);
+                $stmt->execute([
+                    $employeeId,
+                    $firstName,
+                    $middleName ?: null,
+                    $lastName,
+                    $suffixName,
+                    $position,
+                    $birthDate,
+                    $sex,
+                    $employmentStatus,
+                    $locationId,
+                    $photoPath,
+                    $id
+                ]);
+                
+                $_SESSION['employee_message'] = 'Employee updated successfully!';
+                $_SESSION['employee_message_type'] = 'success';
+                
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Employee updated successfully!'
+                ]);
+                break;
+                
+            case 'delete':
+                // Get employee ID
+                $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
+                if (!$id) {
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Invalid employee ID.'
+                    ]);
+                    exit;
+                }
+                
+                // Get employee photo path before deletion
+                $stmt = $db->prepare("SELECT photoPath FROM tbl_employee WHERE id = ?");
+                $stmt->execute([$id]);
+                $employee = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+                // Delete employee from database
+                $deleteStmt = $db->prepare("DELETE FROM tbl_employee WHERE id = ?");
+                $deleteStmt->execute([$id]);
+                
+                // Delete photo file if exists
+                if ($employee && $employee['photoPath']) {
+                    deleteOldPhoto($employee['photoPath']);
+                }
+                
+                $_SESSION['employee_message'] = 'Employee deleted successfully!';
+                $_SESSION['employee_message_type'] = 'success';
+                
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Employee deleted successfully!'
+                ]);
+                break;
+                
+            default:
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Invalid action.'
+                ]);
+                break;
+        }
+        
+    } catch (PDOException $e) {
+        error_log("Database error: " . $e->getMessage());
+        echo json_encode([
+            'success' => false,
+            'message' => 'Database error: ' . $e->getMessage()
+        ]);
+    } catch (Exception $e) {
+        error_log("Error: " . $e->getMessage());
+        echo json_encode([
+            'success' => false,
+            'message' => 'An error occurred: ' . $e->getMessage()
+        ]);
+    }
+    
+} else {
+    echo json_encode([
+        'success' => false,
+        'message' => 'Invalid request method.'
+    ]);
+}
 ?>

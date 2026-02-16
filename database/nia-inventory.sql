@@ -2,8 +2,8 @@
 -- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
--- Host: 127.0.0.1
--- Generation Time: Feb 05, 2026 at 09:47 AM
+-- Host: 127.0.0.1:3310
+-- Generation Time: Feb 13, 2026 at 01:00 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -20,6 +20,25 @@ SET time_zone = "+00:00";
 --
 -- Database: `nia-inventory`
 --
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `activity_log`
+--
+
+CREATE TABLE `activity_log` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) DEFAULT NULL,
+  `email` varchar(255) NOT NULL,
+  `action` varchar(50) NOT NULL,
+  `module` varchar(50) DEFAULT NULL,
+  `description` text DEFAULT NULL,
+  `ip_address` varchar(45) NOT NULL,
+  `user_agent` text DEFAULT NULL,
+  `success` tinyint(1) DEFAULT 1,
+  `timestamp` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -89,6 +108,92 @@ INSERT INTO `location_type` (`id`, `name`) VALUES
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `login_attempts`
+--
+
+CREATE TABLE `login_attempts` (
+  `id` int(11) NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `ip_address` varchar(45) NOT NULL,
+  `user_agent` text DEFAULT NULL,
+  `attempt_time` timestamp NOT NULL DEFAULT current_timestamp(),
+  `success` tinyint(1) DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `password_resets`
+--
+
+CREATE TABLE `password_resets` (
+  `id` int(11) NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `token` varchar(255) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `expires_at` timestamp NOT NULL DEFAULT (current_timestamp() + interval 1 hour),
+  `used` tinyint(1) DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `role_permissions`
+--
+
+CREATE TABLE `role_permissions` (
+  `id` int(11) NOT NULL,
+  `role` enum('Super Admin','Admin') NOT NULL,
+  `module` varchar(50) NOT NULL,
+  `can_view` tinyint(1) DEFAULT 1,
+  `can_create` tinyint(1) DEFAULT 0,
+  `can_update` tinyint(1) DEFAULT 0,
+  `can_delete` tinyint(1) DEFAULT 0,
+  `can_export` tinyint(1) DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `role_permissions`
+--
+
+INSERT INTO `role_permissions` (`id`, `role`, `module`, `can_view`, `can_create`, `can_update`, `can_delete`, `can_export`) VALUES
+(1, 'Super Admin', 'employees', 1, 1, 1, 1, 1),
+(2, 'Super Admin', 'equipment', 1, 1, 1, 1, 1),
+(3, 'Super Admin', 'divisions', 1, 1, 1, 1, 1),
+(4, 'Super Admin', 'sections', 1, 1, 1, 1, 1),
+(5, 'Super Admin', 'software', 1, 1, 1, 1, 1),
+(6, 'Super Admin', 'reports', 1, 1, 1, 1, 1),
+(7, 'Super Admin', 'accounts', 1, 1, 1, 1, 1),
+(8, 'Super Admin', 'settings', 1, 1, 1, 1, 1),
+(9, 'Admin', 'employees', 1, 1, 1, 0, 1),
+(10, 'Admin', 'equipment', 1, 1, 1, 0, 1),
+(11, 'Admin', 'divisions', 1, 0, 0, 0, 1),
+(12, 'Admin', 'sections', 1, 0, 0, 0, 1),
+(13, 'Admin', 'software', 1, 1, 1, 0, 1),
+(14, 'Admin', 'reports', 1, 0, 0, 0, 1),
+(15, 'Admin', 'accounts', 0, 0, 0, 0, 0),
+(16, 'Admin', 'settings', 0, 0, 0, 0, 0);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `sessions`
+--
+
+CREATE TABLE `sessions` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `token` varchar(255) NOT NULL,
+  `ip_address` varchar(45) NOT NULL,
+  `user_agent` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `expires_at` timestamp NOT NULL DEFAULT (current_timestamp() + interval 1 day),
+  `last_activity` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `tbl_accounts`
 --
 
@@ -96,19 +201,26 @@ CREATE TABLE `tbl_accounts` (
   `id` int(11) NOT NULL,
   `user_name` varchar(100) NOT NULL,
   `email` varchar(255) NOT NULL,
-  `password` varchar(255) NOT NULL,
-  `role` enum('Super Admin','Admin') NOT NULL,
+  `password` varchar(255) NOT NULL COMMENT 'Bcrypt hashed password',
+  `role` enum('Super Admin','Admin') NOT NULL DEFAULT 'Admin',
+  `status` enum('Active','Inactive','Locked') NOT NULL DEFAULT 'Active',
+  `failed_login_attempts` int(11) DEFAULT 0,
+  `locked_until` datetime DEFAULT NULL,
+  `last_login` datetime DEFAULT NULL,
+  `last_login_ip` varchar(45) DEFAULT NULL,
+  `2fa_enabled` tinyint(1) DEFAULT 0,
+  `2fa_secret` varchar(255) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NULL DEFAULT NULL ON UPDATE current_timestamp(),
-  `status` enum('Active','Inactive') NOT NULL
+  `created_by` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `tbl_accounts`
 --
 
-INSERT INTO `tbl_accounts` (`id`, `user_name`, `email`, `password`, `role`, `created_at`, `updated_at`, `status`) VALUES
-(6, 'dfgsdfg', 'angelitopadolina.neust@gmail.com', 'asd', 'Super Admin', '2026-02-02 07:39:52', '2026-02-04 02:44:16', 'Active');
+INSERT INTO `tbl_accounts` (`id`, `user_name`, `email`, `password`, `role`, `status`, `failed_login_attempts`, `locked_until`, `last_login`, `last_login_ip`, `2fa_enabled`, `2fa_secret`, `created_at`, `updated_at`, `created_by`) VALUES
+(3, 'SystemSuperAdmin', 'inventory@upriis.local', '$2y$12$RAUQs6D0FBVNz.ky7N6rJegTTOCmDxYpO850YwZMlxyWX4bLDKl9G', 'Super Admin', 'Active', 0, NULL, NULL, NULL, 0, NULL, '2026-02-09 23:26:19', '2026-02-12 07:27:00', NULL);
 
 -- --------------------------------------------------------
 
@@ -125,6 +237,14 @@ CREATE TABLE `tbl_allinone` (
   `specificationStorage` varchar(255) NOT NULL,
   `employeeId` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `tbl_allinone`
+--
+
+INSERT INTO `tbl_allinone` (`allinoneId`, `allinoneBrand`, `specificationProcessor`, `specificationMemory`, `specificationGPU`, `specificationStorage`, `employeeId`) VALUES
+(2, 'asd', 'asd', 'asd', 'asd', 'asad', 1),
+(3, 'HP all-in-one', 'ryzen 7', '8GB', 'Intel Integrated Graphics', '250GB SSD', 645987);
 
 -- --------------------------------------------------------
 
@@ -143,21 +263,19 @@ CREATE TABLE `tbl_employee` (
   `sex` enum('Male','Female','Other') NOT NULL,
   `employmentStatus` enum('Permanent','Casual','Job Order') NOT NULL,
   `photoPath` varchar(255) DEFAULT NULL,
-  `sectionId` int(11) NOT NULL,
+  `location_id` int(11) NOT NULL,
   `createdAt` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updatedAt` timestamp NULL DEFAULT NULL ON UPDATE current_timestamp()
+  `updatedAt` timestamp NULL DEFAULT NULL ON UPDATE current_timestamp(),
+  `is_active` tinyint(1) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `tbl_employee`
 --
 
-INSERT INTO `tbl_employee` (`employeeId`, `firstName`, `middleName`, `lastName`, `suffixName`, `position`, `birthDate`, `sex`, `employmentStatus`, `photoPath`, `sectionId`, `createdAt`, `updatedAt`) VALUES
-(111, 'Benjamin', NULL, 'Abad', NULL, '12313', '2000-11-11', 'Male', 'Permanent', 'profile_698041da303604.34986345.jpeg', 1, '2026-02-02 06:19:06', '2026-02-04 01:44:22'),
-(1514, 'Mark Angelo', NULL, 'Palacay', NULL, 'OJT Trainee', '2000-10-10', 'Male', 'Casual', 'profile_6982beca5e3bc9.10591342.jpeg', 1, '2026-02-04 03:36:42', NULL),
-(20373, 'Lexter', 'N', 'Manuel', NULL, 'OJT Trainee', '2002-11-06', 'Male', 'Casual', 'profile_6982b1bd113ac1.45290650.jpeg', 1, '2026-02-02 02:54:42', '2026-02-04 02:41:01'),
-(41534, 'sdfsd', 'asdfdf', 'sadfsdf', 'Jr.', 'safsdfsaf', '2006-02-01', 'Female', 'Job Order', NULL, 12, '2026-02-02 07:45:16', '2026-02-02 08:06:28'),
-(55555, 'asdasfsad', NULL, 'asdsa', NULL, 'casd', '2000-11-11', 'Male', 'Permanent', 'profile_69805e20348ad3.88461845.jpeg', 1, '2026-02-02 06:08:13', '2026-02-02 08:21:51');
+INSERT INTO `tbl_employee` (`employeeId`, `firstName`, `middleName`, `lastName`, `suffixName`, `position`, `birthDate`, `sex`, `employmentStatus`, `photoPath`, `location_id`, `createdAt`, `updatedAt`, `is_active`) VALUES
+(1, 'Lexter', 'N.', 'Manuel', '', 'OJT Trainee', '2002-11-06', 'Male', 'Casual', 'employee_1_1770881693.jpeg', 4, '2026-02-10 03:41:25', '2026-02-12 07:34:53', 1),
+(645987, 'Demi', NULL, 'Xochitl', '', 'OJT Trainee', '2006-02-10', 'Male', 'Casual', 'employee_645987_1770779085.jpeg', 13, '2026-02-11 03:04:45', '2026-02-11 03:04:45', 1);
 
 -- --------------------------------------------------------
 
@@ -179,9 +297,38 @@ CREATE TABLE `tbl_monitor` (
 --
 
 INSERT INTO `tbl_monitor` (`monitorId`, `monitorBrand`, `monitorSize`, `monitorSerial`, `yearAcquired`, `employeeId`) VALUES
-(1, 'Samsung', '24-Inches', 'MMTX5042332', '2025', 20373),
-(2, 'Acer', '22-inches', 'KLKK0473923409', '2025', NULL),
-(3, 'Lenovo', '22-inches', '3907814', '2025', 1514);
+(11, 'asd', 'asd', 'asd', '2000', 1),
+(12, 'Samsung', '24 inches', '241908712039', '2025', 1),
+(13, 'HP', '43 Inches', '53109847', '2025', NULL),
+(14, 'Samsung', '32 inches', 'SN_11111', '2000', 645987);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tbl_otherequipment`
+--
+
+CREATE TABLE `tbl_otherequipment` (
+  `otherEquipmentId` int(11) NOT NULL,
+  `equipmentType` varchar(100) NOT NULL,
+  `brand` varchar(100) DEFAULT NULL,
+  `model` varchar(100) DEFAULT NULL,
+  `details` text DEFAULT NULL,
+  `serialNumber` varchar(150) DEFAULT NULL,
+  `status` enum('Available','In Use','Under Maintenance','Disposed') DEFAULT 'Available',
+  `yearAcquired` year(4) DEFAULT NULL,
+  `location_id` int(11) NOT NULL,
+  `employeeId` int(11) DEFAULT NULL,
+  `createdAt` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updatedAt` timestamp NULL DEFAULT NULL ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `tbl_otherequipment`
+--
+
+INSERT INTO `tbl_otherequipment` (`otherEquipmentId`, `equipmentType`, `brand`, `model`, `details`, `serialNumber`, `status`, `yearAcquired`, `location_id`, `employeeId`, `createdAt`, `updatedAt`) VALUES
+(1, 'CCTV', 'TAPO', 'C615F KIT', '', 'CC-OE-5872-001', 'In Use', '2025', 9, NULL, '2026-02-12 00:48:56', NULL);
 
 -- --------------------------------------------------------
 
@@ -203,44 +350,8 @@ CREATE TABLE `tbl_printer` (
 --
 
 INSERT INTO `tbl_printer` (`printerId`, `printerBrand`, `printerModel`, `printerSerial`, `yearAcquired`, `employeeId`) VALUES
-(3, 'HP', 'v13', 'HP-PR-2025-004', '2025', NULL);
-
--- --------------------------------------------------------
-
---
--- Table structure for table `tbl_section`
---
-
-CREATE TABLE `tbl_section` (
-  `sectionId` int(11) NOT NULL,
-  `sectionCode` varchar(50) NOT NULL,
-  `sectionName` varchar(255) NOT NULL,
-  `createdAt` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updatedAt` timestamp NULL DEFAULT NULL ON UPDATE current_timestamp(),
-  `divisionId` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `tbl_section`
---
-
-INSERT INTO `tbl_section` (`sectionId`, `sectionCode`, `sectionName`, `createdAt`, `updatedAt`, `divisionId`) VALUES
-(1, 'ICT', 'Information and Communication Services', '2026-01-29 08:31:17', '2026-01-30 04:50:18', 1),
-(2, 'ODM', 'Office of the Department Manager', '2026-01-30 00:17:19', '2026-01-30 04:50:18', 1),
-(3, 'PR', 'PR Unit', '2026-01-30 00:17:39', '2026-01-30 04:50:18', 1),
-(4, 'LSU', 'Legal Services Unit', '2026-01-30 00:18:05', '2026-01-30 04:50:18', 1),
-(5, 'BAC', 'BAC Unit', '2026-01-30 00:18:13', '2026-01-30 04:50:18', 1),
-(6, 'OEM', 'Office of the EOD Manager', '2026-01-30 00:18:51', '2026-01-30 04:50:18', 2),
-(7, 'ENGU', 'Engineering Section', '2026-01-30 00:19:58', '2026-01-30 04:50:18', 2),
-(8, 'EMS', 'Equipment Management Section', '2026-01-30 00:20:36', '2026-01-30 04:50:18', 2),
-(9, 'IDS', 'Institutional Development Section', '2026-01-30 00:21:46', '2026-01-30 04:50:18', 2),
-(10, 'OAM', 'Office of the ADFIN Manager', '2026-01-30 00:22:12', '2026-01-30 04:50:18', 3),
-(11, 'AS', 'Administrative Section', '2026-01-30 00:22:33', '2026-01-30 04:50:18', 3),
-(12, 'FS', 'Finance Section', '2026-01-30 00:25:12', '2026-01-30 04:50:18', 3),
-(13, 'PU', 'Property Unit', '2026-01-30 00:25:56', '2026-01-30 04:50:18', 3),
-(14, 'MSU', 'Medical Service Unit', '2026-01-30 00:26:10', '2026-01-30 04:50:18', 3),
-(15, 'GSU', 'General Services Unit', '2026-01-30 00:26:27', '2026-01-30 04:50:18', 3),
-(16, 'SSU', 'Security Services Unit', '2026-01-30 00:26:42', '2026-01-30 04:50:18', 3);
+(0, 'HP DESKJET', '200020', 'SN_11112325', '2000', 645987),
+(3, 'HP', 'v13', 'HP-PR-2025-004', '2025', 1);
 
 -- --------------------------------------------------------
 
@@ -255,7 +366,7 @@ CREATE TABLE `tbl_software` (
   `licenseType` enum('Perpetual','Subscription') DEFAULT NULL,
   `expiryDate` datetime DEFAULT NULL,
   `email` varchar(100) DEFAULT NULL,
-  `PASSWORD` varchar(100) DEFAULT NULL,
+  `password` varchar(100) DEFAULT NULL,
   `employeeId` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -263,12 +374,8 @@ CREATE TABLE `tbl_software` (
 -- Dumping data for table `tbl_software`
 --
 
-INSERT INTO `tbl_software` (`softwareId`, `licenseSoftware`, `licenseDetails`, `licenseType`, `expiryDate`, `email`, `PASSWORD`, `employeeId`) VALUES
-(1, 'Adobe Photoshop Cs3', '', 'Perpetual', NULL, NULL, NULL, NULL),
-(2, '213', '', 'Perpetual', NULL, NULL, NULL, NULL),
-(3, '123', '', NULL, NULL, NULL, NULL, NULL),
-(9, 'sasfdsdf', '', NULL, NULL, NULL, NULL, NULL),
-(11, '123', '', NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `tbl_software` (`softwareId`, `licenseSoftware`, `licenseDetails`, `licenseType`, `expiryDate`, `email`, `password`, `employeeId`) VALUES
+(12, 'asd', 'asd', 'Perpetual', '2026-11-11 00:00:00', 'asd', 'asdasdsad', 1);
 
 -- --------------------------------------------------------
 
@@ -294,15 +401,23 @@ CREATE TABLE `tbl_systemunit` (
 --
 
 INSERT INTO `tbl_systemunit` (`systemunitId`, `systemUnitCategory`, `systemUnitBrand`, `specificationProcessor`, `specificationMemory`, `specificationGPU`, `specificationStorage`, `systemUnitSerial`, `yearAcquired`, `employeeId`) VALUES
-(1, 'Pre-Built', 'Acer', 'i5', '32', 'RTX 3060', '512GB SSD', '8364633666', '2000', 20373),
-(2, 'Pre-Built', '123', '123', '123', '123', '123', '123', '2024', 55555),
-(3, 'Custom Built', '2313', '123123', '123123', '21313', '123123', '1231312', '2000', 111),
-(9, NULL, 'sadfs', 'asfsdaf', '32', 'sdafs', 'asdfsadf', '4352353245', '2026', 41534),
-(11, NULL, 'Custom Built', 'Ryzen 7 7800X3D', '16', 'RTX 3060', '1TB SSD', '98646755464', '2000', 1514);
+(1, 'Custom Built', 'asd', 'asd', 'asd', 'asd', 'asd', 'asd', '2000', NULL),
+(2, 'Pre-Built', '4214', '4213', '4124', '24134', '4214', '42141321412', '0000', 1),
+(3, 'Pre-Built', 'HP2000', 'Core i7', '16GB', 'RTX 2060', '512GB SSD', 'SN_200011', '2000', 1);
 
 --
 -- Indexes for dumped tables
 --
+
+--
+-- Indexes for table `activity_log`
+--
+ALTER TABLE `activity_log`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_user_id` (`user_id`),
+  ADD KEY `idx_email` (`email`),
+  ADD KEY `idx_action` (`action`),
+  ADD KEY `idx_timestamp` (`timestamp`);
 
 --
 -- Indexes for table `location`
@@ -319,6 +434,40 @@ ALTER TABLE `location_type`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `login_attempts`
+--
+ALTER TABLE `login_attempts`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_email_time` (`email`,`attempt_time`),
+  ADD KEY `idx_ip_time` (`ip_address`,`attempt_time`);
+
+--
+-- Indexes for table `password_resets`
+--
+ALTER TABLE `password_resets`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_email` (`email`),
+  ADD KEY `idx_token` (`token`),
+  ADD KEY `idx_expires` (`expires_at`);
+
+--
+-- Indexes for table `role_permissions`
+--
+ALTER TABLE `role_permissions`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `role_module` (`role`,`module`),
+  ADD KEY `idx_role` (`role`);
+
+--
+-- Indexes for table `sessions`
+--
+ALTER TABLE `sessions`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `token` (`token`),
+  ADD KEY `idx_user_id` (`user_id`),
+  ADD KEY `idx_expires` (`expires_at`);
+
+--
 -- Indexes for table `tbl_accounts`
 --
 ALTER TABLE `tbl_accounts`
@@ -326,7 +475,8 @@ ALTER TABLE `tbl_accounts`
   ADD UNIQUE KEY `email` (`email`),
   ADD KEY `idx_email` (`email`),
   ADD KEY `idx_role` (`role`),
-  ADD KEY `idx_status` (`status`);
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_created_by` (`created_by`);
 
 --
 -- Indexes for table `tbl_allinone`
@@ -340,7 +490,7 @@ ALTER TABLE `tbl_allinone`
 --
 ALTER TABLE `tbl_employee`
   ADD PRIMARY KEY (`employeeId`),
-  ADD KEY `sectionId` (`sectionId`);
+  ADD KEY `fk_employee_location` (`location_id`);
 
 --
 -- Indexes for table `tbl_monitor`
@@ -350,19 +500,21 @@ ALTER TABLE `tbl_monitor`
   ADD KEY `employeeId` (`employeeId`);
 
 --
+-- Indexes for table `tbl_otherequipment`
+--
+ALTER TABLE `tbl_otherequipment`
+  ADD PRIMARY KEY (`otherEquipmentId`),
+  ADD UNIQUE KEY `uniq_serial` (`serialNumber`),
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_location` (`location_id`),
+  ADD KEY `idx_employee` (`employeeId`);
+
+--
 -- Indexes for table `tbl_printer`
 --
 ALTER TABLE `tbl_printer`
   ADD PRIMARY KEY (`printerId`),
   ADD KEY `employeeId` (`employeeId`);
-
---
--- Indexes for table `tbl_section`
---
-ALTER TABLE `tbl_section`
-  ADD PRIMARY KEY (`sectionId`),
-  ADD UNIQUE KEY `sectionCode` (`sectionCode`),
-  ADD KEY `divisionId` (`divisionId`);
 
 --
 -- Indexes for table `tbl_software`
@@ -383,6 +535,12 @@ ALTER TABLE `tbl_systemunit`
 --
 
 --
+-- AUTO_INCREMENT for table `activity_log`
+--
+ALTER TABLE `activity_log`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `location`
 --
 ALTER TABLE `location`
@@ -395,16 +553,40 @@ ALTER TABLE `location_type`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
+-- AUTO_INCREMENT for table `login_attempts`
+--
+ALTER TABLE `login_attempts`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
+
+--
+-- AUTO_INCREMENT for table `password_resets`
+--
+ALTER TABLE `password_resets`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `role_permissions`
+--
+ALTER TABLE `role_permissions`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+
+--
+-- AUTO_INCREMENT for table `sessions`
+--
+ALTER TABLE `sessions`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `tbl_accounts`
 --
 ALTER TABLE `tbl_accounts`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `tbl_allinone`
 --
 ALTER TABLE `tbl_allinone`
-  MODIFY `allinoneId` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `allinoneId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `tbl_employee`
@@ -416,23 +598,41 @@ ALTER TABLE `tbl_employee`
 -- AUTO_INCREMENT for table `tbl_monitor`
 --
 ALTER TABLE `tbl_monitor`
-  MODIFY `monitorId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `monitorId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
--- AUTO_INCREMENT for table `tbl_section`
+-- AUTO_INCREMENT for table `tbl_otherequipment`
 --
-ALTER TABLE `tbl_section`
-  MODIFY `sectionId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+ALTER TABLE `tbl_otherequipment`
+  MODIFY `otherEquipmentId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `tbl_software`
 --
 ALTER TABLE `tbl_software`
-  MODIFY `softwareId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `softwareId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+
+--
+-- AUTO_INCREMENT for table `tbl_systemunit`
+--
+ALTER TABLE `tbl_systemunit`
+  MODIFY `systemunitId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- Constraints for dumped tables
 --
+
+--
+-- Constraints for table `activity_log`
+--
+ALTER TABLE `activity_log`
+  ADD CONSTRAINT `activity_log_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `tbl_accounts` (`id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `sessions`
+--
+ALTER TABLE `sessions`
+  ADD CONSTRAINT `sessions_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `tbl_accounts` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `tbl_allinone`
@@ -441,10 +641,23 @@ ALTER TABLE `tbl_allinone`
   ADD CONSTRAINT `tbl_allinone_ibfk_1` FOREIGN KEY (`employeeId`) REFERENCES `tbl_employee` (`employeeId`);
 
 --
+-- Constraints for table `tbl_employee`
+--
+ALTER TABLE `tbl_employee`
+  ADD CONSTRAINT `fk_employee_location` FOREIGN KEY (`location_id`) REFERENCES `location` (`location_id`) ON UPDATE CASCADE;
+
+--
 -- Constraints for table `tbl_monitor`
 --
 ALTER TABLE `tbl_monitor`
   ADD CONSTRAINT `tbl_monitor_ibfk_1` FOREIGN KEY (`employeeId`) REFERENCES `tbl_employee` (`employeeId`) ON DELETE CASCADE ON UPDATE NO ACTION;
+
+--
+-- Constraints for table `tbl_otherequipment`
+--
+ALTER TABLE `tbl_otherequipment`
+  ADD CONSTRAINT `fk_other_employee` FOREIGN KEY (`employeeId`) REFERENCES `tbl_employee` (`employeeId`) ON DELETE SET NULL,
+  ADD CONSTRAINT `fk_other_location` FOREIGN KEY (`location_id`) REFERENCES `location` (`location_id`) ON UPDATE CASCADE;
 
 --
 -- Constraints for table `tbl_printer`

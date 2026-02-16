@@ -1,0 +1,74 @@
+/* ============================================================
+   DIVISIONS.CSS — NIA UPRIIS ICT Inventory
+   Depends on: root.css (must be loaded first)
+   ============================================================ */
+
+.divisions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: var(--space-6);
+    margin-bottom: var(--space-8);
+}
+
+.division-card {
+    background: var(--bg-white);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: var(--space-6);
+    box-shadow: var(--shadow-soft);
+    transition: transform var(--transition-base), box-shadow var(--transition-base);
+}
+
+.division-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-hover);
+}
+
+.division-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: var(--space-4);
+    padding-bottom: var(--space-4);
+    border-bottom: 2px solid var(--border-color);
+}
+
+.division-badge {
+    display: inline-block;
+    padding: 5px 13px;
+    background: var(--primary-green);
+    color: #fff;
+    border-radius: var(--radius-sm);
+    font-weight: 700;
+    font-size: var(--text-sm);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.division-actions {
+    display: flex;
+    gap: var(--space-2);
+}
+
+.division-name {
+    font-size: var(--text-md);
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: var(--space-3);
+    line-height: 1.4;
+}
+
+.division-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    color: var(--text-medium);
+    font-size: var(--text-sm);
+    flex-wrap: wrap;
+}
+
+.division-meta i { color: var(--primary-green); }
+
+@media (max-width: 768px) {
+    .divisions-grid { grid-template-columns: 1fr; gap: var(--space-4); }
+}

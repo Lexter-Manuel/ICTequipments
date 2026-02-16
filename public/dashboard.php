@@ -2,7 +2,8 @@
 session_start();
 
 require_once '../config/database.php';
-require_once '../config/config.php';
+require_once '../config/session-check.php';
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -13,10 +14,12 @@ require_once '../config/config.php';
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="assets/bootstrap/bootstrap.min.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="assets/css/root.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="assets/css/dashboard.css?v=<?php echo time()?>">
-    <link rel="stylesheet" href="assets/css/computer.css?v=<?php echo time()?>">
-    <link rel="stylesheet" href="assets/css/employees.css?v=<?php echo time()?>">
-    <link rel="stylesheet" href="assets/css/software.css?v=<?php echo time()?>">
+    <link rel="stylesheet" href="assets/css/other_equipment.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="assets/css/roster.css?v=<?php echo time(); ?>">
 </head>
 <body>
     <!-- Sidebar -->
@@ -64,6 +67,10 @@ require_once '../config/config.php';
                     <i class="fas fa-key"></i>
                     <span>Software Licenses</span>
                 </a>
+                <a href="#" class="nav-item" data-page="otherequipment">
+                    <i class="fas fa-server"></i>
+                    <span>Other ICT Equipment</span>
+                </a>
             </div>
             
             <div class="nav-section">
@@ -84,17 +91,21 @@ require_once '../config/config.php';
             
             <div class="nav-section">
                 <div class="nav-section-title">Maintenance</div>
-                <a href="#" class="nav-item" data-page="schedule">
-                    <i class="fas fa-calendar-check"></i>
-                    <span>Schedule</span>
+                <a href="#" class="nav-item" data-page="maintenance-schedule">
+                    <i class="fas fa-clipboard-list"></i>
+                    <span>Maintenance Schedule</span>
                 </a>
-                <a href="#" class="nav-item" data-page="history">
+                <a href="#" class="nav-item" data-page="maintenance-templates">
+                    <i class="fas fa-clipboard-list"></i>
+                    <span>Maintenance Templates</span>
+                </a>
+                <a href="#" class="nav-item" data-page="perform-maintenance">
+                    <i class="fas fa-tools"></i>
+                    <span>Perform Maintenance</span>
+                </a>
+                <a href="#" class="nav-item" data-page="maintenance-history">
                     <i class="fas fa-history"></i>
-                    <span>History</span>
-                </a>
-                <a href="#" class="nav-item" data-page="notifications">
-                    <i class="fas fa-bell"></i>
-                    <span>Notifications</span>
+                    <span>Maintenance History</span>
                 </a>
             </div>
             
@@ -179,10 +190,7 @@ require_once '../config/config.php';
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="assets/bootstrap/bootstrap.min.js"></script>
+    <script src="../node_modules/cropperjs/dist/cropper.min.js"></script>
     <script src="assets/js/dashboard.js?v=<?php echo time()?>"></script>
-    <script src="assets/js/computer_management.js?v=<?php echo time()?>"></script>
-    <script src="assets/js/printer.js?v=<?php echo time()?>"></script>
-    
-
 </body>
 </html>

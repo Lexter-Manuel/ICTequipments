@@ -99,318 +99,7 @@ $sections = $db->query("
 ")->fetchAll();
 ?>
 
-<style>
-.page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 32px;
-}
-
-.page-header h2 {
-    font-family: 'Crimson Pro', serif;
-    font-size: 28px;
-    color: var(--text-dark);
-    font-weight: 700;
-}
-
-.btn {
-    padding: 12px 24px;
-    border: none;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.btn-primary {
-    background: var(--primary-green);
-    color: white;
-}
-
-.btn-primary:hover {
-    background: var(--primary-dark);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px var(--shadow-medium);
-}
-
-.btn-secondary {
-    background: white;
-    color: var(--text-dark);
-    border: 1px solid var(--border-color);
-}
-
-.btn-secondary:hover {
-    background: var(--bg-light);
-}
-
-.btn-sm {
-    padding: 6px 12px;
-    font-size: 13px;
-}
-
-.btn-danger {
-    background: #dc2626;
-    color: white;
-}
-
-.btn-danger:hover {
-    background: #b91c1c;
-}
-
-.division-group {
-    margin-bottom: 40px;
-}
-
-.division-group-header {
-    background: linear-gradient(135deg, var(--primary-green), var(--accent-green));
-    color: white;
-    padding: 20px 24px;
-    border-radius: 12px 12px 0 0;
-    margin-bottom: 0;
-}
-
-.division-group-header h3 {
-    font-family: 'Crimson Pro', serif;
-    font-size: 22px;
-    font-weight: 700;
-    margin-bottom: 4px;
-}
-
-.section-subgroup {
-    background: white;
-    border-left: 1px solid var(--border-color);
-    border-right: 1px solid var(--border-color);
-}
-
-.section-subgroup:last-child {
-    border-radius: 0 0 12px 12px;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.section-header {
-    background: rgba(45, 122, 79, 0.05);
-    padding: 16px 24px;
-    border-bottom: 1px solid var(--border-color);
-    font-weight: 600;
-    color: var(--text-dark);
-    font-size: 16px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.section-header.direct-units {
-    background: rgba(45, 122, 79, 0.08);
-    font-style: italic;
-    color: var(--text-medium);
-}
-
-.units-container {
-    background: white;
-}
-
-.unit-item {
-    padding: 18px 24px 18px 48px;
-    border-bottom: 1px solid var(--border-color);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    transition: background 0.2s;
-}
-
-.unit-item:last-child {
-    border-bottom: none;
-}
-
-.unit-item:hover {
-    background: var(--bg-light);
-}
-
-.unit-info {
-    flex: 1;
-}
-
-.unit-badge {
-    display: inline-block;
-    padding: 3px 10px;
-    background: rgba(45, 122, 79, 0.1);
-    color: var(--primary-green);
-    border-radius: 4px;
-    font-weight: 700;
-    font-size: 11px;
-    margin-bottom: 6px;
-    letter-spacing: 0.5px;
-}
-
-.unit-name {
-    font-size: 15px;
-    font-weight: 600;
-    color: var(--text-dark);
-    margin-bottom: 6px;
-}
-
-.unit-meta {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    color: var(--text-medium);
-    font-size: 12px;
-}
-
-.unit-meta i {
-    color: var(--primary-green);
-}
-
-.unit-actions {
-    display: flex;
-    gap: 8px;
-}
-
-.form-group {
-    margin-bottom: 20px;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 8px;
-    color: var(--text-dark);
-    font-weight: 600;
-    font-size: 14px;
-}
-
-.form-group input,
-.form-group select,
-.form-group textarea {
-    width: 100%;
-    padding: 12px 16px;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    font-size: 14px;
-    font-family: 'Work Sans', sans-serif;
-    transition: all 0.3s;
-}
-
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus {
-    outline: none;
-    border-color: var(--primary-green);
-    box-shadow: 0 0 0 3px rgba(45, 122, 79, 0.1);
-}
-
-.form-group textarea {
-    resize: vertical;
-    min-height: 80px;
-}
-
-.alert {
-    padding: 14px 16px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-size: 14px;
-}
-
-.alert-success {
-    background: rgba(34, 197, 94, 0.1);
-    color: #16a34a;
-    border: 1px solid rgba(34, 197, 94, 0.3);
-}
-
-.alert-error {
-    background: rgba(239, 68, 68, 0.1);
-    color: #dc2626;
-    border: 1px solid rgba(239, 68, 68, 0.3);
-}
-
-.empty-state {
-    text-align: center;
-    padding: 60px 20px;
-    background: white;
-    border-radius: 12px;
-    border: 2px dashed var(--border-color);
-}
-
-.empty-state i {
-    font-size: 64px;
-    color: var(--text-light);
-    margin-bottom: 16px;
-}
-
-.empty-state h3 {
-    font-size: 20px;
-    color: var(--text-dark);
-    margin-bottom: 8px;
-}
-
-.empty-state p {
-    color: var(--text-medium);
-    margin-bottom: 24px;
-}
-
-.filter-container {
-    margin-bottom: 24px;
-    display: flex;
-    gap: 12px;
-}
-
-.filter-container select {
-    padding: 10px 16px;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    font-size: 14px;
-    min-width: 200px;
-}
-
-.parent-type-toggle {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 20px;
-    background: var(--bg-light);
-    padding: 4px;
-    border-radius: 8px;
-}
-
-.parent-type-toggle button {
-    flex: 1;
-    padding: 10px;
-    border: none;
-    background: transparent;
-    border-radius: 6px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s;
-    color: var(--text-medium);
-}
-
-.parent-type-toggle button.active {
-    background: white;
-    color: var(--primary-green);
-    box-shadow: 0 2px 4px var(--shadow-soft);
-}
-
-.hierarchy-info {
-    background: rgba(45, 122, 79, 0.05);
-    border-left: 3px solid var(--primary-green);
-    padding: 12px 16px;
-    border-radius: 6px;
-    margin-bottom: 20px;
-    font-size: 13px;
-    color: var(--text-medium);
-}
-
-.hierarchy-info i {
-    color: var(--primary-green);
-    margin-right: 8px;
-}
-</style>
+<link rel="stylesheet" href="assets/css/units.css?v=<?php echo time(); ?>">
 
 <!-- Page Header -->
 <div class="page-header">
@@ -576,15 +265,15 @@ $sections = $db->query("
 
 <script>
 // Global data arrays for form population
-const divisionsData = <?php echo json_encode($divisions); ?>;
-const sectionsData = <?php echo json_encode($sections); ?>;
+var divisionsData = <?php echo json_encode($divisions); ?>;
+var sectionsData = <?php echo json_encode($sections); ?>;
 
 // Helper functions for parent type selection
 function setParentType(type) {
-    const divisionBtn = document.getElementById('divisionTypeBtn');
-    const sectionBtn = document.getElementById('sectionTypeBtn');
-    const divisionSelect = document.getElementById('divisionSelect');
-    const sectionGroup = document.getElementById('sectionGroup');
+    var divisionBtn = document.getElementById('divisionTypeBtn');
+    var sectionBtn = document.getElementById('sectionTypeBtn');
+    var divisionSelect = document.getElementById('divisionSelect');
+    var sectionGroup = document.getElementById('sectionGroup');
     
     if (type === 'division') {
         divisionBtn.classList.add('active');
@@ -602,9 +291,9 @@ function setParentType(type) {
 }
 
 function handleDivisionChange() {
-    const divisionId = document.getElementById('divisionSelect').value;
-    const sectionSelect = document.getElementById('sectionSelect');
-    const sectionBtn = document.getElementById('sectionTypeBtn');
+    var divisionId = document.getElementById('divisionSelect').value;
+    var sectionSelect = document.getElementById('sectionSelect');
+    var sectionBtn = document.getElementById('sectionTypeBtn');
     
     sectionSelect.innerHTML = '<option value="">Select Section</option>';
     document.getElementById('parentId').value = '';
@@ -613,7 +302,7 @@ function handleDivisionChange() {
         // Populate sections for selected division with hierarchy
         sectionsData.forEach(sec => {
             if (String(sec.divisionId) === divisionId) {
-                const option = document.createElement('option');
+                var option = document.createElement('option');
                 option.value = sec.sectionId;
                 option.textContent = `${sec.divisionName} > ${sec.sectionName}`;
                 sectionSelect.appendChild(option);
@@ -621,7 +310,7 @@ function handleDivisionChange() {
         });
         
         // Set parent to this division if in division mode
-        const divisionBtn = document.getElementById('divisionTypeBtn');
+        var divisionBtn = document.getElementById('divisionTypeBtn');
         if (divisionBtn.classList.contains('active')) {
             document.getElementById('parentId').value = divisionId;
         }
@@ -629,13 +318,13 @@ function handleDivisionChange() {
 }
 
 // Units Manager - Singleton Pattern
-const UnitsManager = (function() {
+var UnitsManager = (function() {
     let modalInstance = null;
     let editMode = false;
     
     function getModalInstance() {
         if (!modalInstance) {
-            const modalElement = document.getElementById('unitModal');
+            var modalElement = document.getElementById('unitModal');
             if (modalElement) {
                 modalInstance = new bootstrap.Modal(modalElement, {
                     backdrop: 'static',
@@ -661,7 +350,7 @@ const UnitsManager = (function() {
         // Reset parent type to 'division' by default
         setParentType('division');
         
-        const modal = getModalInstance();
+        var modal = getModalInstance();
         if (modal) modal.show();
     }
     
@@ -671,17 +360,17 @@ const UnitsManager = (function() {
         document.getElementById('submitBtn').innerHTML = '<i class="fas fa-save"></i> Update Unit';
         
         try {
-            const response = await fetch(`../../ajax/get_unit.php?id=${id}`);
-            const result = await response.json();
+            var response = await fetch(`../../ajax/get_unit.php?id=${id}`);
+            var result = await response.json();
             
             if (result.success) {
-                const unit = result.data;
+                var unit = result.data;
                 document.getElementById('unitId').value = unit.unitId;
                 document.getElementById('unitName').value = unit.unitName;
                 document.getElementById('parentId').value = unit.parentId;
                 
                 // Determine parent type and set accordingly
-                const parentTypeId = unit.parentTypeId;
+                var parentTypeId = unit.parentTypeId;
                 if (parentTypeId === 1) {
                     // Direct under division
                     setParentType('division');
@@ -690,7 +379,7 @@ const UnitsManager = (function() {
                     // Under section
                     setParentType('section');
                     // Find the division ID for this section
-                    const section = sectionsData.find(s => s.sectionId === unit.parentId);
+                    var section = sectionsData.find(s => s.sectionId === unit.parentId);
                     if (section) {
                         document.getElementById('divisionSelect').value = section.divisionId;
                         handleDivisionChange();
@@ -700,7 +389,7 @@ const UnitsManager = (function() {
                     }
                 }
                 
-                const modal = getModalInstance();
+                var modal = getModalInstance();
                 if (modal) modal.show();
             } else {
                 showAlert('Error loading unit data', 'error');
@@ -716,16 +405,16 @@ const UnitsManager = (function() {
         }
         
         try {
-            const formData = new FormData();
+            var formData = new FormData();
             formData.append('action', 'delete');
             formData.append('unitId', id);
             
-            const response = await fetch('../../ajax/manage_unit.php', {
+            var response = await fetch('../../ajax/manage_unit.php', {
                 method: 'POST',
                 body: formData
             });
             
-            const result = await response.json();
+            var result = await response.json();
             
             if (result.success) {
                 showAlert(result.message, 'success');
@@ -741,24 +430,24 @@ const UnitsManager = (function() {
     async function handleSubmit(event) {
         event.preventDefault();
         
-        const formData = new FormData(event.target);
+        var formData = new FormData(event.target);
         formData.append('action', editMode ? 'update' : 'create');
         
-        const submitBtn = document.getElementById('submitBtn');
+        var submitBtn = document.getElementById('submitBtn');
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
         
         try {
-            const response = await fetch('../../ajax/manage_unit.php', {
+            var response = await fetch('../../ajax/manage_unit.php', {
                 method: 'POST',
                 body: formData
             });
             
-            const result = await response.json();
+            var result = await response.json();
             
             if (result.success) {
                 showAlert(result.message, 'success');
-                const modal = getModalInstance();
+                var modal = getModalInstance();
                 if (modal) modal.hide();
                 setTimeout(() => reloadCurrentPage(), 1500);
             } else {
@@ -778,9 +467,9 @@ const UnitsManager = (function() {
     }
     
     function showAlert(message, type) {
-        const alertContainer = document.getElementById('alertContainer');
-        const alertClass = type === 'success' ? 'alert-success' : 'alert-error';
-        const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+        var alertContainer = document.getElementById('alertContainer');
+        var alertClass = type === 'success' ? 'alert-success' : 'alert-error';
+        var icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
         
         alertContainer.innerHTML = `
             <div class="alert ${alertClass}">
@@ -795,15 +484,15 @@ const UnitsManager = (function() {
     }
     
     function filterUnits() {
-        const divisionFilter = document.getElementById('divisionFilter').value;
-        const parentFilter = document.getElementById('parentFilter').value;
-        const groups = document.querySelectorAll('.division-group');
+        var divisionFilter = document.getElementById('divisionFilter').value;
+        var parentFilter = document.getElementById('parentFilter').value;
+        var groups = document.querySelectorAll('.division-group');
         
         let hasVisibleGroups = false;
         
         groups.forEach(group => {
-            const divisionMatch = divisionFilter === 'all' || group.dataset.divisionId === divisionFilter;
-            const subgroups = group.querySelectorAll('.section-subgroup');
+            var divisionMatch = divisionFilter === 'all' || group.dataset.divisionId === divisionFilter;
+            var subgroups = group.querySelectorAll('.section-subgroup');
             let hasVisibleSubgroups = false;
             
             subgroups.forEach(subgroup => {
@@ -834,7 +523,7 @@ const UnitsManager = (function() {
         });
         
         // Show/hide empty state if no results
-        const emptyState = document.querySelector('.empty-state');
+        var emptyState = document.querySelector('.empty-state');
         if (emptyState) {
             emptyState.style.display = hasVisibleGroups ? 'none' : 'block';
         }
@@ -843,7 +532,7 @@ const UnitsManager = (function() {
     function destroy() {
         if (modalInstance) {
             try {
-                const modalElement = document.getElementById('unitModal');
+                var modalElement = document.getElementById('unitModal');
                 if (modalElement) {
                     modalInstance.hide();
                 }

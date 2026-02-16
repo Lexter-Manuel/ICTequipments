@@ -1,9 +1,4 @@
 <?php
-/**
- * Computer Equipment Management Module
- * Manages System Units, Monitors, and All-in-One PCs in a tabbed interface
- * Database integrated with full CRUD operations
- */
 
 require_once '../../config/database.php';
 
@@ -50,6 +45,8 @@ $stmtEmployees = $db->query("
 ");
 $employees = $stmtEmployees->fetchAll();
 ?>
+
+<link rel="stylesheet" href="assets/css/computer.css?v=<?php echo time()?>">
 
 <!-- Page Header -->
 <div class="page-header">
@@ -181,6 +178,22 @@ $employees = $stmtEmployees->fetchAll();
             </tbody>
         </table>
     </div>
+    <div class="table-footer">
+        <div class="footer-info">
+            <span id="recordCount"></span>
+        </div>
+        <div class="pagination-controls" id="paginationControls"></div>
+        <div class="per-page-control">
+            <label>Rows:
+                <select id="perPageSelect" onchange="changePerPage()">
+                    <option value="10">10</option>
+                    <option value="25" selected>25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+            </label>
+        </div>
+    </div>
 </div>
 
 <!-- Monitors Tab -->
@@ -266,6 +279,22 @@ $employees = $stmtEmployees->fetchAll();
                 <?php endforeach; ?>
             </tbody>
         </table>
+    </div>
+    <div class="table-footer">
+        <div class="footer-info">
+            <span id="recordCount"></span>
+        </div>
+        <div class="pagination-controls" id="paginationControls"></div>
+        <div class="per-page-control">
+            <label>Rows:
+                <select id="perPageSelect" onchange="changePerPage()">
+                    <option value="10">10</option>
+                    <option value="25" selected>25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+            </label>
+        </div>
     </div>
 </div>
 
@@ -359,6 +388,22 @@ $employees = $stmtEmployees->fetchAll();
                 <?php endforeach; ?>
             </tbody>
         </table>
+    </div>
+    <div class="table-footer">
+        <div class="footer-info">
+            <span id="recordCount"></span>
+        </div>
+        <div class="pagination-controls" id="paginationControls"></div>
+        <div class="per-page-control">
+            <label>Rows:
+                <select id="perPageSelect" onchange="changePerPage()">
+                    <option value="10">10</option>
+                    <option value="25" selected>25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+            </label>
+        </div>
     </div>
 </div>
 
@@ -544,3 +589,7 @@ $employees = $stmtEmployees->fetchAll();
         </div>
     </div>
 </div>
+
+
+
+<script src="assets/js/computer_management.js?v=<?php echo time()?>"></script>

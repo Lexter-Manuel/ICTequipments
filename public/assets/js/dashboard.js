@@ -28,13 +28,13 @@ class DashboardApp {
      * Setup navigation click handlers
      */
     setupNavigation() {
-        const navItems = document.querySelectorAll('.nav-item[data-page]');
-        const breadcrumbLinks = document.querySelectorAll('.breadcrumb a[data-page]');
+        var navItems = document.querySelectorAll('.nav-item[data-page]');
+        var breadcrumbLinks = document.querySelectorAll('.breadcrumb a[data-page]');
         
         navItems.forEach(item => {
             item.addEventListener('click', (e) => {
                 e.preventDefault();
-                const page = item.dataset.page;
+                var page = item.dataset.page;
                 this.loadPage(page);
                 
                 // Update active state
@@ -51,7 +51,7 @@ class DashboardApp {
         breadcrumbLinks.forEach(link => {
             link.addEventListener('click', (e) => {
                 e.preventDefault();
-                const page = link.dataset.page;
+                var page = link.dataset.page;
                 this.loadPage(page);
             });
         });
@@ -74,15 +74,23 @@ class DashboardApp {
         
         try {
             // Map page names to actual file paths
-            const pageMap = {
+            var pageMap = {
                 'home': '../modules/dashboard/home.php',
+                'roster': '../modules/dashboard/roster.php',
                 'employees': '../modules/inventory/employees.php',
                 'computer': '../modules/inventory/computer.php',
                 'printer': '../modules/inventory/printer.php',
                 'software': '../modules/inventory/software.php',
+                'otherequipment': '../modules/inventory/other_equipment.php',
                 'divisions': '../modules/organization/divisions.php',
                 'sections': '../modules/organization/sections.php',
                 'units': '../modules/organization/units.php',
+                'maintenance-schedule': '../modules/maintenance/maintenance-schedule.php',
+                'maintenance-templates': '../modules/maintenance/maintenance-templates.php',
+                'equipment-assignment': '../modules/maintenance/equipment-assignment.php',
+                'perform-maintenance': '../modules/maintenance/perform-maintenance.php',
+                'pending-approvals': '../modules/maintenance/pending-approvals.php',
+                'maintenance-history': '../modules/maintenance/maintenance-history.php',
                 'schedule': '../modules/maintenance/schedule.php',
                 'history': '../modules/maintenance/history.php',
                 'notifications': '../modules/maintenance/notifications.php',
@@ -92,16 +100,16 @@ class DashboardApp {
                 'settings': '../modules/settings/settings.php'
             };
             
-            const pageUrl = pageMap[pageName] || pageMap['home'];
+            var pageUrl = pageMap[pageName] || pageMap['home'];
             
             // Fetch the page content
-            const response = await fetch(pageUrl);
+            var response = await fetch(pageUrl);
             
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             
-            const html = await response.text();
+            var html = await response.text();
             
             // Cache the page
             this.pageCache[pageName] = html;
@@ -149,16 +157,22 @@ class DashboardApp {
      * @param {string} pageName - Current page name
      */
     updateBreadcrumb(pageName) {
-        const pageNames = {
+        var pageNames = {
             'home': 'Dashboard',
+            'roster': 'Roster',
             'employees': 'Employees',
             'computer': 'Computers',
             'printer': 'Printers',
             'allinone': 'All-in-One PCs',
             'software': 'Software Licenses',
+            'otherequipment': 'Other ICT Equipment',
             'divisions': 'Divisions',
             'sections': 'Sections',
             'units': 'Units',
+            'schedule-templates': 'Schedule Templates',
+            'equipment-assignment': 'Equipment Assignment',
+            'perform-maintenance': 'Perform Maintenance',
+            'pending-approvals': 'Pending Approvals',
             'schedule': 'Maintenance Schedule',
             'history': 'Maintenance History',
             'notifications': 'Notifications',
@@ -168,7 +182,7 @@ class DashboardApp {
             'settings': 'System Settings'
         };
         
-        const displayName = pageNames[pageName] || 'Dashboard';
+        var displayName = pageNames[pageName] || 'Dashboard';
         
         this.breadcrumb.innerHTML = `
             <a href="#" data-page="home"><i class="fas fa-home"></i></a>
@@ -177,23 +191,20 @@ class DashboardApp {
         `;
         
         // Re-attach event listeners to new breadcrumb links
-        const breadcrumbLinks = this.breadcrumb.querySelectorAll('a[data-page]');
+        var breadcrumbLinks = this.breadcrumb.querySelectorAll('a[data-page]');
         breadcrumbLinks.forEach(link => {
             link.addEventListener('click', (e) => {
                 e.preventDefault();
-                const page = link.dataset.page;
+                var page = link.dataset.page;
                 this.loadPage(page);
             });
         });
     }
-    
-    /**
-     * Execute scripts in loaded content
-     */
+
     executeScripts() {
-        const scripts = this.contentArea.querySelectorAll('script');
+        var scripts = this.contentArea.querySelectorAll('script');
         scripts.forEach(oldScript => {
-            const newScript = document.createElement('script');
+            var newScript = document.createElement('script');
             Array.from(oldScript.attributes).forEach(attr => {
                 newScript.setAttribute(attr.name, attr.value);
             });
@@ -239,7 +250,7 @@ class DashboardApp {
      * Setup mobile menu toggle
      */
     setupMobileMenu() {
-        const toggleIcon = this.mobileToggle.querySelector('i');
+        var toggleIcon = this.mobileToggle.querySelector('i');
         
         this.mobileToggle.addEventListener('click', () => {
             this.sidebar.classList.toggle('active');
@@ -262,7 +273,7 @@ class DashboardApp {
      */
     closeMobileMenu() {
         this.sidebar.classList.remove('active');
-        const toggleIcon = this.mobileToggle.querySelector('i');
+        var toggleIcon = this.mobileToggle.querySelector('i');
         toggleIcon.classList.add('fa-bars');
         toggleIcon.classList.remove('fa-times');
     }
@@ -273,8 +284,8 @@ class DashboardApp {
      */
     async performSearch(query) {
         try {
-            const response = await fetch(`../ajax/global_search.php?q=${encodeURIComponent(query)}`);
-            const results = await response.json();
+            var response = await fetch(`../ajax/global_search.php?q=${encodeURIComponent(query)}`);
+            var results = await response.json();
             
             // Display search results (you can customize this)
             console.log('Search results:', results);
@@ -297,7 +308,7 @@ class DashboardApp {
     setupAnimations() {
         // Smooth animations on page load
         window.addEventListener('load', () => {
-            const cards = document.querySelectorAll('.stat-card');
+            var cards = document.querySelectorAll('.stat-card');
             cards.forEach((card, index) => {
                 card.style.opacity = '0';
                 card.style.transform = 'translateY(20px)';
@@ -317,7 +328,7 @@ class DashboardApp {
     logPageView(pageName) {
         // Send to analytics endpoint
         if (navigator.sendBeacon) {
-            const data = new FormData();
+            var data = new FormData();
             data.append('page', pageName);
             data.append('timestamp', new Date().toISOString());
             navigator.sendBeacon('../ajax/log_activity.php', data);
@@ -360,25 +371,25 @@ function navigateToPage(pageName) {
 
         // Update date and time
         function updateDateTime() {
-            const now = new Date();
+            var now = new Date();
             
             // Format date: February 09, 2026
-            const dateOptions = { 
+            var dateOptions = { 
                 year: 'numeric', 
                 month: 'long', 
                 day: '2-digit',
                 weekday: 'long'
             };
-            const dateString = now.toLocaleDateString('en-US', dateOptions);
+            var dateString = now.toLocaleDateString('en-US', dateOptions);
             
             // Format time: 10:30:45 AM
-            const timeOptions = {
+            var timeOptions = {
                 hour: '2-digit',
                 minute: '2-digit',
                 second: '2-digit',
                 hour12: true
             };
-            const timeString = now.toLocaleTimeString('en-US', timeOptions);
+            var timeString = now.toLocaleTimeString('en-US', timeOptions);
             
             // Update the display
             document.getElementById('currentDate').textContent = dateString;

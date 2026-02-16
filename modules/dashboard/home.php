@@ -19,11 +19,11 @@ try {
     $softwareCount = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
     
     // Count sections
-    $stmt = $db->query("SELECT COUNT(*) as count FROM tbl_section WHERE 1");
+    $stmt = $db->query("SELECT COUNT(*) as count FROM location WHERE location_type_id = 2 AND is_deleted = '0'");
     $sectionCount = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
     
     // Count divisions
-    $stmt = $db->query("SELECT COUNT(*) as count FROM tbl_division WHERE 1");
+    $stmt = $db->query("SELECT COUNT(*) as count FROM location WHERE location_type_id = 1 AND is_deleted = '0'");
     $divisionCount = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
     
     // Count monitors
@@ -44,6 +44,269 @@ try {
     $divisionCount = $monitorCount = $printerCount = $allinoneCount = 0;
 }
 ?>
+
+<style>
+/* Modern Dashboard Styles */
+.welcome-banner {
+    background: linear-gradient(135deg, var(--primary-green), var(--primary-dark));
+    border-radius: var(--radius-2xl);
+    padding: 2.5rem;
+    margin-bottom: 2rem;
+    color: white;
+    box-shadow: var(--shadow-xl);
+    position: relative;
+    overflow: hidden;
+    animation: fadeInUp 0.6s ease-out;
+}
+
+.welcome-banner::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.welcome-content {
+    position: relative;
+    z-index: 1;
+}
+
+.welcome-content h2 {
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+    color: white;
+}
+
+.welcome-content p {
+    font-size: 1rem;
+    opacity: 0.9;
+    margin: 0;
+}
+
+/* Modern Stats Grid */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    animation: fadeInUp 0.8s ease-out;
+}
+
+.stat-card {
+    background: white;
+    border-radius: var(--radius-xl);
+    padding: 1.75rem;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border-color);
+    transition: all var(--transition-base);
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary-green), var(--accent-green));
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform var(--transition-slow);
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-xl);
+}
+
+.stat-card:hover::after {
+    transform: scaleX(1);
+}
+
+.stat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    background: linear-gradient(135deg, var(--primary-green), var(--primary-dark));
+    color: white;
+    box-shadow: var(--shadow-md);
+}
+
+.stat-trend {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-weight: 700;
+    font-family: var(--font-mono);
+}
+
+.stat-trend.up {
+    background: rgba(34, 197, 94, 0.1);
+    color: var(--success-600);
+}
+
+.stat-trend.down {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--danger-600);
+}
+
+.stat-value {
+    font-size: 2.25rem;
+    font-weight: 800;
+    color: var(--text-dark);
+    line-height: 1;
+    margin-bottom: 0.5rem;
+    font-family: var(--font-mono);
+}
+
+.stat-label {
+    color: var(--text-medium);
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Overview Cards */
+.overview-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+    animation: fadeInUp 1s ease-out;
+}
+
+.overview-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-md);
+    transition: all var(--transition-base);
+}
+
+.overview-card:hover {
+    box-shadow: var(--shadow-xl);
+    transform: translateY(-2px);
+}
+
+.overview-card h3 {
+    font-size: 1.25rem;
+    color: var(--text-dark);
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.overview-card h3 i {
+    color: var(--primary-green);
+}
+
+.overview-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    background: var(--bg-light);
+    border-radius: var(--radius-md);
+    margin-bottom: 0.75rem;
+    transition: all var(--transition-base);
+}
+
+.overview-item:hover {
+    background: var(--neutral-100);
+    transform: translateX(4px);
+}
+
+.overview-item:last-child {
+    margin-bottom: 0;
+}
+
+.overview-item span:first-child {
+    color: var(--text-medium);
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.overview-item span:last-child {
+    font-weight: 700;
+    color: var(--text-dark);
+    font-family: var(--font-mono);
+}
+
+.overview-item.highlight span:last-child {
+    color: var(--accent-green);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem 1.5rem;
+    color: var(--text-light);
+}
+
+.empty-state i {
+    font-size: 3rem;
+    color: var(--neutral-300);
+    margin-bottom: 1rem;
+    display: block;
+}
+
+.empty-state p {
+    margin: 0;
+    font-size: 0.875rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .welcome-content h2 {
+        font-size: 1.5rem;
+    }
+    
+    .dashboard-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .stat-value {
+        font-size: 1.75rem;
+    }
+    
+    .overview-section {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .stat-card {
+        padding: 1.25rem;
+    }
+}
+</style>
 
 <!-- Welcome Banner -->
 <div class="welcome-banner">
@@ -169,68 +432,55 @@ try {
 </div>
 
 <!-- Recent Activity / Quick Stats -->
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 24px; margin-top: 32px;">
+<div class="overview-section">
     <!-- Recent Equipment Additions -->
-    <div style="background: white; padding: 24px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 2px 8px var(--shadow-soft);">
-        <h3 style="font-family: 'Crimson Pro', serif; font-size: 20px; color: var(--text-dark); margin-bottom: 20px;">
-            <i class="fas fa-clock" style="color: var(--primary-green); margin-right: 8px;"></i>
+    <div class="overview-card">
+        <h3>
+            <i class="fas fa-clock"></i>
             Recent Activity
         </h3>
-        <div style="color: var(--text-medium); font-size: 14px; padding: 40px 20px; text-align: center;">
-            <i class="fas fa-info-circle" style="font-size: 32px; color: var(--text-light); margin-bottom: 12px; display: block;"></i>
-            No recent activity to display
+        <div class="empty-state">
+            <i class="fas fa-info-circle"></i>
+            <p>No recent activity to display</p>
         </div>
     </div>
     
     <!-- Equipment Status Overview -->
-    <div style="background: white; padding: 24px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 2px 8px var(--shadow-soft);">
-        <h3 style="font-family: 'Crimson Pro', serif; font-size: 20px; color: var(--text-dark); margin-bottom: 20px;">
-            <i class="fas fa-chart-pie" style="color: var(--primary-green); margin-right: 8px;"></i>
+    <div class="overview-card">
+        <h3>
+            <i class="fas fa-chart-pie"></i>
             Equipment Overview
         </h3>
-        <div style="display: flex; flex-direction: column; gap: 12px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--bg-light); border-radius: 8px;">
-                <span style="color: var(--text-medium); font-size: 14px;">Total Equipment</span>
-                <span style="font-weight: 600; color: var(--text-dark);">
-                    <?php echo number_format($systemUnitCount + $monitorCount + $printerCount + $allinoneCount); ?>
-                </span>
-            </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--bg-light); border-radius: 8px;">
-                <span style="color: var(--text-medium); font-size: 14px;">Assigned</span>
-                <span style="font-weight: 600; color: var(--accent-green);">
-                    <?php 
-                    $stmt = $db->query("SELECT COUNT(DISTINCT employeeId) as count FROM (
-                        SELECT employeeId FROM tbl_systemunit WHERE employeeId IS NOT NULL
-                        UNION ALL
-                        SELECT employeeId FROM tbl_monitor WHERE employeeId IS NOT NULL
-                        UNION ALL
-                        SELECT employeeId FROM tbl_printer WHERE employeeId IS NOT NULL
-                        UNION ALL
-                        SELECT employeeId FROM tbl_allinone WHERE employeeId IS NOT NULL
-                    ) as assigned_equipment");
-                    echo number_format($stmt->fetch(PDO::FETCH_ASSOC)['count']);
-                    ?>
-                </span>
-            </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--bg-light); border-radius: 8px;">
-                <span style="color: var(--text-medium); font-size: 14px;">Unassigned</span>
-                <span style="font-weight: 600; color: var(--text-light);">
-                    <?php 
-                    $totalEquipment = $systemUnitCount + $monitorCount + $printerCount + $allinoneCount;
-                    $assignedEquipment = $stmt->fetch(PDO::FETCH_ASSOC)['count'] ?? 0;
-                    // Note: This is a simplified calculation, you may want to count actual unassigned items
-                    echo number_format(max(0, $totalEquipment - $assignedEquipment));
-                    ?>
-                </span>
-            </div>
+        <div class="overview-item">
+            <span>Total Equipment</span>
+            <span><?php echo number_format($systemUnitCount + $monitorCount + $printerCount + $allinoneCount); ?></span>
+        </div>
+        <div class="overview-item highlight">
+            <span>Assigned</span>
+            <span>
+                <?php 
+                $stmt = $db->query("SELECT COUNT(DISTINCT employeeId) as count FROM (
+                    SELECT employeeId FROM tbl_systemunit WHERE employeeId IS NOT NULL
+                    UNION ALL
+                    SELECT employeeId FROM tbl_monitor WHERE employeeId IS NOT NULL
+                    UNION ALL
+                    SELECT employeeId FROM tbl_printer WHERE employeeId IS NOT NULL
+                    UNION ALL
+                    SELECT employeeId FROM tbl_allinone WHERE employeeId IS NOT NULL
+                ) as assigned_equipment");
+                $assignedCount = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
+                echo number_format($assignedCount);
+                ?>
+            </span>
+        </div>
+        <div class="overview-item">
+            <span>Unassigned</span>
+            <span>
+                <?php 
+                $totalEquipment = $systemUnitCount + $monitorCount + $printerCount + $allinoneCount;
+                echo number_format(max(0, $totalEquipment - $assignedCount));
+                ?>
+            </span>
         </div>
     </div>
 </div>
-
-<style>
-@media (max-width: 768px) {
-    div[style*="grid-template-columns: repeat(auto-fit, minmax(400px, 1fr))"] {
-        grid-template-columns: 1fr !important;
-    }
-}
-</style>

@@ -1,285 +1,201 @@
-/**
- * Software License Management - JavaScript
- */
+var currentPage = 1;
+var perPage = 25;
+var filteredRows = [];
 
-// Filter functionality
-document.addEventListener('DOMContentLoaded', function() {
-    const filterType = document.getElementById('filterLicenseType');
-    const filterStatus = document.getElementById('filterStatus');
-    const searchInput = document.getElementById('searchLicense');
-    const table = document.getElementById('softwareTable');
-    
-    // Apply filters
-    function applyFilters() {
-        const typeValue = filterType.value.toLowerCase();
-        const statusValue = filterStatus.value.toLowerCase();
-        const searchValue = searchInput.value.toLowerCase();
-        const rows = table.querySelectorAll('tbody tr');
-        
-        rows.forEach(row => {
-            const type = row.dataset.type.toLowerCase();
-            const status = row.dataset.status.toLowerCase();
-            const text = row.textContent.toLowerCase();
-            
-            const typeMatch = !typeValue || type === typeValue;
-            const statusMatch = !statusValue || status === statusValue;
-            const searchMatch = !searchValue || text.includes(searchValue);
-            
-            if (typeMatch && statusMatch && searchMatch) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
-            }
-        });
-        
-        updateVisibleCount();
-    }
-    
-    // Update visible count
-    function updateVisibleCount() {
-        const rows = table.querySelectorAll('tbody tr');
-        const visibleRows = Array.from(rows).filter(row => row.style.display !== 'none');
-        
-        // You can add a count display here if needed
-        console.log(`Showing ${visibleRows.length} of ${rows.length} licenses`);
-    }
-    
-    // Event listeners
-    if (filterType) filterType.addEventListener('change', applyFilters);
-    if (filterStatus) filterStatus.addEventListener('change', applyFilters);
-    if (searchInput) {
-        searchInput.addEventListener('input', debounce(applyFilters, 300));
-    }
-});
-
-// Debounce function for search
-function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-    };
+function filterSoftware() {
+    currentPage = 1;
+    applyTableState();
 }
 
-// Copy to clipboard
-function copyToClipboard(text) {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text).then(() => {
-            showNotification('Copied to clipboard!', 'success');
-        }).catch(err => {
-            console.error('Failed to copy:', err);
-            fallbackCopyToClipboard(text);
-        });
-    } else {
-        fallbackCopyToClipboard(text);
-    }
+function changePerPage() {
+    perPage = parseInt(document.getElementById('perPageSelect').value);
+    currentPage = 1;
+    applyTableState();
 }
 
-// Fallback copy method
-function fallbackCopyToClipboard(text) {
-    const textArea = document.createElement('textarea');
-    textArea.value = text;
-    textArea.style.position = 'fixed';
-    textArea.style.top = '0';
-    textArea.style.left = '0';
-    textArea.style.opacity = '0';
-    document.body.appendChild(textArea);
-    textArea.focus();
-    textArea.select();
-    
-    try {
-        document.execCommand('copy');
-        showNotification('Copied to clipboard!', 'success');
-    } catch (err) {
-        showNotification('Failed to copy', 'error');
-    }
-    
-    document.body.removeChild(textArea);
-}
+function applyTableState() {
+    const searchTerm   = document.getElementById('softwareSearch').value.toLowerCase();
+    const statusFilter = document.getElementById('statusFilter').value;
+    const typeFilter   = document.getElementById('typeFilter').value;
+    const allRows      = Array.from(document.querySelectorAll('#softwareTableBody tr[data-software-id]'));
 
-// Show password (demo)
-function showPassword(id) {
-    alert(`This would show the password for license ID: ${id}\n\nIn production, this would:\n- Verify user permissions\n- Log the access\n- Display the actual password\n\nDemo only - no real passwords stored.`);
-}
+    // 1. Filter
+    filteredRows = allRows.filter(row => {
+        const name     = row.dataset.name     || '';
+        const details  = row.dataset.details  || '';
+        const employee = row.dataset.employee || '';
+        const type     = row.dataset.type     || '';
+        const status   = row.dataset.status   || '';
 
-// View license details
-function viewLicense(id) {
-    alert(`View detailed information for license ID: ${id}\n\nThis would open a modal with:\n- Full license information\n- Purchase history\n- Usage statistics\n- Renewal information\n\nDemo only.`);
-}
+        const matchesSearch  = name.includes(searchTerm)
+                             || details.includes(searchTerm)
+                             || employee.includes(searchTerm);
+        const matchesStatus  = !statusFilter || status === statusFilter;
+        const matchesType    = !typeFilter   || type   === typeFilter;
 
-// Edit license
-function editLicense(id) {
-    alert(`Edit license ID: ${id}\n\nThis would open an edit modal with:\n- All license fields\n- Ability to update information\n- Assignment to employees\n- Set expiry dates\n\nDemo only.`);
-}
-
-// Delete license
-function deleteLicense(id) {
-    if (confirm('Are you sure you want to delete this license?\n\nThis action cannot be undone.\n\n(Demo only - no actual deletion)')) {
-        showNotification('License deleted successfully', 'success');
-        // In production, this would call an API to delete the license
-    }
-}
-
-// Open add license modal
-function openAddLicenseModal() {
-    alert('Add New License\n\nThis would open a modal with:\n- Software name\n- License type (Subscription/Perpetual)\n- License details\n- Expiry date\n- Credentials\n- Assignment options\n\nDemo only.');
-}
-
-// Show notification
-function showNotification(message, type = 'info') {
-    // Create notification element
-    const notification = document.createElement('div');
-    notification.className = `notification notification-${type}`;
-    notification.innerHTML = `
-        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
-        <span>${message}</span>
-    `;
-    
-    // Add styles
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: ${type === 'success' ? '#16a34a' : type === 'error' ? '#dc2626' : '#2563eb'};
-        color: white;
-        padding: 16px 24px;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        font-size: 14px;
-        font-weight: 600;
-        z-index: 10000;
-        animation: slideInRight 0.3s ease;
-    `;
-    
-    document.body.appendChild(notification);
-    
-    // Remove after 3 seconds
-    setTimeout(() => {
-        notification.style.animation = 'slideOutRight 0.3s ease';
-        setTimeout(() => {
-            document.body.removeChild(notification);
-        }, 300);
-    }, 3000);
-}
-
-// Add animation styles
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes slideInRight {
-        from {
-            transform: translateX(400px);
-            opacity: 0;
-        }
-        to {
-            transform: translateX(0);
-            opacity: 1;
-        }
-    }
-    
-    @keyframes slideOutRight {
-        from {
-            transform: translateX(0);
-            opacity: 1;
-        }
-        to {
-            transform: translateX(400px);
-            opacity: 0;
-        }
-    }
-`;
-document.head.appendChild(style);
-
-// Export functionality (demo)
-function exportLicenseReport() {
-    alert('Export License Report\n\nThis would generate a report in:\n- PDF format\n- Excel/CSV format\n- Including all license details\n- Filtered by current view\n\nDemo only.');
-}
-
-// Highlight expiring licenses
-document.addEventListener('DOMContentLoaded', function() {
-    const rows = document.querySelectorAll('tbody tr');
-    
-    rows.forEach(row => {
-        const expiryCountdown = row.querySelector('.expiry-countdown');
-        if (expiryCountdown) {
-            const text = expiryCountdown.textContent;
-            
-            // Add pulsing animation to expiring soon
-            if (expiryCountdown.classList.contains('warning')) {
-                row.style.background = 'rgba(245, 158, 11, 0.03)';
-            }
-            
-            // Add stronger highlight to expired
-            if (expiryCountdown.classList.contains('danger')) {
-                row.style.background = 'rgba(239, 68, 68, 0.03)';
-            }
-        }
+        return matchesSearch && matchesStatus && matchesType;
     });
-});
 
-// Sort table functionality
-function sortTable(columnIndex) {
-    const table = document.getElementById('softwareTable');
-    const tbody = table.querySelector('tbody');
-    const rows = Array.from(tbody.querySelectorAll('tr'));
-    
-    let ascending = true;
-    const header = table.querySelectorAll('th')[columnIndex];
-    
-    if (header.classList.contains('sort-asc')) {
-        ascending = false;
-        header.classList.remove('sort-asc');
-        header.classList.add('sort-desc');
-    } else {
-        // Remove all sort classes
-        table.querySelectorAll('th').forEach(th => {
-            th.classList.remove('sort-asc', 'sort-desc');
-        });
-        header.classList.add('sort-asc');
+    // 2. Pagination
+    const total      = filteredRows.length;
+    const totalPages = Math.max(1, Math.ceil(total / perPage));
+    if (currentPage > totalPages) currentPage = totalPages;
+
+    const start = (currentPage - 1) * perPage;
+    const end   = Math.min(start + perPage, total);
+
+    allRows.forEach(r => r.style.display = 'none');
+    filteredRows.forEach((row, idx) => {
+        row.style.display = (idx >= start && idx < end) ? '' : 'none';
+    });
+
+    // 3. Footer info
+    const showing = total === 0 ? 0 : start + 1;
+    const countEl = document.getElementById('recordCount');
+    if (countEl) {
+        countEl.innerHTML = `Showing <strong>${showing}–${end}</strong> of <strong>${total}</strong> license(s)`;
     }
-    
-    rows.sort((a, b) => {
-        const aValue = a.cells[columnIndex].textContent.trim();
-        const bValue = b.cells[columnIndex].textContent.trim();
-        
-        if (ascending) {
-            return aValue.localeCompare(bValue);
+
+    renderPagination(totalPages);
+}
+
+function renderPagination(totalPages) {
+    const container = document.getElementById('paginationControls');
+    if (!container) return;
+
+    var html = `<button class="page-btn" onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>
+        <i class="fas fa-chevron-left"></i></button>`;
+
+    getPaginationRange(currentPage, totalPages).forEach(p => {
+        if (p === '...') {
+            html += `<span class="page-ellipsis">…</span>`;
         } else {
-            return bValue.localeCompare(aValue);
+            html += `<button class="page-btn ${p === currentPage ? 'active' : ''}" onclick="goToPage(${p})">${p}</button>`;
         }
     });
-    
-    // Re-append sorted rows
-    rows.forEach(row => tbody.appendChild(row));
+
+    html += `<button class="page-btn" onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>
+        <i class="fas fa-chevron-right"></i></button>`;
+
+    container.innerHTML = html;
 }
 
-// Auto-check for expiring licenses on load
-document.addEventListener('DOMContentLoaded', function() {
-    checkExpiringLicenses();
+function getPaginationRange(current, total) {
+    if (total <= 7) return Array.from({length: total}, (_, i) => i + 1);
+    if (current <= 4) return [1, 2, 3, 4, 5, '...', total];
+    if (current >= total - 3) return [1, '...', total-4, total-3, total-2, total-1, total];
+    return [1, '...', current-1, current, current+1, '...', total];
+}
+
+function goToPage(page) {
+    const totalPages = Math.max(1, Math.ceil(filteredRows.length / perPage));
+    if (page < 1 || page > totalPages) return;
+    currentPage = page;
+    applyTableState();
+}
+
+// ========================================
+// ADD / EDIT
+// ========================================
+var currentEditId = null;
+
+function openAddSoftware() {
+    currentEditId = null;
+    document.getElementById('softwareModalTitle').innerHTML = '<i class="fas fa-plus-circle"></i> Add New License';
+    document.getElementById('softwareForm').reset();
+    const modal = new bootstrap.Modal(document.getElementById('softwareModal'));
+    modal.show();
+}
+
+function editSoftware(id) {
+    fetch(`../ajax/manage_software.php?action=get&software_id=${id}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                currentEditId = id;
+                const s = data.data;
+                document.getElementById('softwareModalTitle').innerHTML = '<i class="fas fa-edit"></i> Edit License';
+                document.getElementById('softwareName').value     = s.software_name   || s.licenseSoftware || '';
+                document.getElementById('softwareDetails').value  = s.license_details || s.licenseDetails  || '';
+                document.getElementById('softwareType').value     = s.license_type    || s.licenseType     || '';
+                document.getElementById('softwareExpiry').value   = s.expiry_date
+                    ? (s.expiry_date.includes(' ') ? s.expiry_date.split(' ')[0] : s.expiry_date)
+                    : '';
+                document.getElementById('softwareEmail').value    = s.email    || '';
+                document.getElementById('softwarePassword').value = s.password || '';
+                document.getElementById('softwareEmployee').value = s.employee_id || s.employeeId || '';
+                const modal = new bootstrap.Modal(document.getElementById('softwareModal'));
+                modal.show();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => alert('Error loading software license: ' + error));
+}
+
+function saveSoftware() {
+    const requiredIds = ['softwareName', 'softwareDetails', 'softwareType'];
+    for (var id of requiredIds) {
+        if (!document.getElementById(id).value.trim()) {
+            alert('Please fill in all required fields marked with *');
+            return;
+        }
+    }
+
+    const formData = new FormData();
+    formData.append('action', currentEditId ? 'update' : 'create');
+    if (currentEditId) formData.append('software_id', currentEditId);
+    formData.append('software_name',    document.getElementById('softwareName').value);
+    formData.append('license_details',  document.getElementById('softwareDetails').value);
+    formData.append('license_type',     document.getElementById('softwareType').value);
+    formData.append('expiry_date',      document.getElementById('softwareExpiry').value);
+    formData.append('email',            document.getElementById('softwareEmail').value);
+    formData.append('password',         document.getElementById('softwarePassword').value);
+    formData.append('employee_id',      document.getElementById('softwareEmployee').value);
+
+    fetch('../ajax/manage_software.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            bootstrap.Modal.getInstance(document.getElementById('softwareModal')).hide();
+            location.reload();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => alert('Error saving software license: ' + error));
+}
+
+// ========================================
+// DELETE
+// ========================================
+function deleteSoftware(id) {
+    if (!confirm('Are you sure you want to delete this software license? This action cannot be undone.')) return;
+
+    const formData = new FormData();
+    formData.append('action', 'delete');
+    formData.append('software_id', id);
+
+    fetch('../ajax/manage_software.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            location.reload();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => alert('Error deleting software license: ' + error));
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    applyTableState();
 });
-
-function checkExpiringLicenses() {
-    const rows = document.querySelectorAll('tbody tr');
-    let expiringSoonCount = 0;
-    let expiredCount = 0;
-    
-    rows.forEach(row => {
-        const status = row.dataset.status;
-        if (status === 'Expiring Soon') expiringSoonCount++;
-        if (status === 'Expired') expiredCount++;
-    });
-    
-    if (expiredCount > 0) {
-        console.warn(`⚠️ ${expiredCount} license(s) have expired!`);
-    }
-    
-    if (expiringSoonCount > 0) {
-        console.warn(`⏰ ${expiringSoonCount} license(s) expiring soon!`);
-    }
-}

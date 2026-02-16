@@ -1,16 +1,69 @@
 <?php
-/**
- * All-in-One PC Management AJAX Handler
- * Handles all CRUD operations for all-in-one computers
- * Works with existing tbl_allinone schema
- */
-
 require_once '../config/database.php';
+require_once '../includes/maintenanceHelper.php';
 
 header('Content-Type: application/json');
 
 $db = getDB();
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
+
+/**
+ * Sanitize string input
+ */
+function sanitizeString($input) {
+    return trim(htmlspecialchars(strip_tags($input), ENT_QUOTES, 'UTF-8'));
+}
+
+/**
+ * Validate brand name
+ */
+function validateBrand($brand) {
+    $brand = sanitizeString($brand);
+    if (empty($brand)) {
+        throw new Exception("Brand name cannot be empty");
+    }
+    if (strlen($brand) < 2 || strlen($brand) > 100) {
+        throw new Exception("Brand name must be between 2 and 100 characters");
+    }
+    return $brand;
+}
+
+/**
+ * Validate specification fields
+ */
+function validateSpecification($spec, $fieldName) {
+    $spec = sanitizeString($spec);
+    if (empty($spec)) {
+        throw new Exception("$fieldName cannot be empty");
+    }
+    if (strlen($spec) > 255) {
+        throw new Exception("$fieldName must not exceed 255 characters");
+    }
+    return $spec;
+}
+
+/**
+ * Validate employee ID
+ */
+function validateEmployeeId($db, $employeeId) {
+    if (empty($employeeId)) {
+        return null;
+    }
+    
+    $employeeId = filter_var($employeeId, FILTER_VALIDATE_INT);
+    if ($employeeId === false || $employeeId < 1) {
+        throw new Exception("Invalid employee ID");
+    }
+    
+    // Check if employee exists
+    $stmt = $db->prepare("SELECT COUNT(*) FROM tbl_employee WHERE employeeId = :id");
+    $stmt->execute([':id' => $employeeId]);
+    if ($stmt->fetchColumn() == 0) {
+        throw new Exception("Employee not found");
+    }
+    
+    return $employeeId;
+}
 
 try {
     switch ($action) {
@@ -38,6 +91,7 @@ try {
 
 function listAllInOnes($db) {
     $search = $_GET['search'] ?? '';
+
     $sql = "
         SELECT 
             a.*,
@@ -49,11 +103,15 @@ function listAllInOnes($db) {
     
     $params = [];
     if (!empty($search)) {
+        $term = "%$search%";
         $sql .= " AND (
-            a.allinoneBrand LIKE :search OR
-            a.specificationProcessor LIKE :search
+            a.allinoneBrand LIKE :search1 OR
+            a.specificationProcessor LIKE :search2 OR
+            CONCAT_WS(' ', e.firstName, e.middleName, e.lastName) LIKE :search3
         )";
-        $params[':search'] = "%$search%";
+        $params [':search1'] = $term;
+        $params [':search2'] = $term;
+        $params [':search3'] = $term;
     }
     
     $sql .= " ORDER BY a.allinoneId DESC";
@@ -69,9 +127,9 @@ function listAllInOnes($db) {
             'specificationMemory' => $a['specificationMemory'],
             'specificationGPU' => $a['specificationGPU'],
             'specificationStorage' => $a['specificationStorage'],
-            'serial' => 'AIO-' . str_pad($a['allinoneId'], 6, '0', STR_PAD_LEFT), // Generated since not in schema
-            'screenSize' => '24 inches', // Default since not in schema
-            'yearAcquired' => '2024', // Default since not in schema
+            'serial' => 'AIO-' . str_pad($a['allinoneId'], 6, '0', STR_PAD_LEFT),
+            'screenSize' => '24 inches',
+            'yearAcquired' => '2024',
             'employeeId' => $a['employeeId'],
             'employeeName' => $a['employeeName'],
             'status' => $a['employeeId'] ? 'Active' : 'Available'
@@ -115,12 +173,13 @@ function getAllInOne($db) {
 }
 
 function createAllInOne($db) {
-    $required = ['brand', 'processor', 'memory', 'gpu', 'storage'];
-    foreach ($required as $field) {
-        if (empty($_POST[$field])) {
-            throw new Exception("Field '$field' is required");
-        }
-    }
+    // Validate and sanitize all inputs
+    $brand = validateBrand($_POST['brand'] ?? '');
+    $processor = validateSpecification($_POST['processor'] ?? '', 'Processor');
+    $memory = validateSpecification($_POST['memory'] ?? '', 'Memory');
+    $gpu = validateSpecification($_POST['gpu'] ?? '', 'GPU');
+    $storage = validateSpecification($_POST['storage'] ?? '', 'Storage');
+    $employeeId = validateEmployeeId($db, $_POST['employee_id'] ?? null);
     
     $stmt = $db->prepare("
         INSERT INTO tbl_allinone (
@@ -132,29 +191,50 @@ function createAllInOne($db) {
     ");
     
     $stmt->execute([
-        ':brand' => $_POST['brand'],
-        ':processor' => $_POST['processor'],
-        ':memory' => $_POST['memory'],
-        ':gpu' => $_POST['gpu'],
-        ':storage' => $_POST['storage'],
-        ':employeeId' => $_POST['employee_id'] ?: null
+        ':brand' => $brand,
+        ':processor' => $processor,
+        ':memory' => $memory,
+        ':gpu' => $gpu,
+        ':storage' => $storage,
+        ':employeeId' => $employeeId
     ]);
+
+    $newId = $db->lastInsertId();
+
+    try {
+        $maint = new MaintenanceHelper($db);
+        $maint->initScheduleByType('All-in-One PC', $newId);
+    } catch (Exception $e) {
+        error_log("Failed to schedule maintenance for All-in-One ID $newId: " . $e->getMessage());
+    }
     
     echo json_encode([
         'success' => true,
         'message' => 'All-in-One added successfully',
-        'allinone_id' => $db->lastInsertId()
+        'allinone_id' => $newId
     ]);
 }
 
 function updateAllInOne($db) {
-    $id = $_POST['allinone_id'] ?? null;
-    if (!$id) throw new Exception('All-in-One ID is required');
+    $id = filter_var($_POST['allinone_id'] ?? null, FILTER_VALIDATE_INT);
+    if (!$id || $id < 1) {
+        throw new Exception('Valid All-in-One ID is required');
+    }
     
     // Check exists
     $stmt = $db->prepare("SELECT COUNT(*) FROM tbl_allinone WHERE allinoneId = :id");
     $stmt->execute([':id' => $id]);
-    if ($stmt->fetchColumn() == 0) throw new Exception('All-in-One not found');
+    if ($stmt->fetchColumn() == 0) {
+        throw new Exception('All-in-One not found');
+    }
+    
+    // Validate and sanitize all inputs
+    $brand = validateBrand($_POST['brand'] ?? '');
+    $processor = validateSpecification($_POST['processor'] ?? '', 'Processor');
+    $memory = validateSpecification($_POST['memory'] ?? '', 'Memory');
+    $gpu = validateSpecification($_POST['gpu'] ?? '', 'GPU');
+    $storage = validateSpecification($_POST['storage'] ?? '', 'Storage');
+    $employeeId = validateEmployeeId($db, $_POST['employee_id'] ?? null);
     
     $stmt = $db->prepare("
         UPDATE tbl_allinone SET
@@ -168,12 +248,12 @@ function updateAllInOne($db) {
     ");
     
     $stmt->execute([
-        ':brand' => $_POST['brand'],
-        ':processor' => $_POST['processor'],
-        ':memory' => $_POST['memory'],
-        ':gpu' => $_POST['gpu'],
-        ':storage' => $_POST['storage'],
-        ':employeeId' => $_POST['employee_id'] ?: null,
+        ':brand' => $brand,
+        ':processor' => $processor,
+        ':memory' => $memory,
+        ':gpu' => $gpu,
+        ':storage' => $storage,
+        ':employeeId' => $employeeId,
         ':id' => $id
     ]);
     

@@ -1,0 +1,237 @@
+<?php
+// modules/inventory/maintenance-schedule.php
+?>
+<link rel="stylesheet" href="assets/css/maintenance.css?v=<?php echo time(); ?>">
+
+<div class="page-header">
+    <div class="header-content">
+        <div class="header-left">
+            <h1 class="page-title">Preventive Maintenance Schedule</h1>
+            <p class="page-subtitle">Track upcoming and overdue maintenance tasks</p>
+        </div>
+        <div class="header-right">
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-outline-primary active" id="btnDetailed" onclick="switchView('detailed')">
+                    <i class="fas fa-list"></i> Specific Equipment
+                </button>
+                <button type="button" class="btn btn-outline-primary" id="btnSummary" onclick="switchView('summary')">
+                    <i class="fas fa-th-large"></i> By Unit Summary
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="content-wrapper">
+    <div class="card mb-4 border-0 shadow-sm">
+        <div class="card-body py-3">
+            <div class="row g-3 align-items-center">
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
+                        <input type="text" class="form-control border-start-0 ps-0" placeholder="Search serial, brand, or owner...">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select">
+                        <option value="">All Sections</option>
+                        <option>Administrative</option>
+                        <option>Engineering</option>
+                        <option>Finance</option>
+                        <option>Operations</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select">
+                        <option value="">All Statuses</option>
+                        <option class="text-danger fw-bold">Overdue</option>
+                        <option class="text-warning fw-bold">Due Soon</option>
+                        <option class="text-success fw-bold">Scheduled</option>
+                    </select>
+                </div>
+                <div class="col-md-2 text-end">
+                    <button class="btn btn-light text-primary w-100 border"><i class="fas fa-file-export"></i> Export</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-detailed" class="d-block">
+        <div class="card border-0 shadow-sm">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light text-muted small text-uppercase">
+                        <tr>
+                            <th class="ps-4">Due Date</th>
+                            <th>Equipment Detail</th>
+                            <th>Location / Owner</th>
+                            <th>Status</th>
+                            <th class="text-end pe-4">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="ps-4">
+                                <div class="text-danger fw-bold">Feb 10, 2026</div>
+                                <small class="text-danger fw-bold"><i class="fas fa-exclamation-circle"></i> 6 Days Overdue</small>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-primary-xlight text-primary rounded p-2 me-2"><i class="fas fa-desktop"></i></div>
+                                    <div>
+                                        <div class="fw-bold text-dark">Dell Optiplex 7080</div>
+                                        <div class="small text-muted">SN: SU-2024-009</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="fw-medium">Engineering Section</div>
+                                <small class="text-muted">Engr. Juan Dela Cruz</small>
+                            </td>
+                            <td><span class="badge bg-danger">Overdue</span></td>
+                            <td class="text-end pe-4">
+                                <a href="?page=perform-maintenance&id=101" class="btn btn-sm btn-primary px-3 shadow-sm">Perform</a>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td class="ps-4">
+                                <div class="text-warning fw-bold">Feb 18, 2026</div>
+                                <small class="text-muted">Due in 2 Days</small>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-secondary-xlight text-secondary rounded p-2 me-2"><i class="fas fa-print"></i></div>
+                                    <div>
+                                        <div class="fw-bold text-dark">Epson L3110</div>
+                                        <div class="small text-muted">SN: PR-2023-112</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="fw-medium">Administrative Section</div>
+                                <small class="text-muted">Records Unit</small>
+                            </td>
+                            <td><span class="badge bg-warning text-dark">Due Soon</span></td>
+                            <td class="text-end pe-4">
+                                <a href="?page=perform-maintenance&id=102" class="btn btn-sm btn-primary px-3 shadow-sm">Perform</a>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td class="ps-4">
+                                <div class="text-success fw-bold">Mar 05, 2026</div>
+                                <small class="text-muted">Due in 19 Days</small>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-primary-xlight text-primary rounded p-2 me-2"><i class="fas fa-laptop"></i></div>
+                                    <div>
+                                        <div class="fw-bold text-dark">Acer TravelMate</div>
+                                        <div class="small text-muted">SN: LP-2024-055</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="fw-medium">Finance Section</div>
+                                <small class="text-muted">Cashier Unit</small>
+                            </td>
+                            <td><span class="badge bg-success">Scheduled</span></td>
+                            <td class="text-end pe-4">
+                                <button class="btn btn-sm btn-outline-secondary" disabled>Wait</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer bg-white border-top py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <small class="text-muted">Showing 3 of 45 records</small>
+                    <nav><ul class="pagination pagination-sm mb-0"><li class="page-item active"><a class="page-link" href="#">1</a></li><li class="page-item"><a class="page-link" href="#">2</a></li></ul></nav>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-summary" class="d-none">
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom py-3">
+                        <h6 class="fw-bold mb-0 text-dark">Engineering Section</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="text-muted">Construction Unit</span>
+                            <span class="badge bg-danger rounded-pill">5 Overdue</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="text-muted">Planning Unit</span>
+                            <span class="badge bg-success rounded-pill">All Good</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-muted">O&M Unit</span>
+                            <span class="badge bg-warning text-dark rounded-pill">2 Due Soon</span>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-white text-center">
+                        <button class="btn btn-sm btn-outline-primary w-100">View All Assets</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom py-3">
+                        <h6 class="fw-bold mb-0 text-dark">Administrative Section</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="text-muted">Property Unit</span>
+                            <span class="badge bg-danger rounded-pill">1 Overdue</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="text-muted">Records Unit</span>
+                            <span class="badge bg-success rounded-pill">All Good</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-muted">HR Unit</span>
+                            <span class="badge bg-success rounded-pill">All Good</span>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-white text-center">
+                        <button class="btn btn-sm btn-outline-primary w-100">View All Assets</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom py-3">
+                        <h6 class="fw-bold mb-0 text-dark">Operations Section</h6>
+                    </div>
+                    <div class="card-body">
+                         <div class="text-center py-4">
+                            <div class="text-success mb-2"><i class="fas fa-check-circle fa-2x"></i></div>
+                            <h5 class="fw-bold">100% Compliant</h5>
+                            <p class="text-muted small mb-0">No pending maintenance tasks.</p>
+                         </div>
+                    </div>
+                    <div class="card-footer bg-white text-center">
+                        <button class="btn btn-sm btn-outline-primary w-100">View All Assets</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function switchView(view) {
+    document.getElementById('view-detailed').className = view === 'detailed' ? 'd-block' : 'd-none';
+    document.getElementById('view-summary').className  = view === 'summary' ? 'd-block' : 'd-none';
+    
+    document.getElementById('btnDetailed').classList.toggle('active', view === 'detailed');
+    document.getElementById('btnSummary').classList.toggle('active', view === 'summary');
+}
+</script>

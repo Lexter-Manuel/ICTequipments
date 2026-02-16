@@ -1,151 +1,75 @@
 <?php
-// modules/inventory/software.php
-// Software License Management with sample data
+/**
+ * Software License Management Module
+ * Database integrated with full CRUD operations
+ */
 
-// Sample data for testing (no database required)
-$sampleSoftware = [
-    [
-        'softwareId' => 1,
-        'licenseSoftware' => 'Microsoft Office 365 Business Premium',
-        'licenseDetails' => '5-User License',
-        'licenseType' => 'Subscription',
-        'expiryDate' => '2026-12-31',
-        'email' => 'admin@nia-upriis.gov.ph',
-        'password' => '••••••••',
-        'employeeId' => null,
-        'employeeName' => null,
-        'status' => 'Active',
-        'daysUntilExpiry' => 325
-    ],
-    [
-        'softwareId' => 2,
-        'licenseSoftware' => 'Adobe Creative Cloud',
-        'licenseDetails' => 'All Apps - Single User',
-        'licenseType' => 'Subscription',
-        'expiryDate' => '2026-06-15',
-        'email' => 'design@nia-upriis.gov.ph',
-        'password' => '••••••••',
-        'employeeId' => null,
-        'employeeName' => null,
-        'status' => 'Active',
-        'daysUntilExpiry' => 126
-    ],
-    [
-        'softwareId' => 3,
-        'licenseSoftware' => 'AutoCAD 2024',
-        'licenseDetails' => 'Professional License',
-        'licenseType' => 'Subscription',
-        'expiryDate' => '2026-03-20',
-        'email' => 'engineering@nia-upriis.gov.ph',
-        'password' => '••••••••',
-        'employeeId' => null,
-        'employeeName' => null,
-        'status' => 'Expiring Soon',
-        'daysUntilExpiry' => 39
-    ],
-    [
-        'softwareId' => 4,
-        'licenseSoftware' => 'Windows Server 2022 Standard',
-        'licenseDetails' => '16-Core License',
-        'licenseType' => 'Perpetual',
-        'expiryDate' => null,
-        'email' => null,
-        'password' => null,
-        'employeeId' => null,
-        'employeeName' => null,
-        'status' => 'Active',
-        'daysUntilExpiry' => null
-    ],
-    [
-        'softwareId' => 5,
-        'licenseSoftware' => 'Adobe Photoshop CS6',
-        'licenseDetails' => 'Extended License',
-        'licenseType' => 'Perpetual',
-        'expiryDate' => null,
-        'email' => null,
-        'password' => null,
-        'employeeId' => null,
-        'employeeName' => null,
-        'status' => 'Active',
-        'daysUntilExpiry' => null
-    ],
-    [
-        'softwareId' => 6,
-        'licenseSoftware' => 'Kaspersky Endpoint Security',
-        'licenseDetails' => '50 Devices',
-        'licenseType' => 'Subscription',
-        'expiryDate' => '2026-02-28',
-        'email' => 'ict@nia-upriis.gov.ph',
-        'password' => '••••••••',
-        'employeeId' => null,
-        'employeeName' => null,
-        'status' => 'Expiring Soon',
-        'daysUntilExpiry' => 19
-    ],
-    [
-        'softwareId' => 7,
-        'licenseSoftware' => 'Zoom Business',
-        'licenseDetails' => '10-Host License',
-        'licenseType' => 'Subscription',
-        'expiryDate' => '2026-01-15',
-        'email' => 'meetings@nia-upriis.gov.ph',
-        'password' => '••••••••',
-        'employeeId' => null,
-        'employeeName' => null,
-        'status' => 'Expired',
-        'daysUntilExpiry' => -25
-    ],
-    [
-        'softwareId' => 8,
-        'licenseSoftware' => 'Microsoft SQL Server 2022',
-        'licenseDetails' => 'Standard Edition - 2 Core',
-        'licenseType' => 'Perpetual',
-        'expiryDate' => null,
-        'email' => null,
-        'password' => null,
-        'employeeId' => null,
-        'employeeName' => null,
-        'status' => 'Active',
-        'daysUntilExpiry' => null
-    ],
-    [
-        'softwareId' => 9,
-        'licenseSoftware' => 'Slack Business+',
-        'licenseDetails' => '25 Users',
-        'licenseType' => 'Subscription',
-        'expiryDate' => '2027-01-01',
-        'email' => 'workspace@nia-upriis.gov.ph',
-        'password' => '••••••••',
-        'employeeId' => null,
-        'employeeName' => null,
-        'status' => 'Active',
-        'daysUntilExpiry' => 356
-    ],
-    [
-        'softwareId' => 10,
-        'licenseSoftware' => 'WinRAR',
-        'licenseDetails' => 'Single User License',
-        'licenseType' => 'Perpetual',
-        'expiryDate' => null,
-        'email' => null,
-        'password' => null,
-        'employeeId' => null,
-        'employeeName' => null,
-        'status' => 'Active',
-        'daysUntilExpiry' => null
-    ]
-];
+require_once '../../config/database.php';
+
+$db = getDB();
+
+// Fetch software licenses with employee data
+$stmt = $db->query("
+    SELECT 
+        s.*,
+        CONCAT_WS(' ', e.firstName, e.middleName, e.lastName) as employeeName
+    FROM tbl_software s
+    LEFT JOIN tbl_employee e ON s.employeeId = e.employeeId
+    ORDER BY s.softwareId DESC
+");
+$softwareList = $stmt->fetchAll();
 
 // Calculate statistics
-$totalLicenses = count($sampleSoftware);
-$activeLicenses = count(array_filter($sampleSoftware, fn($s) => $s['status'] === 'Active'));
-$expiringSoon = count(array_filter($sampleSoftware, fn($s) => $s['status'] === 'Expiring Soon'));
-$expiredLicenses = count(array_filter($sampleSoftware, fn($s) => $s['status'] === 'Expired'));
-$subscriptionLicenses = count(array_filter($sampleSoftware, fn($s) => $s['licenseType'] === 'Subscription'));
-$perpetualLicenses = count(array_filter($sampleSoftware, fn($s) => $s['licenseType'] === 'Perpetual'));
+$totalLicenses       = count($softwareList);
+$activeLicenses      = 0;
+$expiringSoon        = 0;
+$expiredLicenses     = 0;
+$subscriptionCount   = 0;
+$perpetualCount      = 0;
+
+$today = new DateTime();
+foreach ($softwareList as &$software) {
+    if ($software['licenseType'] === 'Subscription') $subscriptionCount++;
+    if ($software['licenseType'] === 'Perpetual')    $perpetualCount++;
+
+    if ($software['expiryDate']) {
+        $expiryDate  = new DateTime($software['expiryDate']);
+        $interval    = $today->diff($expiryDate);
+        $daysLeft    = $interval->invert ? -$interval->days : $interval->days;
+
+        if ($daysLeft < 0) {
+            $software['status']        = 'Expired';
+            $software['statusClass']   = 'disposed';
+            $expiredLicenses++;
+        } elseif ($daysLeft <= 30) {
+            $software['status']        = 'Expiring Soon';
+            $software['statusClass']   = 'maintenance';
+            $expiringSoon++;
+        } else {
+            $software['status']        = 'Active';
+            $software['statusClass']   = 'in-use';
+            $activeLicenses++;
+        }
+        $software['daysLeft'] = $daysLeft;
+    } else {
+        $software['status']      = 'Active';
+        $software['statusClass'] = 'in-use';
+        $software['daysLeft']    = null;
+        $activeLicenses++;
+    }
+}
+unset($software);
+
+// Fetch employees for dropdown
+$stmtEmployees = $db->query("
+    SELECT employeeId, CONCAT_WS(' ', firstName, middleName, lastName) as fullName
+    FROM tbl_employee
+    ORDER BY firstName, lastName
+");
+$employees = $stmtEmployees->fetchAll();
 ?>
 
-<link rel="stylesheet" href="assets/css/software.css">
+<link rel="stylesheet" href="assets/css/software.css?v=<?php echo time()?>">
 
 <!-- Page Header -->
 <div class="page-header">
@@ -156,201 +80,297 @@ $perpetualLicenses = count(array_filter($sampleSoftware, fn($s) => $s['licenseTy
     <div class="header-actions">
         <button class="btn btn-secondary">
             <i class="fas fa-download"></i>
-            Export Report
+            Export
         </button>
-        <button class="btn btn-primary" onclick="openAddLicenseModal()">
+        <button class="btn btn-primary" onclick="openAddSoftware()">
             <i class="fas fa-plus"></i>
             Add License
         </button>
     </div>
 </div>
 
-<!-- Statistics Grid -->
+<!-- Statistics -->
 <div class="stats-grid">
     <div class="stat-card">
-        <div class="stat-icon green">
-            <i class="fas fa-key"></i>
-        </div>
-        <div class="stat-value"><?php echo $totalLicenses; ?></div>
+        <i class="fas fa-key stat-icon"></i>
         <div class="stat-label">Total Licenses</div>
+        <div class="stat-value"><?php echo $totalLicenses; ?></div>
     </div>
-    
     <div class="stat-card">
-        <div class="stat-icon blue">
-            <i class="fas fa-check-circle"></i>
-        </div>
-        <div class="stat-value"><?php echo $activeLicenses; ?></div>
+        <i class="fas fa-check-circle stat-icon"></i>
         <div class="stat-label">Active</div>
+        <div class="stat-value"><?php echo $activeLicenses; ?></div>
     </div>
-    
     <div class="stat-card">
-        <div class="stat-icon orange">
-            <i class="fas fa-exclamation-triangle"></i>
-        </div>
-        <div class="stat-value"><?php echo $expiringSoon; ?></div>
+        <i class="fas fa-exclamation-circle stat-icon"></i>
         <div class="stat-label">Expiring Soon</div>
+        <div class="stat-value"><?php echo $expiringSoon; ?></div>
     </div>
-    
     <div class="stat-card">
-        <div class="stat-icon red">
-            <i class="fas fa-times-circle"></i>
-        </div>
-        <div class="stat-value"><?php echo $expiredLicenses; ?></div>
+        <i class="fas fa-times-circle stat-icon"></i>
         <div class="stat-label">Expired</div>
+        <div class="stat-value"><?php echo $expiredLicenses; ?></div>
     </div>
-    
     <div class="stat-card">
-        <div class="stat-icon purple">
-            <i class="fas fa-sync-alt"></i>
-        </div>
-        <div class="stat-value"><?php echo $subscriptionLicenses; ?></div>
+        <i class="fas fa-sync-alt stat-icon"></i>
         <div class="stat-label">Subscription</div>
+        <div class="stat-value"><?php echo $subscriptionCount; ?></div>
     </div>
-    
     <div class="stat-card">
-        <div class="stat-icon blue">
-            <i class="fas fa-infinity"></i>
-        </div>
-        <div class="stat-value"><?php echo $perpetualLicenses; ?></div>
+        <i class="fas fa-infinity stat-icon"></i>
         <div class="stat-label">Perpetual</div>
+        <div class="stat-value"><?php echo $perpetualCount; ?></div>
     </div>
 </div>
 
-<!-- Filters Bar -->
-<div class="filters-bar">
-    <div class="filter-group">
-        <label><i class="fas fa-tag"></i> License Type:</label>
-        <select id="filterLicenseType">
-            <option value="">All Types</option>
-            <option value="Subscription">Subscription</option>
-            <option value="Perpetual">Perpetual</option>
-        </select>
+<!-- Table Container -->
+<div class="data-table-container">
+    <div class="table-header">
+        <h2 class="table-title">
+            <i class="fas fa-list"></i>
+            License Inventory
+        </h2>
+        <div class="table-controls">
+            <div class="filter-group">
+                <select id="statusFilter" onchange="filterSoftware()">
+                    <option value="">All Statuses</option>
+                    <option value="Active">Active</option>
+                    <option value="Expiring Soon">Expiring Soon</option>
+                    <option value="Expired">Expired</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <select id="typeFilter" onchange="filterSoftware()">
+                    <option value="">All Types</option>
+                    <option value="Subscription">Subscription</option>
+                    <option value="Perpetual">Perpetual</option>
+                </select>
+            </div>
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="softwareSearch" placeholder="Search software, license details..." oninput="filterSoftware()">
+            </div>
+        </div>
     </div>
-    
-    <div class="filter-group">
-        <label><i class="fas fa-circle-check"></i> Status:</label>
-        <select id="filterStatus">
-            <option value="">All Status</option>
-            <option value="Active">Active</option>
-            <option value="Expiring Soon">Expiring Soon</option>
-            <option value="Expired">Expired</option>
-        </select>
-    </div>
-    
-    <div class="filter-group">
-        <label><i class="fas fa-search"></i> Search:</label>
-        <input type="text" id="searchLicense" placeholder="Software name, email...">
-    </div>
-</div>
 
-<!-- Data Table -->
-<div class="data-table">
-    <table id="softwareTable">
-        <thead>
-            <tr>
-                <th>Software Name</th>
-                <th>License Type</th>
-                <th>License Details</th>
-                <th>Expiry Date</th>
-                <th>Credentials</th>
-                <th>Assigned To</th>
-                <th>Status</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php foreach ($sampleSoftware as $software): ?>
-            <tr data-type="<?php echo $software['licenseType']; ?>" data-status="<?php echo $software['status']; ?>">
-                <td>
-                    <div class="software-name"><?php echo htmlspecialchars($software['licenseSoftware']); ?></div>
-                    <div class="software-details">ID: <?php echo $software['softwareId']; ?></div>
-                </td>
-                <td>
-                    <span class="license-type license-<?php echo strtolower($software['licenseType']); ?>">
-                        <?php echo $software['licenseType']; ?>
-                    </span>
-                </td>
-                <td><?php echo htmlspecialchars($software['licenseDetails']); ?></td>
-                <td>
-                    <?php if ($software['expiryDate']): ?>
-                        <div class="expiry-info">
-                            <div class="expiry-date"><?php echo date('M d, Y', strtotime($software['expiryDate'])); ?></div>
-                            <?php if ($software['daysUntilExpiry'] > 0): ?>
-                                <div class="expiry-countdown <?php echo $software['daysUntilExpiry'] <= 30 ? 'warning' : ''; ?>">
-                                    <i class="fas fa-clock"></i> <?php echo $software['daysUntilExpiry']; ?> days left
-                                </div>
-                            <?php elseif ($software['daysUntilExpiry'] < 0): ?>
-                                <div class="expiry-countdown danger">
-                                    <i class="fas fa-exclamation-circle"></i> Expired <?php echo abs($software['daysUntilExpiry']); ?> days ago
+    <div class="data-table">
+        <table id="softwareTable">
+            <thead>
+                <tr>
+                    <th>Software Name</th>
+                    <th>License Details</th>
+                    <th>Type</th>
+                    <th>Expiry Date</th>
+                    <th>Assigned To</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="softwareTableBody">
+                <?php if (empty($softwareList)): ?>
+                <tr>
+                    <td colspan="7" class="empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <p>No software license records found</p>
+                    </td>
+                </tr>
+                <?php else: ?>
+                    <?php foreach ($softwareList as $s): ?>
+                    <tr data-software-id="<?php echo $s['softwareId']; ?>"
+                        data-name="<?php echo strtolower($s['licenseSoftware']); ?>"
+                        data-details="<?php echo strtolower($s['licenseDetails']); ?>"
+                        data-type="<?php echo $s['licenseType'] ?? ''; ?>"
+                        data-status="<?php echo $s['status']; ?>"
+                        data-employee="<?php echo strtolower($s['employeeName'] ?? ''); ?>">
+                        <td>
+                            <span class="serial-number"><?php echo htmlspecialchars($s['licenseSoftware']); ?></span>
+                        </td>
+                        <td>
+                            <div style="font-size:14px;color:var(--text-dark)"><?php echo htmlspecialchars($s['licenseDetails']); ?></div>
+                        </td>
+                        <td>
+                            <?php $typeCls = $s['licenseType'] === 'Subscription' ? 'available' : 'in-use'; ?>
+                            <span class="status-badge status-<?php echo $typeCls; ?>">
+                                <?php echo htmlspecialchars($s['licenseType'] ?? 'N/A'); ?>
+                            </span>
+                        </td>
+                        <td>
+                            <?php if ($s['expiryDate']): ?>
+                                <div>
+                                    <div class="year-acquired"><?php echo date('M d, Y', strtotime($s['expiryDate'])); ?></div>
+                                    <?php if ($s['daysLeft'] !== null): ?>
+                                        <?php if ($s['daysLeft'] > 0): ?>
+                                            <div style="font-size:12px;color:<?php echo $s['daysLeft'] <= 30 ? '#b45309' : 'var(--text-light)'; ?>;margin-top:2px">
+                                                <i class="fas fa-clock"></i> <?php echo $s['daysLeft']; ?> days left
+                                            </div>
+                                        <?php elseif ($s['daysLeft'] < 0): ?>
+                                            <div style="font-size:12px;color:#dc2626;margin-top:2px">
+                                                <i class="fas fa-exclamation-circle"></i> Expired <?php echo abs($s['daysLeft']); ?> days ago
+                                            </div>
+                                        <?php else: ?>
+                                            <div style="font-size:12px;color:#dc2626;margin-top:2px">
+                                                <i class="fas fa-exclamation-circle"></i> Expires today
+                                            </div>
+                                        <?php endif; ?>
+                                    <?php endif; ?>
                                 </div>
                             <?php else: ?>
-                                <div class="expiry-countdown danger">
-                                    <i class="fas fa-exclamation-circle"></i> Expires today
-                                </div>
+                                <span class="text-muted"><i class="fas fa-infinity"></i> No Expiry</span>
                             <?php endif; ?>
-                        </div>
-                    <?php else: ?>
-                        <span style="color: var(--text-light); font-style: italic;">
-                            <i class="fas fa-infinity"></i> No Expiry
-                        </span>
-                    <?php endif; ?>
-                </td>
-                <td>
-                    <?php if ($software['email'] || $software['password']): ?>
-                        <div class="credentials">
-                            <?php if ($software['email']): ?>
-                                <div class="credential-item">
-                                    <i class="fas fa-envelope"></i>
-                                    <span><?php echo htmlspecialchars($software['email']); ?></span>
-                                    <button class="btn-copy" onclick="copyToClipboard('<?php echo htmlspecialchars($software['email']); ?>')" title="Copy">
-                                        <i class="fas fa-copy"></i>
-                                    </button>
+                        </td>
+                        <td>
+                            <?php if ($s['employeeName']): ?>
+                                <div class="assigned-employee">
+                                    <i class="fas fa-user"></i>
+                                    <?php echo htmlspecialchars($s['employeeName']); ?>
                                 </div>
+                                <div style="font-size:12px;color:var(--text-light);margin-top:2px;padding-left:18px">ID: <?php echo htmlspecialchars($s['employeeId']); ?></div>
+                            <?php else: ?>
+                                <span class="text-muted">Unassigned</span>
                             <?php endif; ?>
-                            <?php if ($software['password']): ?>
-                                <div class="credential-item">
-                                    <i class="fas fa-lock"></i>
-                                    <span><?php echo $software['password']; ?></span>
-                                    <button class="btn-copy" onclick="showPassword(<?php echo $software['softwareId']; ?>)" title="Show">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
-                                </div>
-                            <?php endif; ?>
-                        </div>
-                    <?php else: ?>
-                        <span style="color: var(--text-light); font-style: italic;">Not provided</span>
-                    <?php endif; ?>
-                </td>
-                <td>
-                    <?php if ($software['employeeName']): ?>
-                        <div style="font-weight: 600;"><?php echo htmlspecialchars($software['employeeName']); ?></div>
-                        <div style="font-size: 12px; color: var(--text-light);">ID: <?php echo $software['employeeId']; ?></div>
-                    <?php else: ?>
-                        <span style="color: var(--text-light); font-style: italic;">Unassigned</span>
-                    <?php endif; ?>
-                </td>
-                <td>
-                    <span class="status-badge status-<?php echo strtolower(str_replace(' ', '', $software['status'])); ?>">
-                        <?php echo $software['status']; ?>
-                    </span>
-                </td>
-                <td>
-                    <div class="action-buttons">
-                        <button class="btn-icon" onclick="viewLicense(<?php echo $software['softwareId']; ?>)" title="View Details">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                        <button class="btn-icon" onclick="editLicense(<?php echo $software['softwareId']; ?>)" title="Edit">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn-icon btn-danger" onclick="deleteLicense(<?php echo $software['softwareId']; ?>)" title="Delete">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </td>
-            </tr>
-            <?php endforeach; ?>
-        </tbody>
-    </table>
+                        </td>
+                        <td>
+                            <span class="status-badge status-<?php echo $s['statusClass']; ?>">
+                                <?php echo htmlspecialchars($s['status']); ?>
+                            </span>
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn-action btn-edit" title="Edit" onclick="editSoftware(<?php echo $s['softwareId']; ?>)">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn-action btn-delete" title="Delete" onclick="deleteSoftware(<?php echo $s['softwareId']; ?>)">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="table-footer">
+        <div class="footer-info">
+            <span id="recordCount"></span>
+        </div>
+        <div class="pagination-controls" id="paginationControls"></div>
+        <div class="per-page-control">
+            <label>Rows:
+                <select id="perPageSelect" onchange="changePerPage()">
+                    <option value="10">10</option>
+                    <option value="25" selected>25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+            </label>
+        </div>
+    </div>
 </div>
 
-<script src="assets/js/software.js"></script>
+<!-- Add/Edit Software Modal -->
+<div class="modal fade" id="softwareModal" tabindex="-1" aria-labelledby="softwareModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="softwareModalTitle">
+                    <i class="fas fa-plus-circle"></i>
+                    Add New License
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="softwareForm">
+                    <!-- License Information -->
+                    <div class="form-section">
+                        <h6 class="form-section-title">
+                            <i class="fas fa-info-circle"></i>
+                            License Information
+                        </h6>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Software Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="softwareName" required placeholder="e.g. Microsoft Office 365">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">License Details <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="softwareDetails" required placeholder="License key or details">
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">License Type <span class="text-danger">*</span></label>
+                                <select class="form-select" id="softwareType" required>
+                                    <option value="">Select Type</option>
+                                    <option value="Subscription">Subscription</option>
+                                    <option value="Perpetual">Perpetual</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Expiry Date</label>
+                                <input type="date" class="form-control" id="softwareExpiry">
+                                <small class="form-text">
+                                    <i class="fas fa-info-circle"></i>
+                                    Leave empty for perpetual licenses
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Credentials -->
+                    <div class="form-section">
+                        <h6 class="form-section-title">
+                            <i class="fas fa-lock"></i>
+                            Credentials (Optional)
+                        </h6>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-control" id="softwareEmail" placeholder="Account email">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Password</label>
+                                <input type="password" class="form-control" id="softwarePassword" placeholder="Account password">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Assignment -->
+                    <div class="form-section">
+                        <h6 class="form-section-title">
+                            <i class="fas fa-user"></i>
+                            Assignment
+                        </h6>
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label class="form-label">Assigned Employee <small class="text-muted">(Optional)</small></label>
+                                <select class="form-select" id="softwareEmployee">
+                                    <option value="">Unassigned</option>
+                                    <?php foreach ($employees as $emp): ?>
+                                        <option value="<?php echo $emp['employeeId']; ?>"><?php echo htmlspecialchars($emp['fullName']); ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i>
+                    Cancel
+                </button>
+                <button type="button" class="btn btn-primary" onclick="saveSoftware()">
+                    <i class="fas fa-save"></i>
+                    Save License
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var softwareData = <?php echo json_encode($softwareList); ?>;
+</script>
+<script src="assets/js/software.js?v=<?php echo time()?>"></script>

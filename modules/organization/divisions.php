@@ -20,218 +20,7 @@ $stmt = $db->query("
 $divisions = $stmt->fetchAll();
 ?>
 
-<style>
-.page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 32px;
-}
-
-.page-header h2 {
-    font-family: 'Crimson Pro', serif;
-    font-size: 28px;
-    color: var(--text-dark);
-    font-weight: 700;
-}
-
-.btn {
-    padding: 12px 24px;
-    border: none;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.btn-primary {
-    background: var(--primary-green);
-    color: white;
-}
-
-.btn-primary:hover {
-    background: var(--primary-dark);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px var(--shadow-medium);
-}
-
-.btn-secondary {
-    background: white;
-    color: var(--text-dark);
-    border: 1px solid var(--border-color);
-}
-
-.btn-secondary:hover {
-    background: var(--bg-light);
-}
-
-.btn-sm {
-    padding: 6px 12px;
-    font-size: 13px;
-}
-
-.btn-danger {
-    background: #dc2626;
-    color: white;
-}
-
-.btn-danger:hover {
-    background: #b91c1c;
-}
-
-.divisions-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-    gap: 24px;
-    margin-bottom: 32px;
-}
-
-.division-card {
-    background: white;
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-    padding: 24px;
-    box-shadow: 0 2px 8px var(--shadow-soft);
-    transition: all 0.3s;
-    position: relative;
-}
-
-.division-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 24px var(--shadow-medium);
-}
-
-.division-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 16px;
-    padding-bottom: 16px;
-    border-bottom: 2px solid var(--border-color);
-}
-
-.division-badge {
-    display: inline-block;
-    padding: 6px 14px;
-    background: linear-gradient(135deg, var(--primary-green), var(--accent-green));
-    color: white;
-    border-radius: 6px;
-    font-weight: 700;
-    font-size: 14px;
-    letter-spacing: 0.5px;
-}
-
-.division-actions {
-    display: flex;
-    gap: 8px;
-}
-
-.division-name {
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--text-dark);
-    margin-bottom: 12px;
-    line-height: 1.4;
-}
-
-.division-meta {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    color: var(--text-medium);
-    font-size: 13px;
-}
-
-.division-meta i {
-    color: var(--primary-green);
-}
-
-.form-group {
-    margin-bottom: 20px;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 8px;
-    color: var(--text-dark);
-    font-weight: 600;
-    font-size: 14px;
-}
-
-.form-group input,
-.form-group textarea {
-    width: 100%;
-    padding: 12px 16px;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    font-size: 14px;
-    font-family: 'Work Sans', sans-serif;
-    transition: all 0.3s;
-}
-
-.form-group input:focus,
-.form-group textarea:focus {
-    outline: none;
-    border-color: var(--primary-green);
-    box-shadow: 0 0 0 3px rgba(45, 122, 79, 0.1);
-}
-
-.form-group textarea {
-    resize: vertical;
-    min-height: 80px;
-}
-
-.alert {
-    padding: 14px 16px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-size: 14px;
-}
-
-.alert-success {
-    background: rgba(34, 197, 94, 0.1);
-    color: #16a34a;
-    border: 1px solid rgba(34, 197, 94, 0.3);
-}
-
-.alert-error {
-    background: rgba(239, 68, 68, 0.1);
-    color: #dc2626;
-    border: 1px solid rgba(239, 68, 68, 0.3);
-}
-
-.empty-state {
-    text-align: center;
-    padding: 60px 20px;
-    background: white;
-    border-radius: 12px;
-    border: 2px dashed var(--border-color);
-}
-
-.empty-state i {
-    font-size: 64px;
-    color: var(--text-light);
-    margin-bottom: 16px;
-}
-
-.empty-state h3 {
-    font-size: 20px;
-    color: var(--text-dark);
-    margin-bottom: 8px;
-}
-
-.empty-state p {
-    color: var(--text-medium);
-    margin-bottom: 24px;
-}
-</style>
+<link rel="stylesheet" href="assets/css/divisions.css">
 
 <!-- Page Header -->
 <div class="page-header">
@@ -314,13 +103,13 @@ $divisions = $stmt->fetchAll();
 
 <script>
 // Divisions Manager - Singleton pattern to prevent multiple initializations
-const DivisionsManager = (function() {
+var DivisionsManager = (function() {
     let modalInstance = null;
     let editMode = false;
     
     // Initialize modal once when tab is loaded
     function initModal() {
-        const modalElement = document.getElementById('divisionModal');
+        var modalElement = document.getElementById('divisionModal');
         if (modalElement && !modalInstance) {
             modalInstance = new bootstrap.Modal(modalElement);
             
@@ -340,7 +129,7 @@ const DivisionsManager = (function() {
         document.getElementById('divisionId').value = '';
         document.getElementById('submitBtn').innerHTML = '<i class="fas fa-save"></i> Save Division';
         
-        const modal = initModal();
+        var modal = initModal();
         if (modal) modal.show();
     }
     
@@ -350,14 +139,14 @@ const DivisionsManager = (function() {
         document.getElementById('submitBtn').innerHTML = '<i class="fas fa-save"></i> Update Division';
         
         try {
-            const response = await fetch(`../../ajax/get_division.php?id=${id}`);
-            const division = await response.json();
+            var response = await fetch(`../../ajax/get_division.php?id=${id}`);
+            var division = await response.json();
             
             if (division.success) {
                 document.getElementById('divisionId').value = division.data.divisionId;
                 document.getElementById('divisionName').value = division.data.divisionName;
                 
-                const modal = initModal();
+                var modal = initModal();
                 if (modal) modal.show();
             } else {
                 showAlert('Error loading division data', 'error');
@@ -373,16 +162,16 @@ const DivisionsManager = (function() {
         }
         
         try {
-            const formData = new FormData();
+            var formData = new FormData();
             formData.append('action', 'delete');
             formData.append('divisionId', id);
             
-            const response = await fetch('../../ajax/manage_division.php', {
+            var response = await fetch('../../ajax/manage_division.php', {
                 method: 'POST',
                 body: formData
             });
             
-            const result = await response.json();
+            var result = await response.json();
             
             if (result.success) {
                 showAlert(result.message, 'success');
@@ -398,20 +187,20 @@ const DivisionsManager = (function() {
     async function handleSubmit(event) {
         event.preventDefault();
         
-        const formData = new FormData(event.target);
+        var formData = new FormData(event.target);
         formData.append('action', editMode ? 'update' : 'create');
         
-        const submitBtn = document.getElementById('submitBtn');
+        var submitBtn = document.getElementById('submitBtn');
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
         
         try {
-            const response = await fetch('../../ajax/manage_division.php', {
+            var response = await fetch('../../ajax/manage_division.php', {
                 method: 'POST',
                 body: formData
             });
             
-            const result = await response.json();
+            var result = await response.json();
             
             if (result.success) {
                 showAlert(result.message, 'success');
@@ -430,9 +219,9 @@ const DivisionsManager = (function() {
     }
     
     function showAlert(message, type) {
-        const alertContainer = document.getElementById('alertContainer');
-        const alertClass = type === 'success' ? 'alert-success' : 'alert-error';
-        const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+        var alertContainer = document.getElementById('alertContainer');
+        var alertClass = type === 'success' ? 'alert-success' : 'alert-error';
+        var icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
         
         alertContainer.innerHTML = `
             <div class="alert ${alertClass}">
@@ -449,12 +238,12 @@ const DivisionsManager = (function() {
     // Cleanup function to destroy modal when tab is switched
     function cleanup() {
         if (modalInstance) {
-            const modalElement = document.getElementById('divisionModal');
+            var modalElement = document.getElementById('divisionModal');
             if (modalElement) {
                 // Hide modal if it's open
                 modalInstance.hide();
                 // Remove backdrop
-                const backdrop = document.querySelector('.modal-backdrop');
+                var backdrop = document.querySelector('.modal-backdrop');
                 if (backdrop) backdrop.remove();
                 // Reset body class
                 document.body.classList.remove('modal-open');

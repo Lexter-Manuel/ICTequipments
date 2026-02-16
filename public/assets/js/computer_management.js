@@ -1,18 +1,11 @@
-/**
- * Computer Equipment Management JavaScript
- * Handles CRUD operations for System Units, Monitors, and All-in-One PCs
- */
 
-// ========================================
-// TAB SWITCHING
-// ========================================
 function switchTab(tabName) {
     // Hide all tabs
-    const tabs = document.querySelectorAll('.tab-content');
+    var tabs = document.querySelectorAll('.tab-content');
     tabs.forEach(tab => tab.classList.remove('active'));
     
     // Remove active state from all buttons
-    const btns = document.querySelectorAll('.tab-btn');
+    var btns = document.querySelectorAll('.tab-btn');
     btns.forEach(btn => btn.classList.remove('active'));
     
     // Show selected tab
@@ -25,10 +18,10 @@ function switchTab(tabName) {
 // ========================================
 // SYSTEM UNITS MANAGEMENT
 // ========================================
-let currentSystemUnitId = null;
+var currentSystemUnitId = null;
 
 function filterSystemUnits() {
-    const search = document.getElementById('systemunitSearch').value;
+    var search = document.getElementById('systemunitSearch').value;
     fetch(`../ajax/manage_systemunit.php?action=list&search=${encodeURIComponent(search)}`)
         .then(response => response.json())
         .then(data => {
@@ -42,7 +35,7 @@ function filterSystemUnits() {
 }
 
 function renderSystemUnits(units) {
-    const tbody = document.getElementById('systemunitTableBody');
+    var tbody = document.getElementById('systemunitTableBody');
     tbody.innerHTML = '';
     
     if (units.length === 0) {
@@ -51,8 +44,8 @@ function renderSystemUnits(units) {
     }
     
     units.forEach(s => {
-        const cls = s.status.toLowerCase();
-        const tr = document.createElement('tr');
+        var cls = s.status.toLowerCase();
+        var tr = document.createElement('tr');
         tr.innerHTML = `
             <td><strong style="color:var(--primary-green)">${escapeHtml(s.systemUnitSerial)}</strong></td>
             <td><div style="font-weight:600">${escapeHtml(s.systemUnitBrand)}</div><div style="font-size:12px;color:var(--text-light)"><i class="fas fa-tag"></i> ${escapeHtml(s.systemUnitCategory)}</div></td>
@@ -74,7 +67,7 @@ function openAddSystemUnit() {
     currentSystemUnitId = null;
     document.getElementById('systemunitModalTitle').textContent = 'Add New System Unit';
     document.getElementById('systemunitForm').reset();
-    const modal = new bootstrap.Modal(document.getElementById('systemunitModal'));
+    var modal = new bootstrap.Modal(document.getElementById('systemunitModal'));
     modal.show();
 }
 
@@ -84,7 +77,7 @@ function editSystemUnit(id) {
         .then(data => {
             if (data.success) {
                 currentSystemUnitId = id;
-                const s = data.data;
+                var s = data.data;
                 document.getElementById('systemunitModalTitle').textContent = 'Edit System Unit';
                 document.getElementById('suCategory').value = s.systemUnitCategory;
                 document.getElementById('suBrand').value = s.systemUnitBrand;
@@ -95,7 +88,7 @@ function editSystemUnit(id) {
                 document.getElementById('suSerial').value = s.systemUnitSerial;
                 document.getElementById('suYear').value = s.yearAcquired;
                 document.getElementById('suEmployee').value = s.employeeId || '';
-                const modal = new bootstrap.Modal(document.getElementById('systemunitModal'));
+                var modal = new bootstrap.Modal(document.getElementById('systemunitModal'));
                 modal.show();
             } else {
                 alert('Error: ' + data.message);
@@ -105,7 +98,7 @@ function editSystemUnit(id) {
 }
 
 function saveSystemUnit() {
-    const formData = new FormData();
+    var formData = new FormData();
     formData.append('action', currentSystemUnitId ? 'update' : 'create');
     if (currentSystemUnitId) formData.append('systemunit_id', currentSystemUnitId);
     formData.append('category', document.getElementById('suCategory').value);
@@ -138,7 +131,7 @@ function saveSystemUnit() {
 function deleteSystemUnit(id) {
     if (!confirm('Are you sure you want to delete this system unit?')) return;
     
-    const formData = new FormData();
+    var formData = new FormData();
     formData.append('action', 'delete');
     formData.append('systemunit_id', id);
     
@@ -161,10 +154,10 @@ function deleteSystemUnit(id) {
 // ========================================
 // MONITORS MANAGEMENT
 // ========================================
-let currentMonitorId = null;
+var currentMonitorId = null;
 
 function filterMonitors() {
-    const search = document.getElementById('monitorSearch').value;
+    var search = document.getElementById('monitorSearch').value;
     fetch(`../ajax/manage_monitor.php?action=list&search=${encodeURIComponent(search)}`)
         .then(response => response.json())
         .then(data => {
@@ -178,7 +171,7 @@ function filterMonitors() {
 }
 
 function renderMonitors(monitors) {
-    const tbody = document.getElementById('monitorTableBody');
+    var tbody = document.getElementById('monitorTableBody');
     tbody.innerHTML = '';
     
     if (monitors.length === 0) {
@@ -187,8 +180,8 @@ function renderMonitors(monitors) {
     }
     
     monitors.forEach(m => {
-        const cls = m.status.toLowerCase();
-        const tr = document.createElement('tr');
+        var cls = m.status.toLowerCase();
+        var tr = document.createElement('tr');
         tr.innerHTML = `
             <td><strong style="color:var(--primary-green)">${escapeHtml(m.monitorSerial)}</strong></td>
             <td><div style="font-weight:600">${escapeHtml(m.monitorBrand)}</div></td>
@@ -206,7 +199,7 @@ function openAddMonitor() {
     currentMonitorId = null;
     document.getElementById('monitorModalTitle').textContent = 'Add New Monitor';
     document.getElementById('monitorForm').reset();
-    const modal = new bootstrap.Modal(document.getElementById('monitorModal'));
+    var modal = new bootstrap.Modal(document.getElementById('monitorModal'));
     modal.show();
 }
 
@@ -216,14 +209,14 @@ function editMonitor(id) {
         .then(data => {
             if (data.success) {
                 currentMonitorId = id;
-                const m = data.data;
+                var m = data.data;
                 document.getElementById('monitorModalTitle').textContent = 'Edit Monitor';
                 document.getElementById('monBrand').value = m.monitorBrand;
                 document.getElementById('monSize').value = m.monitorSize;
                 document.getElementById('monSerial').value = m.monitorSerial;
                 document.getElementById('monYear').value = m.yearAcquired;
                 document.getElementById('monEmployee').value = m.employeeId || '';
-                const modal = new bootstrap.Modal(document.getElementById('monitorModal'));
+                var modal = new bootstrap.Modal(document.getElementById('monitorModal'));
                 modal.show();
             } else {
                 alert('Error: ' + data.message);
@@ -233,7 +226,7 @@ function editMonitor(id) {
 }
 
 function saveMonitor() {
-    const formData = new FormData();
+    var formData = new FormData();
     formData.append('action', currentMonitorId ? 'update' : 'create');
     if (currentMonitorId) formData.append('monitor_id', currentMonitorId);
     formData.append('brand', document.getElementById('monBrand').value);
@@ -262,7 +255,7 @@ function saveMonitor() {
 function deleteMonitor(id) {
     if (!confirm('Are you sure you want to delete this monitor?')) return;
     
-    const formData = new FormData();
+    var formData = new FormData();
     formData.append('action', 'delete');
     formData.append('monitor_id', id);
     
@@ -285,10 +278,10 @@ function deleteMonitor(id) {
 // ========================================
 // ALL-IN-ONE MANAGEMENT
 // ========================================
-let currentAllInOneId = null;
+var currentAllInOneId = null;
 
 function filterAllInOnes() {
-    const search = document.getElementById('allinoneSearch').value;
+    var search = document.getElementById('allinoneSearch').value;
     fetch(`../ajax/manage_allinone.php?action=list&search=${encodeURIComponent(search)}`)
         .then(response => response.json())
         .then(data => {
@@ -302,7 +295,7 @@ function filterAllInOnes() {
 }
 
 function renderAllInOnes(units) {
-    const tbody = document.getElementById('allinoneTableBody');
+    var tbody = document.getElementById('allinoneTableBody');
     tbody.innerHTML = '';
     
     if (units.length === 0) {
@@ -311,8 +304,8 @@ function renderAllInOnes(units) {
     }
     
     units.forEach(a => {
-        const cls = a.status.toLowerCase();
-        const tr = document.createElement('tr');
+        var cls = a.status.toLowerCase();
+        var tr = document.createElement('tr');
         tr.innerHTML = `
             <td><div style="font-weight:600">${escapeHtml(a.allinoneBrand)}</div></td>
             <td>
@@ -332,7 +325,7 @@ function openAddAllInOne() {
     currentAllInOneId = null;
     document.getElementById('allinoneModalTitle').textContent = 'Add New All-in-One';
     document.getElementById('allinoneForm').reset();
-    const modal = new bootstrap.Modal(document.getElementById('allinoneModal'));
+    var modal = new bootstrap.Modal(document.getElementById('allinoneModal'));
     modal.show();
 }
 
@@ -342,7 +335,7 @@ function editAllInOne(id) {
         .then(data => {
             if (data.success) {
                 currentAllInOneId = id;
-                const a = data.data;
+                var a = data.data;
                 document.getElementById('allinoneModalTitle').textContent = 'Edit All-in-One';
                 document.getElementById('aioBrand').value = a.allinoneBrand;
                 document.getElementById('aioProcessor').value = a.specificationProcessor;
@@ -350,7 +343,7 @@ function editAllInOne(id) {
                 document.getElementById('aioGPU').value = a.specificationGPU;
                 document.getElementById('aioStorage').value = a.specificationStorage;
                 document.getElementById('aioEmployee').value = a.employeeId || '';
-                const modal = new bootstrap.Modal(document.getElementById('allinoneModal'));
+                var modal = new bootstrap.Modal(document.getElementById('allinoneModal'));
                 modal.show();
             } else {
                 alert('Error: ' + data.message);
@@ -360,7 +353,7 @@ function editAllInOne(id) {
 }
 
 function saveAllInOne() {
-    const formData = new FormData();
+    var formData = new FormData();
     formData.append('action', currentAllInOneId ? 'update' : 'create');
     if (currentAllInOneId) formData.append('allinone_id', currentAllInOneId);
     formData.append('brand', document.getElementById('aioBrand').value);
@@ -390,7 +383,7 @@ function saveAllInOne() {
 function deleteAllInOne(id) {
     if (!confirm('Are you sure you want to delete this all-in-one PC?')) return;
     
-    const formData = new FormData();
+    var formData = new FormData();
     formData.append('action', 'delete');
     formData.append('allinone_id', id);
     
@@ -414,9 +407,9 @@ function deleteAllInOne(id) {
 // UTILITY FUNCTIONS
 // ========================================
 function refreshCurrentTab() {
-    const suTab = document.getElementById('systemunit-tab');
-    const monTab = document.getElementById('monitor-tab');
-    const aioTab = document.getElementById('allinone-tab');
+    var suTab = document.getElementById('systemunits-tab');
+    var monTab = document.getElementById('monitors-tab');
+    var aioTab = document.getElementById('allinone-tab');
 
     if (suTab && suTab.classList.contains('active')) {
         filterSystemUnits();
@@ -435,7 +428,7 @@ function refreshCurrentTab() {
 }
 
 function escapeHtml(text) {
-    const div = document.createElement('div');
+    var div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
 }

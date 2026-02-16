@@ -1,0 +1,172 @@
+/* ============================================================
+   UNITS.CSS — NIA UPRIIS ICT Inventory
+   Depends on: root.css (must be loaded first)
+   ============================================================ */
+
+/* Inherits filter-container from sections.css pattern — re-declared here */
+.filter-container {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    margin-bottom: var(--space-6);
+    flex-wrap: wrap;
+}
+
+.filter-container select {
+    padding: 10px 14px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--bg-white);
+    font-size: var(--text-base);
+    color: var(--text-dark);
+    min-width: 200px;
+    cursor: pointer;
+    transition: border-color var(--transition-fast);
+}
+
+.filter-container select:focus {
+    outline: none;
+    border-color: var(--primary-green);
+    box-shadow: 0 0 0 3px rgba(45,122,79,0.12);
+}
+
+/* Division group */
+.division-group {
+    margin-bottom: var(--space-6);
+    background: var(--bg-white);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-soft);
+}
+
+.division-group-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-4) var(--space-6);
+    background: linear-gradient(90deg, var(--primary-green), var(--primary-dark));
+    color: #fff;
+    font-weight: 700;
+    font-size: var(--text-md);
+}
+
+/* Section subgroup inside a division */
+.section-subgroup {
+    border-top: 1px solid var(--border-color);
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-5);
+    background: var(--bg-light);
+    font-weight: 600;
+    font-size: var(--text-base);
+    color: var(--text-dark);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.section-header i { color: var(--primary-green); }
+
+/* Units container */
+.units-container {
+    padding: var(--space-3) var(--space-4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.unit-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-3) var(--space-4);
+    background: var(--bg-white);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    transition: all var(--transition-fast);
+}
+
+.unit-item:hover {
+    background: var(--primary-xlight);
+    border-color: var(--primary-green);
+}
+
+.unit-info {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    flex: 1;
+    min-width: 0;
+}
+
+.unit-badge {
+    display: inline-block;
+    padding: 2px 9px;
+    background: var(--color-info);
+    color: #fff;
+    border-radius: var(--radius-sm);
+    font-weight: 700;
+    font-size: var(--text-xs);
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    flex-shrink: 0;
+}
+
+.unit-name {
+    font-weight: 600;
+    font-size: var(--text-base);
+    color: var(--text-dark);
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.unit-meta {
+    display: flex;
+    gap: var(--space-4);
+    color: var(--text-medium);
+    font-size: var(--text-sm);
+    flex-shrink: 0;
+}
+
+.unit-meta i { color: var(--primary-green); }
+
+.unit-actions {
+    display: flex;
+    gap: var(--space-2);
+    flex-shrink: 0;
+    margin-left: var(--space-4);
+}
+
+/* Parent type toggle */
+.parent-type-toggle {
+    display: flex;
+    gap: var(--space-2);
+    margin-bottom: var(--space-4);
+}
+
+.parent-type-toggle .btn { flex: 1; }
+
+/* Hierarchy info badge */
+.hierarchy-info {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    background: var(--primary-xlight);
+    color: var(--primary-dark);
+    border-radius: var(--radius-md);
+    padding: var(--space-2) var(--space-4);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    margin-bottom: var(--space-4);
+}
+
+@media (max-width: 768px) {
+    .unit-item  { flex-direction: column; align-items: flex-start; gap: var(--space-2); }
+    .unit-info  { flex-direction: column; align-items: flex-start; }
+    .unit-actions { margin-left: 0; }
+}
