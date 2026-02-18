@@ -460,3 +460,48 @@ th.sort-active .sort-icon { opacity: 1; }
     .detail-item  { padding: var(--space-3); }
     .detail-icon  { width: 36px; height: 36px; font-size: 15px; }
 }
+
+.modal {
+    left: var(--sidebar-width) !important;
+    width: calc(100vw - var(--sidebar-width)) !important;
+}
+
+#edit_previewImage {
+    width: 100%;
+    object-fit: cover;
+    border-radius: var(--radius-md);
+    border: 2px solid var(--border-color);
+}
+
+.btn-change-photo {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    background: var(--bg-white);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--text-dark);
+    cursor: pointer;
+    transition: all var(--transition-base);
+}
+
+.btn-change-photo:hover {
+    background: var(--bg-light);
+    border-color: var(--primary-green);
+    color: var(--primary-green);
+}
+
+.photo-upload-box {
+    border: 2px dashed var(--border-color);
+    border-radius: var(--radius-md);
+    margin: var(--space-4) 0;
+    text-align: center;
+    color: var(--text-medium);
+    font-size: var(--text-sm);
+    cursor: pointer;
+    transition: all var(--transition-base);
+}

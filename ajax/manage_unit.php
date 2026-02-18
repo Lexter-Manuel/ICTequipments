@@ -1,5 +1,10 @@
 <?php
 // ajax/manage_unit.php
+// Prevent any output before JSON
+error_reporting(E_ALL);
+ini_set('display_errors', 0); // Don't display errors to output
+ini_set('log_errors', 1); // Log errors instead
+
 session_start();
 require_once '../config/database.php';
 require_once '../config/config.php';
@@ -18,7 +23,7 @@ $action = $_POST['action'] ?? '';
 try {
     switch ($action) {
         case 'create':
-            $unitName = sanitize($_POST['unitName'] ?? '');
+            $unitName = trim($_POST['unitName'] ?? '');
             $parentId = intval($_POST['parentId'] ?? 0);
             
             if (empty($unitName) || empty($parentId)) {
@@ -64,7 +69,7 @@ try {
             
         case 'update':
             $unitId = intval($_POST['unitId'] ?? 0);
-            $unitName = sanitize($_POST['unitName'] ?? '');
+            $unitName = trim($_POST['unitName'] ?? '');
             $parentId = intval($_POST['parentId'] ?? 0);
             
             if (empty($unitId) || empty($unitName) || empty($parentId)) {
@@ -117,7 +122,7 @@ try {
             }
             
             // Check if unit has employees
-            $stmt = $db->prepare("SELECT COUNT(*) as count FROM tbl_employee WHERE sectionId = ?");
+            $stmt = $db->prepare("SELECT COUNT(*) as count FROM tbl_employee WHERE location_id = ?");
             $stmt->execute([$unitId]);
             $result = $stmt->fetch();
             
@@ -157,3 +162,17 @@ try {
         'message' => $e->getMessage()
     ]);
 }
+
+// Catch any fatal errors or warnings that might output HTML
+register_shutdown_function(function() {
+    $error = error_get_last();
+    if ($error && in_array($error['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
+        if (!headers_sent()) {
+            header('Content-Type: application/json');
+        }
+        echo json_encode([
+            'success' => false,
+            'message' => 'Server error: ' . $error['message']
+        ]);
+    }
+});

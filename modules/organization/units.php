@@ -116,7 +116,7 @@ $sections = $db->query("
 <!-- Filters -->
 <?php if (count($divisions) > 0): ?>
 <div class="filter-container">
-    <select id="divisionFilter" onchange="UnitsManager.filterUnits()">
+    <select id="divisionFilter" onchange="UnitsManager.handleDivisionFilterChange()">
         <option value="all">All Divisions</option>
         <?php foreach ($divisions as $div): ?>
         <option value="<?php echo $div['divisionId']; ?>">
@@ -129,8 +129,8 @@ $sections = $db->query("
         <option value="all">All Parents (Divisions & Sections)</option>
         <option value="direct">Direct Units Only</option>
         <?php foreach ($sections as $sec): ?>
-        <option value="<?php echo $sec['sectionId']; ?>">
-            <?php echo htmlspecialchars($sec['divisionName']); ?> > <?php echo htmlspecialchars($sec['sectionName']); ?>
+        <option value="<?php echo $sec['sectionId']; ?>" data-division-id="<?php echo $sec['divisionId']; ?>">
+            <?php echo htmlspecialchars($sec['sectionName']); ?>
         </option>
         <?php endforeach; ?>
     </select>
@@ -264,6 +264,9 @@ $sections = $db->query("
 </div>
 
 <script>
+// Configuration - Adjust this path if needed based on your project structure
+var AJAX_PATH = '../ajax/';  // Change to '/ajax/' if using absolute path from root
+
 // Global data arrays for form population
 var divisionsData = <?php echo json_encode($divisions); ?>;
 var sectionsData = <?php echo json_encode($sections); ?>;
@@ -304,7 +307,7 @@ function handleDivisionChange() {
             if (String(sec.divisionId) === divisionId) {
                 var option = document.createElement('option');
                 option.value = sec.sectionId;
-                option.textContent = `${sec.divisionName} > ${sec.sectionName}`;
+                option.textContent = `${sec.sectionName}`;
                 sectionSelect.appendChild(option);
             }
         });
@@ -333,7 +336,10 @@ var UnitsManager = (function() {
                 
                 modalElement.addEventListener('hidden.bs.modal', function() {
                     document.getElementById('unitForm').reset();
+                    document.getElementById('unitId').value = '';
                     editMode = false;
+                    // Reset to default state
+                    setParentType('division');
                 });
             }
         }
@@ -360,7 +366,22 @@ var UnitsManager = (function() {
         document.getElementById('submitBtn').innerHTML = '<i class="fas fa-save"></i> Update Unit';
         
         try {
-            var response = await fetch(`../../ajax/get_unit.php?id=${id}`);
+            // Use configurable AJAX_PATH
+            var response = await fetch(`${AJAX_PATH}get_unit.php?id=${id}`);
+            
+            // Check if response is ok
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            // Check if response is JSON
+            var contentType = response.headers.get("content-type");
+            if (!contentType || !contentType.includes("application/json")) {
+                var text = await response.text();
+                console.error('Response is not JSON:', text);
+                throw new Error('Server returned non-JSON response');
+            }
+            
             var result = await response.json();
             
             if (result.success) {
@@ -370,7 +391,7 @@ var UnitsManager = (function() {
                 document.getElementById('parentId').value = unit.parentId;
                 
                 // Determine parent type and set accordingly
-                var parentTypeId = unit.parentTypeId;
+                var parentTypeId = parseInt(unit.parentTypeId);
                 if (parentTypeId === 1) {
                     // Direct under division
                     setParentType('division');
@@ -379,7 +400,7 @@ var UnitsManager = (function() {
                     // Under section
                     setParentType('section');
                     // Find the division ID for this section
-                    var section = sectionsData.find(s => s.sectionId === unit.parentId);
+                    var section = sectionsData.find(s => parseInt(s.sectionId) === parseInt(unit.parentId));
                     if (section) {
                         document.getElementById('divisionSelect').value = section.divisionId;
                         handleDivisionChange();
@@ -392,10 +413,11 @@ var UnitsManager = (function() {
                 var modal = getModalInstance();
                 if (modal) modal.show();
             } else {
-                showAlert('Error loading unit data', 'error');
+                showAlert(result.message || 'Error loading unit data', 'error');
             }
         } catch (error) {
-            showAlert('Failed to load unit data', 'error');
+            console.error('Error loading unit:', error);
+            showAlert('Failed to load unit data. Please check the console for details.', 'error');
         }
     }
     
@@ -409,7 +431,7 @@ var UnitsManager = (function() {
             formData.append('action', 'delete');
             formData.append('unitId', id);
             
-            var response = await fetch('../../ajax/manage_unit.php', {
+            var response = await fetch(`${AJAX_PATH}manage_unit.php`, {
                 method: 'POST',
                 body: formData
             });
@@ -430,20 +452,64 @@ var UnitsManager = (function() {
     async function handleSubmit(event) {
         event.preventDefault();
         
+        // Validate that parentId is set
+        var parentId = document.getElementById('parentId').value;
+        var divisionSelect = document.getElementById('divisionSelect').value;
+        var sectionSelect = document.getElementById('sectionSelect').value;
+        var divisionBtn = document.getElementById('divisionTypeBtn');
+        
+        // Ensure parentId is set correctly based on the selected mode
+        if (divisionBtn.classList.contains('active')) {
+            // Division mode: parentId should be the selected division
+            if (divisionSelect) {
+                document.getElementById('parentId').value = divisionSelect;
+            }
+        } else {
+            // Section mode: parentId should be the selected section
+            if (sectionSelect) {
+                document.getElementById('parentId').value = sectionSelect;
+            }
+        }
+        
+        // Re-check parentId after setting
+        parentId = document.getElementById('parentId').value;
+        
+        if (!parentId) {
+            showAlert('Please select a parent location (Division or Section)', 'error');
+            return;
+        }
+        
         var formData = new FormData(event.target);
         formData.append('action', editMode ? 'update' : 'create');
+        
+        // Debug log
+        console.log('Submitting form with parentId:', parentId);
+        console.log('Edit mode:', editMode);
         
         var submitBtn = document.getElementById('submitBtn');
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
         
         try {
-            var response = await fetch('../../ajax/manage_unit.php', {
+            var response = await fetch(`${AJAX_PATH}manage_unit.php`, {
                 method: 'POST',
                 body: formData
             });
             
-            var result = await response.json();
+            // Check content type
+            var contentType = response.headers.get("content-type");
+            var responseText = await response.text();
+            
+            console.log('Response status:', response.status);
+            console.log('Content-Type:', contentType);
+            console.log('Response text:', responseText);
+            
+            if (!contentType || !contentType.includes("application/json")) {
+                console.error('Server returned non-JSON response:', responseText);
+                throw new Error('Server error: ' + responseText.substring(0, 200));
+            }
+            
+            var result = JSON.parse(responseText);
             
             if (result.success) {
                 showAlert(result.message, 'success');
@@ -456,7 +522,8 @@ var UnitsManager = (function() {
                 submitBtn.innerHTML = editMode ? '<i class="fas fa-save"></i> Update Unit' : '<i class="fas fa-save"></i> Save Unit';
             }
         } catch (error) {
-            showAlert('Failed to save unit', 'error');
+            console.error('Submit error:', error);
+            showAlert(error.message || 'Failed to save unit', 'error');
             submitBtn.disabled = false;
             submitBtn.innerHTML = editMode ? '<i class="fas fa-save"></i> Update Unit' : '<i class="fas fa-save"></i> Save Unit';
         }
@@ -529,6 +596,32 @@ var UnitsManager = (function() {
         }
     }
     
+    function handleDivisionFilterChange() {
+        var divisionFilter = document.getElementById('divisionFilter').value;
+        var parentFilter = document.getElementById('parentFilter');
+        var options = parentFilter.querySelectorAll('option');
+        
+        // Reset parent filter to "all" when division changes
+        parentFilter.value = 'all';
+        
+        // Show/hide section options based on selected division
+        options.forEach(option => {
+            if (option.value === 'all' || option.value === 'direct') {
+                option.style.display = 'block';
+            } else {
+                var optionDivisionId = option.getAttribute('data-division-id');
+                if (divisionFilter === 'all' || optionDivisionId === divisionFilter) {
+                    option.style.display = 'block';
+                } else {
+                    option.style.display = 'none';
+                }
+            }
+        });
+        
+        // Apply the filter
+        filterUnits();
+    }
+    
     function destroy() {
         if (modalInstance) {
             try {
@@ -553,6 +646,7 @@ var UnitsManager = (function() {
         deleteUnit,
         handleSubmit,
         filterUnits,
+        handleDivisionFilterChange,
         destroy
     };
 })();

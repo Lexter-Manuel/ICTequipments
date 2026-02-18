@@ -69,6 +69,7 @@
 }
 .btn-outline-danger:hover:not(:disabled) { background: var(--color-danger); color: #fff; }
 
+.dropdown { margin: var(--space-2) 0 !important; }
 .btn-sm { padding: 6px 12px; font-size: var(--text-sm); }
 .btn-lg { padding: 14px 28px; font-size: var(--text-md); }
 .btn-sm i { font-size: 12px; }

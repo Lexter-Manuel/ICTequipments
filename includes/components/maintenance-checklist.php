@@ -1,6 +1,5 @@
 <?php
-// includes/components/maintenance-checklist.php
-// Logic: If $isWidget is TRUE, we hide the page header to fit inside other pages.
+
 $isWidget = isset($isWidget) ? $isWidget : false;
 ?>
 
@@ -282,11 +281,14 @@ $isWidget = isset($isWidget) ? $isWidget : false;
 
             <!-- Signatories Section -->
             <div class="row g-4">
-                <div class="col-md-4">
-                    <label class="form-label fw-bold">Prepared/Conducted by:</label>
-                    <input type="text" class="form-control mb-2" value="Lexter Manuel" readonly>
-                    <p class="text-center mb-0 small text-muted border-top pt-2">ICT Staff</p>
-                </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Prepared/Conducted by:</label>
+                        <?php 
+                            $conductorName = $_SESSION['full_name'] ?? $_SESSION['user_name'] ?? 'Unknown User';
+                        ?>
+                        <input type="text" class="form-control mb-2" value="<?php echo htmlspecialchars($conductorName); ?>" readonly>
+                        <p class="text-center mb-0 small text-muted border-top pt-2">ICT Staff</p>
+                    </div>
                 <div class="col-md-4">
                     <label class="form-label fw-bold">Checked by:</label>
                     <select class="form-control mb-2">
