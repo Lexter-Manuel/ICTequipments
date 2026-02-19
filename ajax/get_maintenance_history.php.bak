@@ -1,0 +1,218 @@
+<?php
+// ajax/get_maintenance_history.php
+require_once '../config/database.php';
+
+header('Content-Type: application/json');
+
+try {
+    $db = Database::getInstance()->getConnection();
+
+    // 1. Fetch Location Hierarchy Helpers
+    $locStmt = $db->query("SELECT * FROM location");
+    $allLocations = [];
+    while ($row = $locStmt->fetch(PDO::FETCH_ASSOC)) {
+        $allLocations[$row['location_id']] = $row;
+    }
+
+    // Helper function to trace location up to Division
+    function getLocationData($locId, $allLocations) {
+        $data = ['unit' => 'Unknown', 'divKey' => 'OTHER', 'divName' => 'Other'];
+        $curr = $locId;
+        
+        while ($curr && isset($allLocations[$curr])) {
+            $loc = $allLocations[$curr];
+            // If it's a Unit (3) or Section (2), use it as the unit label
+            if ($loc['location_type_id'] == 3) $data['unit'] = $loc['location_name'];
+            if ($loc['location_type_id'] == 2 && $data['unit'] == 'Unknown') $data['unit'] = $loc['location_name'];
+            
+            // If it's a Division (1), set the Division Keys
+            if ($loc['location_type_id'] == 1) {
+                $data['divName'] = $loc['location_name'];
+                if (strpos($loc['location_name'], 'EOD') !== false) $data['divKey'] = 'EOD';
+                elseif (strpos($loc['location_name'], 'ADFIN') !== false) $data['divKey'] = 'ADFIN';
+                elseif (strpos($loc['location_name'], 'ODM') !== false) $data['divKey'] = 'ODM';
+            }
+            $curr = $loc['parent_location_id'];
+        }
+        return $data;
+    }
+
+    // 2. Fetch Employees
+    $empStmt = $db->query("SELECT * FROM tbl_employee");
+    $employees = [];
+    while ($row = $empStmt->fetch(PDO::FETCH_ASSOC)) {
+        $locData = getLocationData($row['location_id'], $allLocations);
+        $employees[$row['employeeId']] = [
+            'id' => $row['employeeId'],
+            'name' => $row['firstName'] . ' ' . $row['lastName'],
+            'position' => $row['position'],
+            'location_id' => $row['location_id'],
+            'unit' => $locData['unit'],
+            'divKey' => $locData['divKey']
+        ];
+    }
+
+    // 3. Fetch Maintenance Records joined with Technician and Equipment Registry
+    $query = "
+        SELECT 
+            mr.recordId,
+            mr.equipmentId,
+            mr.maintenanceDate,
+            DATE_FORMAT(mr.maintenanceDate, '%Y-%m-%d') as dateVal,
+            DATE_FORMAT(mr.maintenanceDate, '%b %e, %Y') as dateLabel,
+            DATE_FORMAT(mr.maintenanceDate, '%h:%i %p') as timeVal,
+            LOWER(mr.conditionRating) as conditionVal,
+            mr.conditionRating as conditionLabel,
+            a.user_name as tech,
+            a.role as techRole,
+            tr.typeName as equipmentType,
+            tr.tableName,
+            tr.pkColumn,
+            tr.context
+        FROM tbl_maintenance_record mr
+        JOIN tbl_accounts a ON mr.accountId = a.id
+        JOIN tbl_equipment_type_registry tr ON mr.equipmentTypeId = tr.typeId
+        ORDER BY mr.maintenanceDate DESC
+    ";
+    
+    $records = $db->query($query)->fetchAll(PDO::FETCH_ASSOC);
+
+    // Prepare Output Structures
+    $divisions = [];
+    $histEmployees = [];
+    $summary = ['total' => 0, 'maintained' => 0, 'excellent_good' => 0, 'pending' => 0];
+
+    foreach ($records as $rec) {
+        // Fetch specific equipment details dynamically based on registry
+        $eqTable = $rec['tableName'];
+        $eqPk = $rec['pkColumn'];
+        $eqId = $rec['equipmentId'];
+        
+        $eqStmt = $db->prepare("SELECT * FROM {$eqTable} WHERE {$eqPk} = ?");
+        $eqStmt->execute([$eqId]);
+        $eq = $eqStmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$eq) continue;
+
+        $name = 'Unknown';
+        $serial = 'N/A';
+        $empId = $eq['employeeId'] ?? null;
+        $locId = $eq['location_id'] ?? null;
+
+        // Extract Brand/Name/Serial based on table structure
+        if ($eqTable === 'tbl_systemunit') {
+            $name = $eq['systemUnitBrand'] ?? 'System Unit';
+            $serial = $eq['systemUnitSerial'] ?? 'N/A';
+        } elseif ($eqTable === 'tbl_allinone') {
+            $name = $eq['allinoneBrand'] ?? 'All-in-One';
+        } elseif ($eqTable === 'tbl_monitor') {
+            $name = $eq['monitorBrand'] ?? 'Monitor';
+            $serial = $eq['monitorSerial'] ?? 'N/A';
+        } elseif ($eqTable === 'tbl_printer') {
+            $name = $eq['printerModel'] ?? 'Printer';
+            $serial = $eq['printerSerial'] ?? 'N/A';
+        } elseif ($eqTable === 'tbl_otherequipment') {
+            $name = ($eq['brand'] ?? '') . ' ' . ($eq['model'] ?? '');
+            $serial = $eq['serialNumber'] ?? 'N/A';
+        }
+
+        // Determine Location Hierarchy
+        $locData = ['unit' => 'Unassigned', 'divKey' => 'OTHER', 'divName' => 'Other'];
+        if ($empId && isset($employees[$empId])) {
+            $locData = getLocationData($employees[$empId]['location_id'], $allLocations);
+        } elseif ($locId) {
+            $locData = getLocationData($locId, $allLocations);
+        }
+
+        $divKey = $locData['divKey'];
+
+        // Map equipment type to JS icon classes
+        $jsType = 'system_unit';
+        if (stripos($rec['equipmentType'], 'Laptop') !== false) $jsType = 'laptop';
+        if (stripos($rec['equipmentType'], 'Printer') !== false) $jsType = 'printer';
+        if (stripos($rec['equipmentType'], 'Monitor') !== false) $jsType = 'monitor';
+
+        // Asset Object
+        $asset = [
+            'id' => $rec['recordId'],
+            'name' => $name,
+            'serial' => $serial,
+            'type' => $jsType,
+            'unit' => $locData['unit'],
+            'tech' => $rec['tech'],
+            'techRole' => $rec['techRole'],
+            'date' => $rec['dateVal'],
+            'dateLabel' => $rec['dateLabel'],
+            'time' => $rec['timeVal'],
+            'condition' => $rec['conditionVal'],
+            'conditionLabel' => $rec['conditionLabel']
+        ];
+
+        // Initialize Division if not exists
+        if (!isset($divisions[$divKey])) {
+            $divisions[$divKey] = [
+                'name' => $locData['divName'],
+                'stats' => ['total' => 0, 'maintained' => 0, 'pending' => 0, 'compliance' => 0],
+                'units' => ['All Units'],
+                'assets' => []
+            ];
+            $histEmployees[$divKey] = [];
+        }
+
+        if (!in_array($locData['unit'], $divisions[$divKey]['units'])) {
+            $divisions[$divKey]['units'][] = $locData['unit'];
+        }
+
+        $divisions[$divKey]['assets'][] = $asset;
+
+        // Group Employee
+        if ($empId && isset($employees[$empId])) {
+            if (!isset($histEmployees[$divKey][$empId])) {
+                $histEmployees[$divKey][$empId] = [
+                    'id' => $empId,
+                    'name' => $employees[$empId]['name'],
+                    'position' => $employees[$empId]['position'],
+                    'unit' => $locData['unit'],
+                    'assets' => []
+                ];
+            }
+            $histEmployees[$divKey][$empId]['assets'][] = $rec['recordId'];
+        }
+
+        // Update Stats
+        $divisions[$divKey]['stats']['total']++;
+        $summary['total']++;
+        
+        if ($rec['conditionVal'] === 'pending') {
+            $divisions[$divKey]['stats']['pending']++;
+            $summary['pending']++;
+        } else {
+            $divisions[$divKey]['stats']['maintained']++;
+            $summary['maintained']++;
+            if (in_array($rec['conditionVal'], ['excellent', 'good'])) {
+                $summary['excellent_good']++;
+            }
+        }
+    }
+
+    // Calculate Division compliance percentages
+    foreach ($divisions as $key => &$div) {
+        $total = $div['stats']['total'];
+        $maintained = $div['stats']['maintained'];
+        $div['stats']['compliance'] = $total > 0 ? round(($maintained / $total) * 100) : 0;
+        
+        $histEmployees[$key] = array_values($histEmployees[$key]);
+    }
+
+    echo json_encode([
+        'success' => true,
+        'divisions' => $divisions,
+        'employees' => $histEmployees,
+        'summary' => $summary,
+        'all_records' => $records // Used for global "All" table
+    ]);
+
+} catch (Exception $e) {
+    echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+}
+?>

@@ -1,0 +1,550 @@
+/* ============================================================
+   MAINTENANCE-CHECKLIST.CSS — NIA UPRIIS ICT Inventory System
+   Styles for the rendered maintenance checklist form
+   (used in both perform-maintenance.php and roster modal)
+   ============================================================ */
+
+/* ============================================================
+   1. CHECKLIST WRAPPER CARD
+   ============================================================ */
+.mc-card {
+    background: var(--bg-white);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    box-shadow: var(--shadow-card);
+    animation: pageIn 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ---- Card Banner Header ---- */
+.mc-card-header {
+    background: linear-gradient(135deg, var(--primary-green) 0%, var(--primary-dark) 100%);
+    padding: var(--space-6) var(--space-8);
+    position: relative;
+    overflow: hidden;
+}
+
+.mc-card-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -8%;
+    width: 240px;
+    height: 240px;
+    background: radial-gradient(circle, rgba(255,255,255,0.10) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.mc-card-header::after {
+    content: '';
+    position: absolute;
+    bottom: -40%;
+    left: 3%;
+    width: 160px;
+    height: 160px;
+    background: radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.mc-header-inner {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+}
+
+.mc-header-icon {
+    width: 52px;
+    height: 52px;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.22);
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 22px;
+    flex-shrink: 0;
+    backdrop-filter: blur(4px);
+}
+
+.mc-header-text { flex: 1; min-width: 0; }
+
+.mc-header-title {
+    font-family: var(--font-display);
+    font-size: var(--text-xl);
+    font-weight: 700;
+    color: #fff;
+    margin: 0 0 3px;
+    line-height: 1.2;
+}
+
+.mc-header-subtitle {
+    font-size: var(--text-sm);
+    color: rgba(255,255,255,0.75);
+    margin: 0;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+}
+
+/* ---- Card Body ---- */
+.mc-card-body {
+    padding: var(--space-8);
+}
+
+/* ============================================================
+   2. ASSET INFO FIELDS
+   ============================================================ */
+.mc-info-grid {
+    display: grid;
+    gap: var(--space-4);
+    margin-bottom: var(--space-6);
+}
+
+.mc-info-grid-2 { grid-template-columns: repeat(2, 1fr); }
+.mc-info-grid-3 { grid-template-columns: repeat(3, 1fr); }
+
+.mc-field-group { display: flex; flex-direction: column; gap: var(--space-2); }
+
+.mc-field-label {
+    font-size: var(--text-xs);
+    font-weight: 700;
+    color: var(--text-light);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.mc-field-value {
+    display: block;
+    width: 100%;
+    padding: 10px var(--space-4);
+    background: var(--bg-page);
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    font-weight: 600;
+    color: var(--text-dark);
+    cursor: default;
+}
+
+.mc-field-value.is-serial {
+    font-family: 'Courier New', monospace;
+    color: var(--primary-green);
+    background: rgba(45, 122, 79, 0.05);
+    border-color: rgba(45, 122, 79, 0.2);
+}
+
+/* ---- Section Divider ---- */
+.mc-section-divider {
+    height: 1px;
+    background: var(--border-color);
+    margin: var(--space-6) 0;
+}
+
+.mc-section-title {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    font-family: var(--font-display);
+    font-size: var(--text-lg);
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: var(--space-5);
+}
+
+.mc-section-title i { color: var(--primary-green); font-size: 18px; }
+
+/* ============================================================
+   3. CHECKLIST TABLE
+   ============================================================ */
+.mc-table-wrapper {
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    margin-bottom: var(--space-6);
+}
+
+.mc-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+}
+
+/* Head */
+.mc-table thead tr {
+    background: linear-gradient(135deg, var(--primary-green) 0%, var(--primary-dark) 100%);
+}
+
+.mc-table thead th {
+    padding: 13px var(--space-4);
+    font-size: var(--text-xs);
+    font-weight: 700;
+    color: rgba(255,255,255,0.9);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    border: none;
+}
+
+.mc-table thead th.col-procedure { width: 22%; }
+.mc-table thead th.col-desc      { width: 52%; }
+.mc-table thead th.col-radio     { width: 8.67%; text-align: center; }
+
+/* Body rows */
+.mc-table tbody tr {
+    border-bottom: 1px solid var(--border-color);
+    transition: background var(--transition-fast);
+}
+
+.mc-table tbody tr:last-child { border-bottom: none; }
+.mc-table tbody tr:hover { background: var(--bg-light); }
+
+.mc-table tbody td {
+    padding: 12px var(--space-4);
+    color: var(--text-dark);
+    vertical-align: middle;
+    border-right: 1px solid var(--border-color);
+}
+
+.mc-table tbody td:last-child { border-right: none; }
+
+/* Category header cell */
+.mc-category-cell {
+    font-family: var(--font-display);
+    font-size: var(--text-base);
+    font-weight: 700;
+    color: var(--text-dark);
+    vertical-align: middle !important;
+    background: var(--bg-light);
+    border-right: 3px solid var(--primary-green) !important;
+}
+
+/* Description cell */
+.mc-desc-cell {
+    font-size: var(--text-base);
+    color: var(--text-medium);
+    line-height: 1.5;
+}
+
+/* Radio cells */
+.mc-radio-cell {
+    text-align: center;
+    width: 8.67%;
+}
+
+/* Custom radio buttons */
+.mc-radio {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--border-color);
+    border-radius: 50%;
+    cursor: pointer;
+    position: relative;
+    transition: all var(--transition-fast);
+    flex-shrink: 0;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.mc-radio:hover { border-color: var(--primary-green); }
+
+.mc-radio:checked {
+    border-color: var(--primary-green);
+    background: var(--primary-green);
+}
+
+.mc-radio:checked::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 7px;
+    height: 7px;
+    background: #fff;
+    border-radius: 50%;
+}
+
+/* Radio — "No" variant (red) */
+.mc-radio.radio-no:checked {
+    border-color: var(--color-danger);
+    background: var(--color-danger);
+}
+
+.mc-radio.radio-no:hover { border-color: var(--color-danger); }
+
+/* Radio — "N/A" variant (grey) */
+.mc-radio.radio-na:checked {
+    border-color: var(--text-light);
+    background: var(--text-light);
+}
+
+/* Remarks row */
+.mc-remarks-row td { padding: 14px var(--space-4); background: var(--bg-light); }
+
+.mc-remarks-label {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: var(--text-base);
+    color: var(--text-dark);
+    white-space: nowrap;
+}
+
+.mc-textarea {
+    width: 100%;
+    padding: 10px var(--space-4);
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    color: var(--text-dark);
+    background: var(--bg-white);
+    resize: vertical;
+    min-height: 72px;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.mc-textarea:focus {
+    outline: none;
+    border-color: var(--primary-green);
+    box-shadow: 0 0 0 3px rgba(45, 122, 79, 0.12);
+}
+
+.mc-textarea::placeholder { color: var(--text-light); font-style: italic; }
+
+/* ============================================================
+   4. SIGNATORIES SECTION
+   ============================================================ */
+.mc-signatories-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-5);
+    margin-bottom: var(--space-6);
+}
+
+.mc-signatory-card {
+    background: var(--bg-light);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    transition: box-shadow var(--transition-base);
+}
+
+.mc-signatory-card:hover { box-shadow: var(--shadow-card); }
+
+.mc-signatory-header {
+    padding: 8px var(--space-4);
+    background: var(--primary-xlight);
+    border-bottom: 1px solid rgba(45, 122, 79, 0.15);
+    font-size: var(--text-xs);
+    font-weight: 700;
+    color: var(--primary-green);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+}
+
+.mc-signatory-body { padding: var(--space-4); }
+
+.mc-signatory-name {
+    font-family: var(--font-display);
+    font-size: var(--text-md);
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: var(--space-3);
+    min-height: 28px;
+    display: flex;
+    align-items: center;
+}
+
+.mc-signatory-line {
+    border-top: 1.5px solid var(--border-color);
+    padding-top: var(--space-2);
+    font-size: var(--text-xs);
+    color: var(--text-light);
+    font-style: italic;
+    text-align: center;
+    letter-spacing: 0.3px;
+}
+
+/* ============================================================
+   5. FORM ACTIONS
+   ============================================================ */
+.mc-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: var(--space-3);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--border-color);
+    flex-wrap: wrap;
+}
+
+.mc-btn-cancel {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 10px 20px;
+    background: var(--bg-white);
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    font-weight: 600;
+    color: var(--text-medium);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    text-decoration: none;
+}
+
+.mc-btn-cancel:hover {
+    background: var(--bg-light);
+    border-color: var(--color-danger);
+    color: var(--color-danger);
+}
+
+.mc-btn-submit {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 11px 28px;
+    background: linear-gradient(135deg, var(--primary-green) 0%, var(--primary-dark) 100%);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-md);
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform var(--transition-base), box-shadow var(--transition-base);
+    box-shadow: 0 4px 14px rgba(45, 122, 79, 0.32);
+}
+
+.mc-btn-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(45, 122, 79, 0.42);
+}
+
+.mc-btn-submit:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(45, 122, 79, 0.28);
+}
+
+/* ============================================================
+   6. LOADING STATE
+   ============================================================ */
+.mc-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px var(--space-6);
+    gap: var(--space-4);
+}
+
+.mc-loading .spinner {
+    width: 44px;
+    height: 44px;
+    border: 4px solid var(--border-color);
+    border-top-color: var(--primary-green);
+    border-radius: 50%;
+    animation: spin 0.75s linear infinite;
+}
+
+.mc-loading p {
+    color: var(--text-medium);
+    font-size: var(--text-sm);
+    margin: 0;
+}
+
+/* ============================================================
+   7. ROSTER MODAL OVERRIDES
+   — Only the maintenance modal inside .modal#maintenanceModal
+   ============================================================ */
+#maintenanceModal .modal-header {
+    background: linear-gradient(135deg, var(--primary-green) 0%, var(--primary-dark) 100%);
+    border-bottom: none;
+    padding: var(--space-5) var(--space-6);
+    position: relative;
+    overflow: hidden;
+}
+
+#maintenanceModal .modal-header::before {
+    content: '';
+    position: absolute;
+    top: -60%;
+    right: -5%;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+#maintenanceModal .modal-title {
+    color: #fff;
+    font-family: var(--font-display);
+    font-size: var(--text-xl);
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+#maintenanceModal .modal-title i { font-size: 20px; opacity: 0.9; }
+
+#maintenanceModal .modal-body {
+    padding: 0;
+    background: var(--bg-page);
+}
+
+/* The card inside the modal has no outer card chrome — just body padding */
+#maintenanceModal .mc-card {
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+    background: transparent;
+    animation: none;
+}
+
+#maintenanceModal .mc-card-header { display: none; }
+
+#maintenanceModal .mc-card-body {
+    padding: var(--space-6);
+}
+
+/* ============================================================
+   8. RESPONSIVE
+   ============================================================ */
+@media (max-width: 768px) {
+    .mc-card-body    { padding: var(--space-5); }
+    .mc-card-header  { padding: var(--space-5) var(--space-5) var(--space-4); }
+
+    .mc-info-grid-2,
+    .mc-info-grid-3  { grid-template-columns: 1fr; }
+
+    .mc-signatories-grid { grid-template-columns: 1fr; }
+
+    .mc-table thead th { font-size: 10px; padding: 10px var(--space-3); }
+    .mc-table tbody td { padding: 10px var(--space-3); font-size: var(--text-sm); }
+
+    .mc-actions { justify-content: stretch; }
+    .mc-btn-cancel,
+    .mc-btn-submit { flex: 1; justify-content: center; }
+}
+
+@media (max-width: 480px) {
+    .mc-header-inner { flex-direction: column; align-items: flex-start; gap: var(--space-3); }
+    .mc-header-icon  { width: 44px; height: 44px; font-size: 18px; }
+    .mc-header-title { font-size: var(--text-lg); }
+
+    .mc-table { font-size: 12px; }
+    .mc-table thead th,
+    .mc-table tbody td { padding: 8px var(--space-2); }
+}

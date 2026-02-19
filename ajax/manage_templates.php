@@ -88,7 +88,8 @@ try {
                 $stmt->execute([$id]);
             } else {
                 // Fetch by Type (For Perform Maintenance Mode)
-                $stmt = $db->prepare("SELECT * FROM tbl_maintenance_template WHERE targetTypeId = ? AND isActive = 1 LIMIT 1");
+                // Supports comma-separated targetTypeId (e.g. '1,3,4')
+                $stmt = $db->prepare("SELECT * FROM tbl_maintenance_template WHERE FIND_IN_SET(?, targetTypeId) > 0 AND isActive = 1 LIMIT 1");
                 $stmt->execute([$type]);
             }
 
@@ -125,11 +126,37 @@ try {
                 
                 // Inject structure back into object so JS works normally
                 $template['structure_json'] = json_encode(['categories' => $fullStructure]);
+
+                // Resolve type IDs to names
+                $typeMap = [];
+                $typeStmt = $db->query("SELECT typeId, typeName FROM tbl_equipment_type_registry");
+                while ($r = $typeStmt->fetch(PDO::FETCH_ASSOC)) {
+                    $typeMap[$r['typeId']] = $r['typeName'];
+                }
+                $ids = array_filter(explode(',', $template['targetTypeId']));
+                $template['targetTypeNames'] = array_map(function($id) use ($typeMap) {
+                    return $typeMap[trim($id)] ?? 'Unknown';
+                }, $ids);
                 
                 echo json_encode(['success' => true, 'data' => $template]);
             } else {
                 echo json_encode(['success' => false, 'message' => 'No template found']);
             }
+            break;
+
+            // LIST TEMPLATES BY TYPE (For the Dropdown)
+        case 'list_by_type':
+            $type = $_GET['type'] ?? '';
+            // Supports comma-separated targetTypeId (e.g. '1,3,4')
+            $stmt = $db->prepare("
+                SELECT templateId, templateName, frequency 
+                FROM tbl_maintenance_template 
+                WHERE FIND_IN_SET(?, targetTypeId) > 0 AND isActive = 1 
+                ORDER BY templateName ASC
+            ");
+            $stmt->execute([$type]);
+            $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            echo json_encode(['success' => true, 'data' => $data]);
             break;
         
         case 'list':
@@ -147,6 +174,21 @@ try {
             $stmt = $db->prepare($sql);
             $stmt->execute();
             $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Resolve type IDs to names for display
+            $typeMap = [];
+            $typeStmt = $db->query("SELECT typeId, typeName FROM tbl_equipment_type_registry");
+            while ($r = $typeStmt->fetch(PDO::FETCH_ASSOC)) {
+                $typeMap[$r['typeId']] = $r['typeName'];
+            }
+            foreach ($data as &$row) {
+                $ids = array_filter(explode(',', $row['targetTypeId']));
+                $names = array_map(function($id) use ($typeMap) {
+                    return $typeMap[trim($id)] ?? 'Unknown';
+                }, $ids);
+                $row['targetTypeNames'] = $names;
+            }
+            unset($row);
             
             echo json_encode(['success' => true, 'data' => $data]);
             break;
@@ -195,6 +237,27 @@ try {
                 $db->commit();
                 echo json_encode(['success' => true, 'message' => 'Template updated successfully']);
 
+            } catch (Exception $e) {
+                $db->rollBack();
+                throw $e;
+            }
+            break;
+
+        case 'delete':
+            $id = $_GET['id'] ?? $_POST['id'] ?? null;
+            if (!$id) {
+                throw new Exception("Missing template ID");
+            }
+
+            $db->beginTransaction();
+
+            try {
+                $db->prepare("DELETE FROM tbl_checklist_item WHERE categoryId IN (SELECT categoryId FROM tbl_checklist_category WHERE templateId = ?)")->execute([$id]);
+                $db->prepare("DELETE FROM tbl_checklist_category WHERE templateId = ?")->execute([$id]);
+                $db->prepare("DELETE FROM tbl_maintenance_template WHERE templateId = ?")->execute([$id]);
+
+                $db->commit();
+                echo json_encode(['success' => true, 'message' => 'Template deleted successfully']);
             } catch (Exception $e) {
                 $db->rollBack();
                 throw $e;

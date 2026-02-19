@@ -153,7 +153,6 @@ require_once '../config/session-check.php';
             <div class="header-bottom">
                 <div class="breadcrumb" id="breadcrumb">
                     <a href="#" data-page="home"><i class="fas fa-home"></i></a>
-                    <span>/</span>
                     <span class="current">Dashboard</span>
                 </div>
                 <div class="header-actions">
@@ -188,9 +187,12 @@ require_once '../config/session-check.php';
         <i class="fas fa-bars"></i>
     </button>
     
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="assets/bootstrap/bootstrap.min.js"></script>
+    <script>
+        var BASE_URL = window.location.origin + "/ictequipment/";
+    </script>
+    <script src="assets/bootstrap/bootstrap.bundle.min.js"></script>
     <script src="../node_modules/cropperjs/dist/cropper.min.js"></script>
     <script src="assets/js/dashboard.js?v=<?php echo time()?>"></script>
+    <script src="assets/js/maintenance-conductor.js?v=<?php echo time(); ?>"></script>
 </body>
 </html>

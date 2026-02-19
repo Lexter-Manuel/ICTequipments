@@ -36,15 +36,14 @@
     --shadow-hover:        0 8px 24px rgba(45, 122, 79, 0.16);
     --shadow-sidebar:      4px 0 24px rgba(45, 122, 79, 0.18);
 
-    /* — Semantic Status Colors — */
-    --color-success:       #16a34a;
-    --color-success-bg:    rgba(34, 197, 94, 0.10);
-    --color-warning:       #d97706;
-    --color-warning-bg:    rgba(245, 158, 11, 0.10);
-    --color-danger:        #dc2626;
-    --color-danger-bg:     rgba(220, 38, 38, 0.08);
-    --color-info:          #2563eb;
-    --color-info-bg:       rgba(59, 130, 246, 0.10);
+--color-success:       #15803d;   /* one step darker/cooler than current */
+--color-success-bg:    rgba(21, 128, 61, 0.10);
+--color-warning:       #b45309;   /* toned amber, not golden-yellow */
+--color-warning-bg:    rgba(180, 83, 9, 0.10);
+--color-danger:        #c0392b;   /* warmer red, less harsh than pure #dc2626 */
+--color-danger-bg:     rgba(192, 57, 43, 0.08);
+--color-info:          #0369a1;   /* sky blue, darker & less electric */
+--color-info-bg:       rgba(3, 105, 161, 0.10);
 
     /* — Typography — */
     --font-display:        'Crimson Pro', Georgia, serif;

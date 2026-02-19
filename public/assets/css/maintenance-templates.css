@@ -219,3 +219,41 @@
 .dropdown.show {
     display: block !important;
 }
+
+.dropdown-menu {
+    margin: var(--space-2) var(--space-1) !important;
+}
+
+.dropdown-item {
+    padding: 8px 16px;
+    font-size: var(--text-sm);
+    background-color: var(--bg-light);
+    transition: 0.3s all;
+}
+
+.text-edit {
+    color: var(--primary-green);
+    background-color: var(--bg-light);
+}
+
+.text-edit:hover {
+    background-color: var(--primary-green);
+    color: #fff;
+}
+
+.text-danger:hover {
+    background-color: var(--color-danger);
+    color: #fff !important;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.template-badge {
+    top: 28px;
+    right: 55px;
+}

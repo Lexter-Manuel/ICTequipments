@@ -203,7 +203,7 @@ function createAllInOne($db) {
 
     try {
         $maint = new MaintenanceHelper($db);
-        $maint->initScheduleByType('All-in-One PC', $newId);
+        $maint->initScheduleByType('All-in-One', $newId);
     } catch (Exception $e) {
         error_log("Failed to schedule maintenance for All-in-One ID $newId: " . $e->getMessage());
     }

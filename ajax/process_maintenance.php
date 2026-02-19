@@ -9,7 +9,7 @@ try {
     $input = json_decode(file_get_contents('php://input'), true);
     
     $scheduleId = $input['scheduleId'] ?? null;
-    $assetId = $input['assetId'] ?? null;
+    $equipmentId = $input['equipmentId'] ?? null;
     $typeId = $input['typeId'] ?? null; // e.g. from Registry
     $checklistData = json_encode($input['checklist']); // Pass/Fail results
     $remarks = $input['remarks'];
@@ -21,11 +21,13 @@ try {
     // 2. Insert History Record
     $stmtRecord = $db->prepare("
         INSERT INTO tbl_maintenance_record 
-        (scheduleId, maintenanceDate, checklistJson, remarks, overallStatus, conditionRating)
-        VALUES (:sid, NOW(), :json, :remarks, :status, :rating)
+        (scheduleId, equipmentTypeId, equipmentId, maintenanceDate, checklistJson, remarks, overallStatus, conditionRating)
+        VALUES (:sid, :typeId, :equipmentId, NOW(), :json, :remarks, :status, :rating)
     ");
     $stmtRecord->execute([
         ':sid' => $scheduleId,
+        ':typeId' => $typeId,
+        ':equipmentId' => $equipmentId,
         ':json' => $checklistData,
         ':remarks' => $remarks,
         ':status' => $status,

@@ -20,7 +20,10 @@ date_default_timezone_set('Asia/Manila');
 // Application Settings
 define('APP_NAME', 'NIA UPRIIS ICT Inventory System');
 define('APP_VERSION', '1.0.0');
-define('BASE_URL', 'http://localhost/ictequipment'); // UPDATE THIS
+
+$protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
+$host = $_SERVER['HTTP_HOST'];
+define('BASE_URL', $protocol . "://" . $host . "/ictequipment/");
 
 // Session Settings
 define('SESSION_LIFETIME', 3600); // 1 hour

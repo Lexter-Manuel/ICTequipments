@@ -505,3 +505,20 @@ th.sort-active .sort-icon { opacity: 1; }
     cursor: pointer;
     transition: all var(--transition-base);
 }
+
+.data-table-container {
+    margin: var(--space-6) 0;
+}
+
+@media (max-width: 576px) {
+        .modal {
+        left: 0 !important;
+        width: 100% !important;
+    }
+}
+
+.btn-outline-primary:hover {
+    background: var(--primary-green) !important;
+    color: var(--bg-white) !important;
+    border-color: var(--primary-green) !important;
+}

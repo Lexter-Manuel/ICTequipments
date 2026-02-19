@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3310
--- Generation Time: Feb 16, 2026 at 04:41 AM
+-- Generation Time: Feb 19, 2026 at 06:15 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -220,7 +220,7 @@ CREATE TABLE `tbl_accounts` (
 --
 
 INSERT INTO `tbl_accounts` (`id`, `user_name`, `email`, `password`, `role`, `status`, `failed_login_attempts`, `locked_until`, `last_login`, `last_login_ip`, `2fa_enabled`, `2fa_secret`, `created_at`, `updated_at`, `created_by`) VALUES
-(3, 'SystemSuperAdmin', 'inventory@upriis.local', '$2y$12$RAUQs6D0FBVNz.ky7N6rJegTTOCmDxYpO850YwZMlxyWX4bLDKl9G', 'Super Admin', 'Active', 0, NULL, NULL, NULL, 0, NULL, '2026-02-09 23:26:19', '2026-02-16 02:29:42', NULL);
+(3, 'SystemSuperAdmin', 'inventory@upriis.local', '$2y$12$RAUQs6D0FBVNz.ky7N6rJegTTOCmDxYpO850YwZMlxyWX4bLDKl9G', 'Super Admin', 'Active', 0, NULL, NULL, NULL, 0, NULL, '2026-02-09 23:26:19', '2026-02-19 04:26:33', NULL);
 
 -- --------------------------------------------------------
 
@@ -259,6 +259,27 @@ CREATE TABLE `tbl_checklist_category` (
   `sequenceOrder` int(11) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `tbl_checklist_category`
+--
+
+INSERT INTO `tbl_checklist_category` (`categoryId`, `templateId`, `categoryName`, `sequenceOrder`) VALUES
+(1, 2, 'I. PHYSICAL INSPECTION, INTERIORS AND CLEANING', 1),
+(2, 2, 'II. HARDWARE PERFORMANCE CHECK', 2),
+(3, 2, 'Untitled', 3),
+(4, 3, 'I. PHYSICAL INSPECTION, INTERIORS AND CLEANING', 1),
+(5, 3, 'II. HARDWARE PERFORMANCE CHECK', 2),
+(6, 3, 'Untitled', 3),
+(7, 4, 'I. PHYSICAL INSPECTION, INTERIORS AND CLEANING', 1),
+(8, 4, 'II. HARDWARE PERFORMANCE CHECK', 2),
+(9, 4, 'Untitled', 3),
+(19, 8, 'I. PHYSICAL INSPECTION, INTERIORS AND CLEANING', 1),
+(20, 8, 'II. HARDWARE PERFORMANCE CHECK', 2),
+(21, 8, 'Untitled', 3),
+(22, 9, 'I. PHYSICAL INSPECTION, INTERIORS AND CLEANING', 1),
+(23, 9, 'II. HARDWARE PERFORMANCE CHECK', 2),
+(24, 9, 'Untitled', 3);
+
 -- --------------------------------------------------------
 
 --
@@ -271,6 +292,27 @@ CREATE TABLE `tbl_checklist_item` (
   `taskDescription` text NOT NULL,
   `sequenceOrder` int(11) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `tbl_checklist_item`
+--
+
+INSERT INTO `tbl_checklist_item` (`itemId`, `categoryId`, `taskDescription`, `sequenceOrder`) VALUES
+(1, 1, 'Dust removal performed', 1),
+(2, 1, 'Parts are intact', 2),
+(3, 2, 'Power Supply is working properly', 1),
+(4, 4, 'Dust removal performed', 1),
+(5, 4, 'Parts are intact', 2),
+(6, 5, 'Power Supply is working properly', 1),
+(7, 7, 'Dust removal performed', 1),
+(8, 7, 'Parts are intact', 2),
+(9, 8, 'Power Supply is working properly', 1),
+(19, 19, 'Dust removal performed', 1),
+(20, 19, 'Parts are intact', 2),
+(21, 20, 'Power Supply is working properly', 1),
+(22, 22, 'Dust removal performed', 1),
+(23, 22, 'Parts are intact', 2),
+(24, 23, 'Power Supply is working properly', 1);
 
 -- --------------------------------------------------------
 
@@ -301,7 +343,7 @@ CREATE TABLE `tbl_employee` (
 
 INSERT INTO `tbl_employee` (`employeeId`, `firstName`, `middleName`, `lastName`, `suffixName`, `position`, `birthDate`, `sex`, `employmentStatus`, `photoPath`, `location_id`, `createdAt`, `updatedAt`, `is_active`) VALUES
 (1, 'Lexter', 'N.', 'Manuel', '', 'OJT Trainee', '2002-11-06', 'Male', 'Casual', 'employee_1_1770881693.jpeg', 4, '2026-02-10 03:41:25', '2026-02-12 07:34:53', 1),
-(645987, 'Demi', NULL, 'Xochitl', '', 'OJT Trainee', '2006-02-10', 'Male', 'Casual', 'employee_645987_1770970632.jpeg', 13, '2026-02-11 03:04:45', '2026-02-13 08:17:12', 1);
+(645987, 'Demi', NULL, 'Xochitl', '', 'OJT Trainee', '2006-02-10', 'Male', 'Casual', 'employee_645987_1771379914.jpeg', 13, '2026-02-11 03:04:45', '2026-02-18 01:58:34', 1);
 
 -- --------------------------------------------------------
 
@@ -333,10 +375,7 @@ INSERT INTO `tbl_equipment_type_registry` (`typeId`, `typeName`, `tableName`, `p
 (6, 'Mouse', 'tbl_otherequipment', 'otherEquipmentId', 'equipmentType = \'Mouse\'', 180, 'Employee', '2026-02-16 03:18:42'),
 (7, 'Keyboard', 'tbl_otherequipment', 'otherEquipmentId', 'equipmentType = \'Keyboard\'', 180, 'Employee', '2026-02-16 03:18:42'),
 (8, 'CCTV System', 'tbl_otherequipment', 'otherEquipmentId', 'equipmentType = \'CCTV\'', 180, 'Location', '2026-02-16 03:18:42'),
-(9, 'Network Storage (NAS)', 'tbl_otherequipment', 'otherEquipmentId', 'equipmentType = \'NAS\'', 180, 'Location', '2026-02-16 03:18:42'),
-(10, 'Network Switch', 'tbl_otherequipment', 'otherEquipmentId', 'equipmentType = \'Switch\'', 180, 'Location', '2026-02-16 03:18:42'),
-(11, 'Projector', 'tbl_otherequipment', 'otherEquipmentId', 'equipmentType = \'Projector\'', 180, 'Location', '2026-02-16 03:18:42'),
-(12, 'Other Infrastructure', 'tbl_otherequipment', 'otherEquipmentId', 'equipmentType NOT IN (\'CCTV\', \'NAS\', \'Switch\', \'Projector\', \'Laptop\', \'Mouse\', \'Keyboard\')', 180, 'Location', '2026-02-16 03:18:42');
+(9, 'Network Storage (NAS)', 'tbl_otherequipment', 'otherEquipmentId', 'equipmentType = \'NAS\'', 180, 'Location', '2026-02-16 03:18:42');
 
 -- --------------------------------------------------------
 
@@ -400,6 +439,26 @@ CREATE TABLE `tbl_maintenance_schedule` (
   `updatedAt` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Maintenance schedule for equipment';
 
+--
+-- Dumping data for table `tbl_maintenance_schedule`
+--
+
+INSERT INTO `tbl_maintenance_schedule` (`scheduleId`, `equipmentType`, `equipmentId`, `maintenanceFrequency`, `lastMaintenanceDate`, `nextDueDate`, `isActive`, `createdAt`, `updatedAt`) VALUES
+(2, '3', 15, '', NULL, '2026-08-15', 1, '2026-02-16 03:51:54', '2026-02-16 03:51:54'),
+(3, '3', 16, '', NULL, '2026-08-15', 1, '2026-02-16 03:52:10', '2026-02-16 03:52:10'),
+(4, '3', 17, '', NULL, '2026-08-15', 1, '2026-02-16 03:54:21', '2026-02-16 03:54:21'),
+(5, '3', 18, '', NULL, '2026-08-15', 1, '2026-02-16 03:55:19', '2026-02-16 03:55:19'),
+(6, '3', 19, '', NULL, '2026-08-15', 1, '2026-02-16 03:58:17', '2026-02-16 03:58:17'),
+(7, '4', 4, '', NULL, '2026-08-15', 1, '2026-02-16 04:31:34', '2026-02-16 04:31:34'),
+(8, '4', 5, '', NULL, '2026-08-15', 1, '2026-02-16 04:31:52', '2026-02-16 04:31:52'),
+(9, '4', 6, '', NULL, '2026-08-15', 1, '2026-02-16 04:33:15', '2026-02-16 04:33:15'),
+(10, '4', 7, '', '2025-08-15', '2026-08-17', 1, '2026-02-18 03:07:57', '2026-02-18 03:09:35'),
+(11, '2', 3, 'Semi-Annual', NULL, '2026-08-17', 1, '2026-02-18 07:08:25', '2026-02-18 07:08:25'),
+(13, '1', 1, '', NULL, '2026-08-18', 1, '2026-02-19 02:59:08', '2026-02-19 02:59:08'),
+(14, '3', 20, '', NULL, '2026-08-18', 1, '2026-02-19 03:08:55', '2026-02-19 03:08:55'),
+(15, '1', 2, '', NULL, '2026-08-18', 1, '2026-02-19 03:39:44', '2026-02-19 03:39:44'),
+(16, '4', 8, '', NULL, '2026-08-18', 1, '2026-02-19 03:40:12', '2026-02-19 03:40:12');
+
 -- --------------------------------------------------------
 
 --
@@ -409,11 +468,21 @@ CREATE TABLE `tbl_maintenance_schedule` (
 CREATE TABLE `tbl_maintenance_template` (
   `templateId` int(11) NOT NULL,
   `templateName` varchar(100) NOT NULL,
-  `targetTypeId` int(11) NOT NULL,
-  `frequencyId` int(11) NOT NULL DEFAULT 3,
+  `targetTypeId` varchar(50) NOT NULL,
+  `frequency` varchar(50) NOT NULL,
+  `structure_json` longtext DEFAULT NULL,
+  `signatories_json` longtext DEFAULT NULL,
   `isActive` tinyint(1) DEFAULT 1,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `createdAt` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `tbl_maintenance_template`
+--
+
+INSERT INTO `tbl_maintenance_template` (`templateId`, `templateName`, `targetTypeId`, `frequency`, `structure_json`, `signatories_json`, `isActive`, `createdAt`) VALUES
+(8, 'ICT PREVENTIVE MAINTENANCE', '1', 'Semi-Annual', NULL, '{\"verifiedByName\":\"[Select Supervisor Name]\",\"verifiedByTitle\":\"DIVISION \\/ SECTION HEAD\",\"notedByName\":\"[Select Head of Office]\",\"notedByTitle\":\"HEAD OF OFFICE\"}', 1, '2026-02-18 06:02:38'),
+(9, 'ICT PREVENTIVE MAINTENANCE', '1', 'Semi-Annual', NULL, '{\"verifiedByName\":\"TEST\",\"verifiedByTitle\":\"DIVISION \\/ SECTION HEAD\",\"notedByName\":\"[Select Head of Office]\",\"notedByTitle\":\"HEAD OF OFFICE\"}', 1, '2026-02-18 06:02:55');
 
 -- --------------------------------------------------------
 
@@ -435,10 +504,12 @@ CREATE TABLE `tbl_monitor` (
 --
 
 INSERT INTO `tbl_monitor` (`monitorId`, `monitorBrand`, `monitorSize`, `monitorSerial`, `yearAcquired`, `employeeId`) VALUES
-(11, 'asd', 'asd', 'asd', '2000', 1),
-(12, 'Samsung', '24 inches', '241908712039', '2025', 1),
-(13, 'HP', '43 Inches', '53109847', '2025', NULL),
-(14, 'Samsung', '32 inches', 'SN_11111', '2000', 645987);
+(15, 'faf', '24', 'afadf', '2000', NULL),
+(16, 'faf', '24', '654656345', '2000', NULL),
+(17, '5141', '24', '214141234134', '2022', NULL),
+(18, '11111111', '11111111111111', '11111111111', '2000', NULL),
+(19, '555555555', '555555555', '5555555555', '2000', NULL),
+(20, 'test', '24 inches', 'test', '2025', 1);
 
 -- --------------------------------------------------------
 
@@ -488,8 +559,10 @@ CREATE TABLE `tbl_printer` (
 --
 
 INSERT INTO `tbl_printer` (`printerId`, `printerBrand`, `printerModel`, `printerSerial`, `yearAcquired`, `employeeId`) VALUES
-(0, 'HP DESKJET', '200020', 'SN_11112325', '2000', 645987),
-(3, 'HP', 'v13', 'HP-PR-2025-004', '2025', 1);
+(4, '66666', '666666', '6666666', '2000', NULL),
+(5, '666667657', '666666657 56', '66666667657', '2000', NULL),
+(7, 'HP DESKJET210', '2012413', 'SN_DK1142', '2003', 645987),
+(8, 'test', 'test', 'test', '2025', 645987);
 
 -- --------------------------------------------------------
 
@@ -513,7 +586,8 @@ CREATE TABLE `tbl_software` (
 --
 
 INSERT INTO `tbl_software` (`softwareId`, `licenseSoftware`, `licenseDetails`, `licenseType`, `expiryDate`, `email`, `password`, `employeeId`) VALUES
-(12, 'Adobe Photoshop', 'NONE', 'Perpetual', '2026-11-11 00:00:00', 'nia.lextermanuel@gmail.com', 'asdasdsad', 1);
+(12, 'Adobe Photoshop', 'NONE', 'Perpetual', '2026-11-11 00:00:00', 'nia.lextermanuel@gmail.com', 'asdasdsad', 1),
+(13, 'rasr', 'rqwerr', 'Subscription', '2026-11-11 00:00:00', '432', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -539,10 +613,8 @@ CREATE TABLE `tbl_systemunit` (
 --
 
 INSERT INTO `tbl_systemunit` (`systemunitId`, `systemUnitCategory`, `systemUnitBrand`, `specificationProcessor`, `specificationMemory`, `specificationGPU`, `specificationStorage`, `systemUnitSerial`, `yearAcquired`, `employeeId`) VALUES
-(1, 'Custom Built', 'asd', 'asd', 'asd', 'asd', 'asd', 'asd', '2000', NULL),
-(2, 'Pre-Built', '4214', '4213', '4124', '24134', '4214', '42141321412', '0000', 1),
-(3, 'Pre-Built', 'HP2000', 'Core i7', '16GB', 'RTX 2060', '512GB SSD', 'SN_200011', '2000', 1),
-(7, 'Custom Built', 'dasd', 'eqwewqe', 'ewqe', 'wqeqe', 'qweqewq', 'qweqweq', '2025', 645987);
+(1, 'Pre-Built', 'test', 'test', 'tets', 'test', 'test', 'test', '2025', 645987),
+(2, 'Custom Built', 'test2', 'test2', 'test2', 'test2', 'test2', 'test2', '2025', 645987);
 
 -- --------------------------------------------------------
 
@@ -875,7 +947,7 @@ ALTER TABLE `location_type`
 -- AUTO_INCREMENT for table `login_attempts`
 --
 ALTER TABLE `login_attempts`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=43;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=68;
 
 --
 -- AUTO_INCREMENT for table `password_resets`
@@ -911,13 +983,13 @@ ALTER TABLE `tbl_allinone`
 -- AUTO_INCREMENT for table `tbl_checklist_category`
 --
 ALTER TABLE `tbl_checklist_category`
-  MODIFY `categoryId` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `categoryId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
 
 --
 -- AUTO_INCREMENT for table `tbl_checklist_item`
 --
 ALTER TABLE `tbl_checklist_item`
-  MODIFY `itemId` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `itemId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
 
 --
 -- AUTO_INCREMENT for table `tbl_employee`
@@ -941,25 +1013,25 @@ ALTER TABLE `tbl_maintenance_frequency`
 -- AUTO_INCREMENT for table `tbl_maintenance_record`
 --
 ALTER TABLE `tbl_maintenance_record`
-  MODIFY `recordId` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `recordId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `tbl_maintenance_schedule`
 --
 ALTER TABLE `tbl_maintenance_schedule`
-  MODIFY `scheduleId` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `scheduleId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- AUTO_INCREMENT for table `tbl_maintenance_template`
 --
 ALTER TABLE `tbl_maintenance_template`
-  MODIFY `templateId` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `templateId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `tbl_monitor`
 --
 ALTER TABLE `tbl_monitor`
-  MODIFY `monitorId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+  MODIFY `monitorId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
 
 --
 -- AUTO_INCREMENT for table `tbl_otherequipment`
@@ -968,16 +1040,22 @@ ALTER TABLE `tbl_otherequipment`
   MODIFY `otherEquipmentId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
+-- AUTO_INCREMENT for table `tbl_printer`
+--
+ALTER TABLE `tbl_printer`
+  MODIFY `printerId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+
+--
 -- AUTO_INCREMENT for table `tbl_software`
 --
 ALTER TABLE `tbl_software`
-  MODIFY `softwareId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `softwareId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT for table `tbl_systemunit`
 --
 ALTER TABLE `tbl_systemunit`
-  MODIFY `systemunitId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `systemunitId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- Constraints for dumped tables
@@ -1000,6 +1078,12 @@ ALTER TABLE `sessions`
 --
 ALTER TABLE `tbl_allinone`
   ADD CONSTRAINT `tbl_allinone_ibfk_1` FOREIGN KEY (`employeeId`) REFERENCES `tbl_employee` (`employeeId`);
+
+--
+-- Constraints for table `tbl_checklist_item`
+--
+ALTER TABLE `tbl_checklist_item`
+  ADD CONSTRAINT `fk_item_category_cascade` FOREIGN KEY (`categoryId`) REFERENCES `tbl_checklist_category` (`categoryId`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `tbl_employee`

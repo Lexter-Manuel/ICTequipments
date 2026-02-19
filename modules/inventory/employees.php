@@ -1,58 +1,28 @@
 <?php
 
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+if (session_status() === PHP_SESSION_NONE) { session_start(); }
 
-// Include database connection
 require_once '../../config/database.php';
-
 $db = Database::getInstance()->getConnection();
 
-// Get messages from session if they exist
-$message = '';
-$messageType = '';
+$message = $messageType = '';
 if (isset($_SESSION['employee_message'])) {
     $message = $_SESSION['employee_message'];
     $messageType = $_SESSION['employee_message_type'];
-    unset($_SESSION['employee_message']);
-    unset($_SESSION['employee_message_type']);
+    unset($_SESSION['employee_message'], $_SESSION['employee_message_type']);
 }
 
-// Fetch all divisions (location_type_id = 1)
-$divisionStmt = $db->query("
-    SELECT location_id, location_name 
-    FROM location 
-    WHERE location_type_id = 1 AND is_deleted = '0'
-    ORDER BY location_name ASC
-");
+$divisionStmt = $db->query("SELECT location_id, location_name FROM location WHERE location_type_id = 1 AND is_deleted = '0' ORDER BY location_name ASC");
 $divisions = $divisionStmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Fetch all sections (location_type_id = 2)
-$sectionStmt = $db->query("
-    SELECT location_id, location_name, parent_location_id 
-    FROM location 
-    WHERE location_type_id = 2 AND is_deleted = '0'
-    ORDER BY location_name ASC
-");
+$sectionStmt = $db->query("SELECT location_id, location_name, parent_location_id FROM location WHERE location_type_id = 2 AND is_deleted = '0' ORDER BY location_name ASC");
 $sections = $sectionStmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Fetch all units (location_type_id = 3)
-$unitStmt = $db->query("
-    SELECT location_id, location_name, parent_location_id 
-    FROM location 
-    WHERE location_type_id = 3 AND is_deleted = '0'
-    ORDER BY location_name ASC
-");
+$unitStmt = $db->query("SELECT location_id, location_name, parent_location_id FROM location WHERE location_type_id = 3 AND is_deleted = '0' ORDER BY location_name ASC");
 $units = $unitStmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Fetch all employees
 $employeeStmt = $db->query("
-    SELECT 
-        e.*,
-        l.location_name,
-        l.location_type_id,
-        lt.name as location_type_name
+    SELECT e.*, l.location_name, l.location_type_id, lt.name as location_type_name
     FROM tbl_employee e
     LEFT JOIN location l ON e.location_id = l.location_id
     LEFT JOIN location_type lt ON l.location_type_id = lt.id
@@ -60,26 +30,28 @@ $employeeStmt = $db->query("
 ");
 $employees = $employeeStmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Calculate statistics
 $totalEmployees = count($employees);
 $permanentCount = count(array_filter($employees, fn($e) => $e['employmentStatus'] === 'Permanent'));
-$casualCount = count(array_filter($employees, fn($e) => $e['employmentStatus'] === 'Casual'));
-$jobOrderCount = count(array_filter($employees, fn($e) => $e['employmentStatus'] === 'Job Order'));
+$casualCount    = count(array_filter($employees, fn($e) => $e['employmentStatus'] === 'Casual'));
+$jobOrderCount  = count(array_filter($employees, fn($e) => $e['employmentStatus'] === 'Job Order'));
 ?>
 
-<!-- CropperJS CSS -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
+<link rel="stylesheet" href="assets/css/inventory.css?v=<?php echo time()?>">
 <link rel="stylesheet" href="assets/css/employees.css?v=<?php echo time()?>">
 
 <!-- Page Header -->
 <div class="page-header">
-    <h1 class="page-title">
-        <i class="fas fa-users"></i>
-        Employee Management
-    </h1>
+    <div class="page-header-inner">
+        <div class="page-header-icon">
+            <i class="fas fa-users"></i>
+        </div>
+        <div>
+            <h1 class="page-title">Employee Management</h1>
+        </div>
+    </div>
     <button class="add-btn" onclick="toggleForm()">
-        <i class="fas fa-user-plus"></i>
-        Add New Employee
+        <i class="fas fa-user-plus"></i> Add New Employee
     </button>
 </div>
 
@@ -94,52 +66,39 @@ $jobOrderCount = count(array_filter($employees, fn($e) => $e['employmentStatus']
 <div class="stats-grid">
     <div class="stat-card">
         <i class="fas fa-users stat-icon"></i>
-        <div class="stat-label">Total Employees</div>
-        <div class="stat-value"><?php echo $totalEmployees; ?></div>
+        <div><div class="stat-label">Total Employees</div><div class="stat-value"><?php echo $totalEmployees; ?></div></div>
     </div>
     <div class="stat-card">
         <i class="fas fa-user-check stat-icon"></i>
-        <div class="stat-label">Permanent</div>
-        <div class="stat-value"><?php echo $permanentCount; ?></div>
+        <div><div class="stat-label">Permanent</div><div class="stat-value"><?php echo $permanentCount; ?></div></div>
     </div>
     <div class="stat-card">
         <i class="fas fa-user-clock stat-icon"></i>
-        <div class="stat-label">Casual</div>
-        <div class="stat-value"><?php echo $casualCount; ?></div>
+        <div><div class="stat-label">Casual</div><div class="stat-value"><?php echo $casualCount; ?></div></div>
     </div>
     <div class="stat-card">
         <i class="fas fa-user-tie stat-icon"></i>
-        <div class="stat-label">Job Order</div>
-        <div class="stat-value"><?php echo $jobOrderCount; ?></div>
+        <div><div class="stat-label">Job Order</div><div class="stat-value"><?php echo $jobOrderCount; ?></div></div>
     </div>
 </div>
 
 <!-- Add Employee Form -->
 <div class="form-container" id="employeeFormContainer">
     <div class="form-header">
-        <h2 class="form-title">
-            <i class="fas fa-user-plus"></i>
-            Add New Employee
-        </h2>
-        <button class="btn-close-form" onclick="toggleForm()">
-            <i class="fas fa-times"></i>
-            Close
-        </button>
+        <h2 class="form-title"><i class="fas fa-user-plus"></i> Add New Employee</h2>
+        <button class="btn-close-form" onclick="toggleForm()"><i class="fas fa-times"></i> Close</button>
     </div>
-    
+
     <form id="employeeForm" method="POST" action="ajax/process_employee.php" enctype="multipart/form-data">
         <input type="hidden" name="action" value="add">
         <input type="hidden" id="locationId" name="locationId" value="">
         <input type="hidden" id="croppedImage" name="croppedImage" value="">
-        
+
         <div class="row">
-            <!-- Personal Information Section -->
+            <!-- Personal Information -->
             <div class="col-md-8">
-                <h6 class="form-section-title">
-                    <i class="fas fa-id-card"></i>
-                    Personal Information
-                </h6>
-                
+                <h6 class="form-section-title"><i class="fas fa-id-card"></i> Personal Information</h6>
+
                 <div class="row mb-3">
                     <div class="col-md-4">
                         <label for="employeeId" class="form-label">Employee ID <span class="text-danger">*</span></label>
@@ -164,12 +123,9 @@ $jobOrderCount = count(array_filter($employees, fn($e) => $e['employmentStatus']
                         <label for="suffixName" class="form-label">Suffix</label>
                         <select class="form-select" id="suffixName" name="suffixName">
                             <option value="">None</option>
-                            <option value="Jr.">Jr.</option>
-                            <option value="Sr.">Sr.</option>
-                            <option value="II">II</option>
-                            <option value="III">III</option>
-                            <option value="IV">IV</option>
-                            <option value="V">V</option>
+                            <option value="Jr.">Jr.</option><option value="Sr.">Sr.</option>
+                            <option value="II">II</option><option value="III">III</option>
+                            <option value="IV">IV</option><option value="V">V</option>
                         </select>
                     </div>
                 </div>
@@ -190,9 +146,7 @@ $jobOrderCount = count(array_filter($employees, fn($e) => $e['employmentStatus']
                         <label for="sex" class="form-label">Sex <span class="text-danger">*</span></label>
                         <select class="form-select" id="sex" name="sex" required>
                             <option value="">Select Sex</option>
-                            <option value="Male">Male</option>
-                            <option value="Female">Female</option>
-                            <option value="Other">Other</option>
+                            <option value="Male">Male</option><option value="Female">Female</option><option value="Other">Other</option>
                         </select>
                     </div>
                     <div class="col-md-6">
@@ -206,11 +160,7 @@ $jobOrderCount = count(array_filter($employees, fn($e) => $e['employmentStatus']
                     </div>
                 </div>
 
-                <!-- Location Information Section -->
-                <h6 class="form-section-title">
-                    <i class="fas fa-map-marker-alt"></i>
-                    Location Assignment
-                </h6>
+                <h6 class="form-section-title"><i class="fas fa-map-marker-alt"></i> Location Assignment</h6>
 
                 <div class="row mb-3">
                     <div class="col-md-4">
@@ -218,9 +168,7 @@ $jobOrderCount = count(array_filter($employees, fn($e) => $e['employmentStatus']
                         <select class="form-select" id="division" name="division" required>
                             <option value="">Select Division</option>
                             <?php foreach ($divisions as $division): ?>
-                                <option value="<?php echo $division['location_id']; ?>">
-                                    <?php echo htmlspecialchars($division['location_name']); ?>
-                                </option>
+                                <option value="<?php echo $division['location_id']; ?>"><?php echo htmlspecialchars($division['location_name']); ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
@@ -239,57 +187,40 @@ $jobOrderCount = count(array_filter($employees, fn($e) => $e['employmentStatus']
                 </div>
             </div>
 
-            <!-- Photo Upload Section -->
+            <!-- Photo Upload -->
             <div class="col-md-4">
-                <h6 class="form-section-title">
-                    <i class="fas fa-camera"></i>
-                    Employee Photo
-                </h6>
-                
+                <h6 class="form-section-title"><i class="fas fa-camera"></i> Employee Photo</h6>
                 <div class="photo-upload-container">
                     <div class="photo-upload-box" id="photoUploadBox">
                         <input type="file" id="photoInput" name="photo" accept="image/*" hidden>
-                        
                         <div class="upload-placeholder" id="uploadPlaceholder">
                             <i class="fas fa-cloud-upload-alt"></i>
                             <p>Click to upload photo</p>
                             <small>JPG, PNG (Max 5MB)</small>
                         </div>
-                        
                         <div class="photo-preview" id="photoPreview">
                             <img id="previewImage" src="" alt="Preview">
                         </div>
                     </div>
-                    
-                    <button type="button" class="btn-change-photo" id="changePhotoBtn" style="display: none;">
-                        <i class="fas fa-sync-alt"></i>
-                        Change Photo
+                    <button type="button" class="btn-change-photo" id="changePhotoBtn" style="display:none">
+                        <i class="fas fa-sync-alt"></i> Change Photo
                     </button>
                 </div>
             </div>
         </div>
 
         <div class="form-footer">
-            <button type="button" class="btn-cancel">
-                <i class="fas fa-times"></i>
-                Cancel
-            </button>
-            <button type="submit" class="btn-submit">
-                <i class="fas fa-save"></i>
-                Add Employee
-            </button>
+            <button type="button" class="btn-cancel"><i class="fas fa-times"></i> Cancel</button>
+            <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Add Employee</button>
         </div>
     </form>
 </div>
 
 <?php include '../../includes/components/cropper_modal.php'; ?>
 
-<!-- Pass PHP data to JavaScript -->
 <script>
     var sectionsData = <?php echo json_encode($sections); ?>;
-    var unitsData = <?php echo json_encode($units); ?>;
+    var unitsData    = <?php echo json_encode($units); ?>;
 </script>
-
-<!-- CropperJS and Employee Management Scripts -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
 <script src="assets/js/employees.js?v=<?php echo time(); ?>"></script>

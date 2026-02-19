@@ -186,7 +186,6 @@ class DashboardApp {
         
         this.breadcrumb.innerHTML = `
             <a href="#" data-page="home"><i class="fas fa-home"></i></a>
-            <span>/</span>
             <span class="current">${displayName}</span>
         `;
         
@@ -246,9 +245,7 @@ class DashboardApp {
         `;
     }
     
-    /**
-     * Setup mobile menu toggle
-     */
+
     setupMobileMenu() {
         var toggleIcon = this.mobileToggle.querySelector('i');
         
@@ -267,10 +264,7 @@ class DashboardApp {
             }
         });
     }
-    
-    /**
-     * Close mobile menu
-     */
+
     closeMobileMenu() {
         this.sidebar.classList.remove('active');
         var toggleIcon = this.mobileToggle.querySelector('i');

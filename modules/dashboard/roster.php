@@ -38,6 +38,7 @@ $jobOrderCount = count(array_filter($employees, fn($e) => $e['employmentStatus']
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
 <link rel="stylesheet" href="assets/css/roster.css?v=<?php echo time(); ?>">
+<link rel="stylesheet" href="assets/css/maintenance-checklist.css?v=<?php echo time(); ?>">
 
 <!-- ========================================
      ROSTER LIST VIEW
@@ -271,22 +272,66 @@ $jobOrderCount = count(array_filter($employees, fn($e) => $e['employmentStatus']
     </div>
 </div>
 
-<!-- Maintenance Checklist Modal -->
+<!-- Maintenance Modal -->
 <div class="modal fade" id="maintenanceModal" tabindex="-1" aria-labelledby="maintenanceModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header" style="background: linear-gradient(135deg, var(--primary-green) 0%, rgba(45, 122, 79, 0.8) 100%); color: white;">
+        <div class="modal-content" style="border: none; border-radius: var(--radius-xl); overflow: hidden;">
+
+            <!-- Styled Header -->
+            <div class="modal-header">
                 <h5 class="modal-title" id="maintenanceModalLabel">
-                    <i class="fas fa-tools"></i> Preventive Maintenance Checklist
+                    <i class="fas fa-clipboard-check"></i>
+                    Preventive Maintenance
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body" id="maintenanceModalBody">
-                <!-- Maintenance checklist will be loaded here -->
-                <div class="text-center py-5">
-                    <i class="fas fa-spinner fa-spin fa-3x text-primary"></i>
-                    <p class="mt-3">Loading maintenance checklist...</p>
+
+            <!-- Body: loading state + checklist container -->
+            <div class="modal-body p-0">
+                <div id="modal-maintenance-loader" class="mc-loading">
+                    <div class="spinner"></div>
+                    <p>Loading checklist…</p>
                 </div>
+                <div id="modal-maintenance-container"></div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="equipmentDetailsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content">
+            <div class="modal-header text-white">
+                <h5 class="modal-title"><i class="fas fa-info-circle"></i> Equipment Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-4">
+                    <div class="bg-light rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                        <i id="detailIcon" class="fas fa-desktop fa-3x text-secondary"></i>
+                    </div>
+                    <h5 id="detailBrand" class="fw-bold mb-1">Brand Name</h5>
+                    <p id="detailSerial" class="text-muted font-monospace small">SN: 12345678</p>
+                    <span id="detailType" class="badge bg-secondary">Type</span>
+                </div>
+                
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Assigned To:</span>
+                        <span id="detailOwner" class="fw-bold text-dark">Employee Name</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Location:</span>
+                        <span id="detailLocation" class="text-dark">Location Name</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Status:</span>
+                        <span class="text-success fw-bold">Active</span> </li>
+                </ul>
+            </div>
+            <div class="modal-footer border-0 bg-light justify-content-center">
+                <button type="button" class="btn btn-secondary w-100" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>

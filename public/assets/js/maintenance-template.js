@@ -7,7 +7,7 @@ if (document.readyState === 'loading') {
 
 // 2. Main Loader Function
 function loadTemplates() {
-    const container = document.getElementById('templatesContainer');
+    var container = document.getElementById('templatesContainer');
     
     // Safety check: stop if we aren't on the templates page
     if (!container) return;
@@ -27,11 +27,11 @@ function loadTemplates() {
             if (data.data.length === 0) {
                 container.innerHTML = `
                     <div class="col-12 text-center py-5">
-                        <div class="mb-3 text-muted" style="opacity: 0.5;">
+                        <div class="mb-3 " style="opacity: 0.5;">
                             <i class="fas fa-folder-open fa-3x"></i>
                         </div>
-                        <h5 class="text-muted">No templates found</h5>
-                        <p class="small text-muted">Create a new template to get started.</p>
+                        <h5 class="">No templates found</h5>
+                        <p class="small ">Create a new template to get started.</p>
                     </div>`;
                 return;
             }
@@ -58,60 +58,82 @@ function loadTemplates() {
 
 // 3. The Function That Was Missing (Card Generator)
 function createTemplateCard(t) {
-    // Determine Icon & Color based on Type
-    let iconClass = 'fa-cogs';
-    let bgClass = 'bg-primary-xlight text-primary';
-    const type = (t.targetTypeId || '').toLowerCase();
+    // Determine Icon & Color based on Type(s)
+    var typeIds = (t.targetTypeId || '').split(',').map(s => s.trim());
+    var typeNames = t.targetTypeNames || [];
 
-    if (type.includes('system')) { iconClass = 'fa-desktop'; }
-    else if (type.includes('printer')) { iconClass = 'fa-print'; bgClass = 'bg-secondary-xlight text-secondary'; }
-    else if (type.includes('laptop')) { iconClass = 'fa-laptop'; }
-    else if (type.includes('monitor')) { iconClass = 'fa-tv'; }
+    // Pick primary icon from first type
+    var iconClass = 'fa-cogs';
+    var bgClass = 'bg-primary-xlight text-primary';
+    var firstId = typeIds[0] || '';
+
+    if (firstId === '1')      { iconClass = 'fa-desktop'; }
+    else if (firstId === '2') { iconClass = 'fa-desktop'; }
+    else if (firstId === '3') { iconClass = 'fa-tv'; bgClass = 'bg-info-xlight text-info'; }
+    else if (firstId === '4') { iconClass = 'fa-print'; bgClass = 'bg-secondary-xlight text-secondary'; }
+    else if (firstId === '5') { iconClass = 'fa-laptop'; }
 
     // Count Items (Use count from DB if available, else 0)
-    let itemCount = t.item_count || 0;
+    var itemCount = t.item_count || 0;
 
     // Format Date
-    const dateCreated = t.createdAt ? new Date(t.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'N/A';
+    var dateCreated = t.createdAt ? new Date(t.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'N/A';
+
+    // Build type badges
+    var typeBadges = '';
+    if (typeNames.length > 0) {
+        typeBadges = typeNames.map(name => `<span class="badge bg-light text-dark border me-1" style="font-size:10px;">${name}</span>`).join('');
+    } else {
+        typeBadges = '<span class="badge bg-light text-muted border" style="font-size:10px;">No type assigned</span>';
+    }
 
     return `
     <div class="col-md-6 col-xl-4">
         <div class="card template-card h-100 border-0 shadow-sm position-relative" onclick="viewTemplate(${t.templateId})">
             <span class="template-badge badge bg-success">Active</span>
             <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start mb-3">
-                    <div class="template-icon-box ${bgClass}">
-                        <i class="fas ${iconClass}"></i>
-                    </div>
-                    <div class="dropdown">
-                        <button class="btn btn-light btn-sm rounded-circle" type="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-ellipsis-v"></i>
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="#" onclick="viewTemplate(${t.templateId})"><i class="fas fa-eye me-2"></i> Edit</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item text-danger" href="#" onclick="deleteTemplate(${t.templateId})"><i class="fas fa-trash me-2"></i> Delete</a></li>
-                        </ul>
-                    </div>
+<div class="d-flex justify-content-between align-items-start mb-3">
+                <div class="template-icon-box ${bgClass}">
+                    <i class="fas ${iconClass}"></i>
                 </div>
+                
+                <div class="dropdown" onclick="event.stopPropagation()">
+                    <button class="btn btn-light btn-sm rounded-circle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                            <a class="dropdown-item text-edit" href="#" onclick="editTemplate(${t.templateId})">
+                                <i class="fas fa-edit me-2"></i> Edit
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item text-danger" href="#" onclick="deleteTemplate(${t.templateId})">
+                                <i class="fas fa-trash me-2"></i> Delete
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
                 <h5 class="fw-bold mb-1">${t.templateName}</h5>
-                <p class="text-muted small mb-3">Target: ${t.targetTypeId ? t.targetTypeId.replace('_', ' ').toUpperCase() : 'N/A'}</p>
+                <div class="mb-3">${typeBadges}</div>
                 
                 <div class="template-stats">
                     <div class="template-stat">
-                        <div class="small text-muted">Frequency</div>
+                        <div class="small ">Frequency</div>
                         <div class="fw-bold" style="color: var(--primary-green);">${t.frequency}</div>
                     </div>
                     <div class="template-stat text-end">
-                        <div class="small text-muted">Questions</div>
+                        <div class="small ">Questions</div>
                         <div class="fw-bold" style="color: var(--primary-green);">${itemCount} items</div>
                     </div>
                 </div>
             </div>
             <div class="card-footer bg-light border-top">
                 <div class="d-flex justify-content-between align-items-center small">
-                    <span class="text-muted"><i class="fas fa-list-check me-1"></i> ${itemCount} items</span>
-                    <span class="text-muted">Created ${dateCreated}</span>
+                    <span class=""><i class="fas fa-list-check me-1"></i> ${itemCount} items</span>
+                    <span class="">Created ${dateCreated}</span>
                 </div>
             </div>
         </div>
@@ -127,8 +149,11 @@ function openCreateTemplateModal() {
     // Reset Signatories
     document.getElementById('sigVerifiedName').innerText = "[Select Supervisor Name]";
     document.getElementById('sigVerifiedTitle').innerText = "Division / Section Head";
+
+    // Reset equipment type multi-select
+    selectAllTypes(false);
     
-    const modal = new bootstrap.Modal(document.getElementById('templateBuilderModal'));
+    var modal = new bootstrap.Modal(document.getElementById('templateBuilderModal'));
     modal.show();
 }
 
@@ -143,8 +168,8 @@ function openBuilderModal() {
 }
 
 function addCategory() {
-    const container = document.getElementById('checklistCategories');
-    const newSection = document.createElement('div');
+    var container = document.getElementById('checklistCategories');
+    var newSection = document.createElement('div');
     newSection.className = 'paper-section';
     newSection.innerHTML = `
         <div class="section-header">
@@ -157,7 +182,7 @@ function addCategory() {
         <div class="checklist-items">
             <div class="checklist-row">
                 <div class="flex-grow-1" contenteditable="true">New inspection item...</div>
-                <div class="ms-3 text-muted small fst-italic">[Pass / Fail / N/A]</div>
+                <div class="ms-3  small fst-italic">[Yes / No / N/A]</div>
                 <button class="btn btn-link btn-sm text-danger ms-2 builder-controls" onclick="removeItem(this)">&times;</button>
             </div>
         </div>
@@ -166,12 +191,12 @@ function addCategory() {
 }
 
 function addItem(btn) {
-    const itemsContainer = btn.closest('.section-header').nextElementSibling;
-    const newItem = document.createElement('div');
+    var itemsContainer = btn.closest('.section-header').nextElementSibling;
+    var newItem = document.createElement('div');
     newItem.className = 'checklist-row';
     newItem.innerHTML = `
         <div class="flex-grow-1" contenteditable="true">New inspection item...</div>
-        <div class="ms-3 text-muted small fst-italic">[Pass / Fail / N/A]</div>
+        <div class="ms-3  small fst-italic">[Pass / No / N/A]</div>
         <button class="btn btn-link btn-sm text-danger ms-2 builder-controls" onclick="removeItem(this)">&times;</button>
     `;
     itemsContainer.appendChild(newItem);
@@ -200,8 +225,8 @@ function editSignatory(btn) {
     currentSignatoryContainer = btn.closest('.position-relative');
     
     // Find the current values
-    const nameEl = currentSignatoryContainer.querySelector('[id*="Name"]');
-    const titleEl = currentSignatoryContainer.querySelector('[id*="Title"]');
+    var nameEl = currentSignatoryContainer.querySelector('[id*="Name"]');
+    var titleEl = currentSignatoryContainer.querySelector('[id*="Title"]');
     
     // Populate the modal inputs
     document.getElementById('inputSigName').value = nameEl.innerText;
@@ -222,12 +247,12 @@ function applySignatoryChanges() {
     if (!currentSignatoryContainer) return;
 
     // Get new values
-    const newName = document.getElementById('inputSigName').value.trim();
-    const newTitle = document.getElementById('inputSigTitle').value.trim();
+    var newName = document.getElementById('inputSigName').value.trim();
+    var newTitle = document.getElementById('inputSigTitle').value.trim();
 
     // Update the DOM elements in the builder
-    const nameEl = currentSignatoryContainer.querySelector('[id*="Name"]');
-    const titleEl = currentSignatoryContainer.querySelector('[id*="Title"]');
+    var nameEl = currentSignatoryContainer.querySelector('[id*="Name"]');
+    var titleEl = currentSignatoryContainer.querySelector('[id*="Title"]');
 
     nameEl.innerText = newName || "[Name Placeholder]";
     titleEl.innerText = newTitle || "Position Title";
@@ -243,8 +268,8 @@ function applySignatoryChanges() {
 var previewModalInstance = null;
 
 function viewTemplate(id) {
-    const modalEl = document.getElementById('templateViewModal');
-    const modalBody = document.getElementById('viewModalBody');
+    var modalEl = document.getElementById('templateViewModal');
+    var modalBody = document.getElementById('viewModalBody');
     
     // Initialize Modal if needed
     if (!previewModalInstance) {
@@ -255,7 +280,7 @@ function viewTemplate(id) {
     modalBody.innerHTML = `
         <div class="text-center py-5">
             <div class="spinner-border text-primary" role="status"></div>
-            <p class="mt-2 text-muted">Loading template preview...</p>
+            <p class="mt-2 ">Loading template preview...</p>
         </div>`;
     
     previewModalInstance.show();
@@ -277,17 +302,17 @@ function viewTemplate(id) {
 
 function renderPreview(t, container) {
     // 1. Parse Data
-    let structure = {};
+    var structure = {};
     try {
         structure = JSON.parse(t.structure_json);
     } catch(e) { console.error("JSON Parse Error", e); }
 
     // 2. Build the Main Table Rows
-    let tableRows = '';
+    var tableRows = '';
     
     if(structure.categories) {
         structure.categories.forEach((cat) => {
-            const itemCount = cat.items.length;
+            var itemCount = cat.items.length;
             
             // Loop through items in this category
             cat.items.forEach((item, index) => {
@@ -313,10 +338,10 @@ function renderPreview(t, container) {
     }
 
     // 3. Parse Signatories
-    let sigs = { verifiedByTitle: 'Division/Section Head', notedByTitle: 'Head of Office', verifiedByName: '', notedByName: '' };
+    var sigs = { verifiedByTitle: 'Division/Section Head', notedByTitle: 'Head of Office', verifiedByName: '', notedByName: '' };
     try {
         if(t.signatories_json) {
-            const parsedSigs = JSON.parse(t.signatories_json);
+            var parsedSigs = JSON.parse(t.signatories_json);
             if(parsedSigs.verifiedByTitle) sigs = Object.assign(sigs, parsedSigs);
         }
     } catch(e) {}
@@ -352,7 +377,7 @@ function renderPreview(t, container) {
                     </div>
                     <div class="d-flex align-items-end mb-2">
                         <span style="width: 140px;">Equipment Type:</span>
-                        <div class="flex-grow-1 border-bottom border-dark ps-2">${t.targetTypeId.replace('_',' ')}</div>
+                        <div class="flex-grow-1 border-bottom border-dark ps-2">${(t.targetTypeNames || []).join(', ') || formatTypeIds(t.targetTypeId)}</div>
                     </div>
                     <div class="d-flex align-items-end">
                         <span style="width: 140px;">Property No:</span>
@@ -384,7 +409,7 @@ function renderPreview(t, container) {
 
             <div class="row pt-4">
                 <div class="col-4">
-                    <small class="d-block text-muted mb-4">Prepared/Conducted by:</small>
+                    <small class="d-block  mb-4">Prepared/Conducted by:</small>
                     <div class="text-center">
                         <div class="fw-bold text-uppercase">[Technician Name]</div>
                         <div class="border-top border-dark mt-1 pt-1 mx-2"></div>
@@ -392,7 +417,7 @@ function renderPreview(t, container) {
                     </div>
                 </div>
                 <div class="col-4">
-                    <small class="d-block text-muted mb-4">Checked by:</small>
+                    <small class="d-block  mb-4">Checked by:</small>
                     <div class="text-center">
                         <div class="fw-bold text-uppercase text-primary">${sigs.verifiedByName || '&nbsp;'}</div>
                         <div class="border-top border-dark mt-1 pt-1 mx-2"></div>
@@ -400,7 +425,7 @@ function renderPreview(t, container) {
                     </div>
                 </div>
                 <div class="col-4">
-                    <small class="d-block text-muted mb-4">Noted by:</small>
+                    <small class="d-block  mb-4">Noted by:</small>
                     <div class="text-center">
                         <div class="fw-bold text-uppercase text-primary">${sigs.notedByName || '&nbsp;'}</div>
                         <div class="border-top border-dark mt-1 pt-1 mx-2"></div>
@@ -416,14 +441,24 @@ function renderPreview(t, container) {
 // 4. SAVE (Handles both Create and Update)
 function saveTemplate() {
     // ... (Get Elements logic same as before) ...
-    const titleEl = document.querySelector('.paper-title');
-    const typeSelect = document.getElementById('globalTypeSelect');
-    const freqSelect = document.getElementById('globalFreqSelect');
+    var titleEl = document.querySelector('.paper-title');
+    var freqSelect = document.getElementById('globalFreqSelect');
 
-    let templateData = {
+    // Collect selected equipment types from multi-select checkboxes
+    var selectedTypes = [];
+    document.querySelectorAll('#typeMultiSelectMenu input[type="checkbox"]:checked').forEach(function(cb) {
+        selectedTypes.push(cb.value);
+    });
+
+    if (selectedTypes.length === 0) {
+        alert('Please select at least one equipment type.');
+        return;
+    }
+
+    var templateData = {
         id: currentTemplateId,
         title: titleEl.innerText.trim(),
-        equipmentType: typeSelect.value,
+        equipmentType: selectedTypes.join(','),
         frequency: freqSelect.value,
         categories: [],
         signatories: {
@@ -437,21 +472,21 @@ function saveTemplate() {
 
     // Scrape Categories (Same as before)
     document.querySelectorAll('.paper-section').forEach((section, index) => {
-        let headerSpan = section.querySelector('.section-header span');
-        let category = {
+        var headerSpan = section.querySelector('.section-header span');
+        var category = {
             order: index + 1,
             title: headerSpan ? headerSpan.innerText.trim() : 'Untitled',
             items: []
         };
         section.querySelectorAll('.checklist-row').forEach((row, rIndex) => {
-            let itemText = row.querySelector('.flex-grow-1');
+            var itemText = row.querySelector('.flex-grow-1');
             if(itemText) category.items.push({ order: rIndex + 1, text: itemText.innerText.trim() });
         });
         templateData.categories.push(category);
     });
 
     // DETERMINE ACTION: Create or Update
-    const action = currentTemplateId ? 'update' : 'create';
+    var action = currentTemplateId ? 'update' : 'create';
 
     fetch(`../ajax/manage_templates.php?action=${action}`, {
         method: 'POST',
@@ -471,12 +506,12 @@ function saveTemplate() {
 // 2. SWITCH TO EDIT MODE
 function editTemplate(id) {
     // If called from Preview Modal, close it first
-    const viewModalEl = document.getElementById('templateViewModal');
-    const viewModal = bootstrap.Modal.getInstance(viewModalEl);
+    var viewModalEl = document.getElementById('templateViewModal');
+    var viewModal = bootstrap.Modal.getInstance(viewModalEl);
     if (viewModal) viewModal.hide();
 
     // Open Builder
-    const builderModal = new bootstrap.Modal(document.getElementById('templateBuilderModal'));
+    var builderModal = new bootstrap.Modal(document.getElementById('templateBuilderModal'));
     builderModal.show();
 
     // Show Loading state in builder
@@ -489,17 +524,17 @@ function editTemplate(id) {
         .then(data => {
             if(!data.success) { alert(data.message); return; }
             
-            const t = data.data;
+            var t = data.data;
             currentTemplateId = t.templateId; // SET GLOBAL ID
 
             // A. Populate Header
             document.querySelector('.paper-title').innerText = t.templateName;
-            document.getElementById('globalTypeSelect').value = t.targetTypeId;
+            setSelectedEquipmentTypes(t.targetTypeId);
             document.getElementById('globalFreqSelect').value = t.frequency;
 
             // B. Populate Signatories
             try {
-                const sigs = JSON.parse(t.signatories_json);
+                var sigs = JSON.parse(t.signatories_json);
                 if(sigs) {
                     document.getElementById('sigVerifiedName').innerText = sigs.verifiedByName || "[Select Supervisor Name]";
                     document.getElementById('sigVerifiedTitle').innerText = sigs.verifiedByTitle || "Division / Section Head";
@@ -509,28 +544,28 @@ function editTemplate(id) {
             } catch(e) { console.error("Sig Parse Error", e); }
 
             // C. Re-Draw Categories & Items
-            const container = document.getElementById('checklistCategories');
+            var container = document.getElementById('checklistCategories');
             container.innerHTML = ""; // Clear again to be safe
 
             // Parse structure (it comes as string from DB)
-            const structure = JSON.parse(t.structure_json);
+            var structure = JSON.parse(t.structure_json);
             
             if(structure.categories) {
                 structure.categories.forEach(cat => {
                     // Create Section HTML
-                    const sectionId = 'sec_' + Date.now() + Math.random(); 
-                    let itemsHtml = '';
+                    var sectionId = 'sec_' + Date.now() + Math.random(); 
+                    var itemsHtml = '';
                     
                     cat.items.forEach(item => {
                         itemsHtml += `
                             <div class="checklist-row">
                                 <div class="flex-grow-1" contenteditable="true">${item.text}</div>
-                                <div class="ms-3 text-muted small fst-italic">[Pass / Fail / NA]</div>
+                                <div class="ms-3  small fst-italic">[Yes / No / NA]</div>
                                 <button class="btn btn-link btn-sm text-danger ms-2 builder-controls" onclick="removeItem(this)">&times;</button>
                             </div>`;
                     });
 
-                    const sectionHtml = `
+                    var sectionHtml = `
                         <div class="paper-section">
                             <div class="section-header">
                                 <span contenteditable="true">${cat.title}</span>
@@ -549,11 +584,128 @@ function editTemplate(id) {
 }
 
 function OpenDropdown(btn) {
-    const dropdown = new bootstrap.Dropdown(btn);
-    dropdown.addEventListener('shown.bs.dropdown', function () {
-        const menu = btn.nextElementSibling;
-        const rect = btn.getBoundingClientRect();
-        const menuRect = menu.getBoundingClientRect();
-        const viewportHeight = window.innerHeight;
-    })
+    var dropdown = new bootstrap.Dropdown(btn);
+    dropdown.show();
 }
+
+function deleteTemplate(id) {
+    if (confirm("Are you sure you want to delete this template? This action cannot be undone.")) {
+        fetch(`${BASE_URL}ajax/manage_templates.php?action=delete&id=${id}`)
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    alert("Template deleted successfully.");
+                    location.reload();
+                } else {
+                    alert("Error: " + data.message);
+                }
+            });
+    }
+}
+
+// ========================================
+// MULTI-SELECT EQUIPMENT TYPES
+// ========================================
+var equipmentTypeCache = []; // [{typeId, typeName}, ...]
+
+function loadBuilderEquipmentTypes() {
+    var menu = document.getElementById('typeMultiSelectMenu');
+    if (!menu) return;
+
+    fetch(`${BASE_URL}ajax/get_equipment_types.php`)
+        .then(r => r.json())
+        .then(res => {
+            if (res.success) {
+                equipmentTypeCache = res.data;
+                renderTypeCheckboxes();
+            } else {
+                menu.innerHTML = '<div class="text-danger small p-2">Error loading types</div>';
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            menu.innerHTML = '<div class="text-danger small p-2">Connection Error</div>';
+        });
+}
+
+function renderTypeCheckboxes(selectedIds) {
+    var menu = document.getElementById('typeMultiSelectMenu');
+    if (!menu) return;
+
+    var selected = [];
+    if (selectedIds) {
+        selected = String(selectedIds).split(',').map(s => s.trim());
+    }
+
+    var html = '';
+    equipmentTypeCache.forEach(function(type) {
+        var checked = selected.includes(String(type.typeId)) ? 'checked' : '';
+        html += `
+            <div class="form-check mb-1">
+                <input class="form-check-input" type="checkbox" value="${type.typeId}" id="typeChk_${type.typeId}" ${checked} onchange="updateTypeLabel()">
+                <label class="form-check-label small" for="typeChk_${type.typeId}">${type.typeName}</label>
+            </div>`;
+    });
+
+    html += `<hr class="my-1"><div class="d-flex gap-1">
+        <button class="btn btn-outline-primary btn-sm flex-fill py-0" style="font-size:11px;" onclick="selectAllTypes(true)">All</button>
+        <button class="btn btn-outline-secondary btn-sm flex-fill py-0" style="font-size:11px;" onclick="selectAllTypes(false)">None</button>
+    </div>`;
+
+    menu.innerHTML = html;
+    updateTypeLabel();
+}
+
+function selectAllTypes(selectAll) {
+    document.querySelectorAll('#typeMultiSelectMenu input[type="checkbox"]').forEach(function(cb) {
+        cb.checked = selectAll;
+    });
+    updateTypeLabel();
+}
+
+function updateTypeLabel() {
+    var label = document.getElementById('typeMultiSelectLabel');
+    var checked = document.querySelectorAll('#typeMultiSelectMenu input[type="checkbox"]:checked');
+    if (checked.length === 0) {
+        label.textContent = 'Select Types...';
+    } else if (checked.length === equipmentTypeCache.length) {
+        label.textContent = 'All Equipment Types';
+    } else if (checked.length <= 2) {
+        var names = [];
+        checked.forEach(function(cb) {
+            var t = equipmentTypeCache.find(x => String(x.typeId) === cb.value);
+            if (t) names.push(t.typeName);
+        });
+        label.textContent = names.join(', ');
+    } else {
+        label.textContent = checked.length + ' types selected';
+    }
+}
+
+function setSelectedEquipmentTypes(typeIdStr) {
+    var ids = String(typeIdStr || '').split(',').map(s => s.trim());
+    document.querySelectorAll('#typeMultiSelectMenu input[type="checkbox"]').forEach(function(cb) {
+        cb.checked = ids.includes(cb.value);
+    });
+    updateTypeLabel();
+}
+
+function getSelectedEquipmentTypes() {
+    var ids = [];
+    document.querySelectorAll('#typeMultiSelectMenu input[type="checkbox"]:checked').forEach(function(cb) {
+        ids.push(cb.value);
+    });
+    return ids.join(',');
+}
+
+/** Resolve comma-separated type IDs to display names using the cache */
+function formatTypeIds(typeIdStr) {
+    var ids = String(typeIdStr || '').split(',').map(s => s.trim());
+    var names = ids.map(function(id) {
+        var t = equipmentTypeCache.find(x => String(x.typeId) === id);
+        return t ? t.typeName : id;
+    });
+    return names.join(', ');
+}
+
+loadBuilderEquipmentTypes();
