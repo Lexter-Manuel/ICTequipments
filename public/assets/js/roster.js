@@ -503,7 +503,7 @@ function createEquipmentCard(type, brand, serial, icon, id, equipmentType) {
                     </div>
                     <div class="col-6">
                         <button class="btn btn-sm btn-primary w-100" 
-                                onclick="openMaintenanceModal(${id}, '${safeType}', '${safeBrand}', '${safeSerial}')">
+                                onclick="openRosterMaintenance(${id}, '${safeType}', '${safeBrand}', '${safeSerial}')">
                             <i class="fas fa-tools"></i> Maintenance
                         </button>
                     </div>
@@ -841,205 +841,27 @@ function toggleActiveStatus(employeeId, currentStatus, buttonElement) {
     });
 }
 
-var EQUIPMENT_TYPE_MAP = {};
+// Equipment type map now lives in maintenance-conductor.js (EQUIPMENT_TYPE_MAP)
+// Just ensure it's loaded when roster page initializes
+ensureEquipmentTypeMap();
 
-fetchEquipmentTypeMap();
+// ========================================
+// MAINTENANCE — thin wrapper around shared openMaintenanceModal()
+// (openMaintenanceModal lives in maintenance-conductor.js, loaded globally)
+// ========================================
+function openRosterMaintenance(equipmentId, typeString, brand, serial) {
+    var owner = document.querySelector('.profile-name-large')
+        ? document.querySelector('.profile-name-large').innerText : 'Current Employee';
+    var location = document.querySelector('.profile-badges-group .status-badge')
+        ? document.querySelector('.profile-badges-group .status-badge').innerText : 'Assigned Location';
 
-function fetchEquipmentTypeMap() {
-    fetch(`${BASE_URL}ajax/get_equipment_types.php`)
-        .then(r => r.json())
-        .then(res => {
-            if (res.success) {
-                res.data.forEach(type => {
-                    const key = type.typeName.toLowerCase().replace(/[^a-z0-9]/g, '');
-                    EQUIPMENT_TYPE_MAP[key] = type.typeId;
-                });
-            }
-        })
-        .catch(err => console.error("Failed to load equipment types:", err));
-}
-
-function openMaintenanceModal(equipmentId, typeString, brand, serial) {
-    // 1. Show Modal & Loading State
-    const modalEl = document.getElementById('maintenanceModal');
-    const modal = new bootstrap.Modal(modalEl);
-    modal.show();
-
-    const container = document.getElementById('modal-maintenance-container');
-    const loader = document.getElementById('modal-maintenance-loader');
-    
-    loader.style.display = 'block';
-    container.innerHTML = '';
-
-    // 2. Resolve Type ID
-    const cleanType = typeString.toLowerCase().replace(/[^a-z0-9]/g, '');
-    const typeId = EQUIPMENT_TYPE_MAP[cleanType];
-
-    if (!typeId) {
-        // Retry logic if map isn't loaded yet
-        if (Object.keys(EQUIPMENT_TYPE_MAP).length === 0) {
-            setTimeout(() => openMaintenanceModal(equipmentId, typeString, brand, serial), 500);
-            return;
-        }
-        container.innerHTML = `<div class="alert alert-danger m-3">Unknown Equipment Type: ${typeString}</div>`;
-        loader.style.display = 'none';
-        return;
-    }
-
-    // 3. Fetch Templates & Check Schedule
-    Promise.all([
-        fetch(`${BASE_URL}ajax/manage_templates.php?action=list_by_type&type=${typeId}`).then(r => r.json()),
-        fetch(`${BASE_URL}ajax/get_maintenance_assets.php?type=${typeId}`).then(r => r.json())
-    ]).then(([tmplRes, assetRes]) => {
-        loader.style.display = 'none';
-
-        // Check if we have templates
-        if (!tmplRes.success || tmplRes.data.length === 0) {
-            container.innerHTML = `<div class="alert alert-warning m-4 text-center">No checklist templates found for <strong>${typeString}</strong>.<br>Please create one in "Maintenance Templates" first.</div>`;
-            return;
-        }
-
-        // Build Template Options
-        let optionsHtml = tmplRes.data.map(t => 
-            `<option value="${t.templateId}">${t.templateName} (${t.frequency})</option>`
-        ).join('');
-
-        // Find existing schedule (if any)
-        const asset = assetRes.data ? assetRes.data.find(a => a.equipmentId == equipmentId) : null;
-
-        // 4. Render "Selection Stage" UI
-        container.innerHTML = `
-            <div class="row justify-content-center p-4">
-                <div class="col-md-8 text-center">
-                    <div class="bg-primary-xlight text-primary rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 70px; height: 70px;">
-                        <i class="fas fa-clipboard-list fa-2x"></i>
-                    </div>
-                    <h5 class="fw-bold">Maintenance Selection</h5>
-                    <p class="text-muted small mb-4">Select the checklist template to use for this <strong>${brand}</strong>.</p>
-                    
-                    <div class="card bg-light border-0 p-3 mb-4 text-start">
-                         <div class="mb-3">
-                            <label class="form-label fw-bold small text-muted text-uppercase">1. Asset Details</label>
-                            <input type="text" class="form-control" value="${brand} - ${serial}" readonly disabled>
-                         </div>
-                         <div class="mb-0">
-                            <label class="form-label fw-bold small text-muted text-uppercase">2. Select Checklist Template</label>
-                            <select class="form-select form-select-lg shadow-sm border-primary" id="rosterTemplateSelect">
-                                ${optionsHtml}
-                            </select>
-                         </div>
-                    </div>
-
-                    <div class="d-grid gap-2">
-                        <button class="btn btn-primary btn-lg" id="btnStartRosterMaint">
-                            Start Inspection <i class="fas fa-arrow-right ms-2"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
-
-        // 5. Attach "Start" Click Handler
-        document.getElementById('btnStartRosterMaint').onclick = function() {
-            const selectedTemplateId = document.getElementById('rosterTemplateSelect').value;
-            
-            // Auto-create schedule if missing
-            if (!asset) {
-                container.innerHTML = `<div class="text-center py-5"><div class="spinner-border text-primary"></div><p class="mt-2">Initializing schedule...</p></div>`;
-                
-                fetch(`${BASE_URL}ajax/quick_add_schedule.php`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ equipmentId: equipmentId, equipmentType: typeId })
-                })
-                .then(r => r.json())
-                .then(res => {
-                    if (res.success) {
-                        launchConductor(res.scheduleId, selectedTemplateId, typeString, brand, serial);
-                    } else {
-                        container.innerHTML = `<div class="alert alert-danger">Failed to create schedule: ${res.message}</div>`;
-                    }
-                });
-            } else {
-                launchConductor(asset.scheduleId, selectedTemplateId, typeString, brand, serial);
-            }
-        };
-
-    }).catch(err => {
-        container.innerHTML = `<div class="alert alert-danger m-3">Error: ${err.message}</div>`;
-        loader.style.display = 'none';
+    openMaintenanceModal({
+        equipmentId:   equipmentId,
+        equipmentType: typeString,   // string like "systemunit" — conductor resolves to numeric ID
+        typeName:      typeString,
+        brand:         brand,
+        serial:        serial,
+        owner:         owner,
+        location:      location
     });
-}
-
-// Helper to launch the checklist
-function launchConductor(scheduleId, templateId, typeString, brand, serial) {
-    currentAssetData = {
-        owner: document.querySelector('.profile-name-large') ? document.querySelector('.profile-name-large').innerText : 'Current Employee',
-        location: 'Assigned Location',
-        serial: serial,
-        brand: brand,
-        type: typeString
-    };
-    startMaintenanceSequence(scheduleId, templateId, 'modal-maintenance-container');
-}
-// Helper to actually switch to the checklist
-function launchConductor(scheduleId, templateId, typeString, brand, serial) {
-    // Set global data for the conductor
-    currentAssetData = {
-        owner: document.querySelector('.profile-name-large') ? document.querySelector('.profile-name-large').innerText : 'Current Employee',
-        location: 'Assigned Location',
-        serial: serial,
-        brand: brand,
-        type: typeString
-    };
-    
-    // Call the Conductor (from maintenance-conductor.js)
-    startMaintenanceSequence(scheduleId, templateId, 'modal-maintenance-container');
-}
-function autoCreateScheduleAndProceed(equipmentId, typeId, typeString, brand, serial) {
-    const loader = document.getElementById('modal-maintenance-loader');
-    loader.querySelector('p').innerText = "Initializing new maintenance schedule...";
-
-    fetch(`${BASE_URL}ajax/quick_add_schedule.php`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ equipmentId: equipmentId, equipmentType: typeId })
-    })
-    .then(r => r.json())
-    .then(res => {
-        if (res.success) {
-            loadAndStartMaintenance(res.scheduleId, typeId, typeString, brand, serial);
-        } else {
-            document.getElementById('modal-maintenance-container').innerHTML = 
-                `<div class="alert alert-danger m-3">Failed to create schedule: ${res.message}</div>`;
-            loader.style.display = 'none';
-        }
-    });
-}
-
-function loadAndStartMaintenance(scheduleId, typeId, typeString, brand, serial) {
-    currentAssetData = {
-        owner: document.querySelector('.profile-name-large') ? document.querySelector('.profile-name-large').innerText : 'Current Employee',
-        location: document.querySelector('.profile-badges-group .status-badge') ? 'Assigned Location' : 'N/A',
-        serial: serial,
-        brand: brand,
-        type: typeString
-    };
-
-    fetch(`${BASE_URL}ajax/manage_templates.php?action=list_by_type&type=${typeId}`)
-        .then(r => r.json())
-        .then(tmplRes => {
-            if (tmplRes.success && tmplRes.data.length > 0) {
-                const templateId = tmplRes.data[0].templateId; // Pick first template
-                
-                document.getElementById('modal-maintenance-loader').style.display = 'none';
-                
-                // LAUNCH THE CONDUCTOR
-                startMaintenanceSequence(scheduleId, templateId, 'modal-maintenance-container');
-            } else {
-                document.getElementById('modal-maintenance-container').innerHTML = 
-                    `<div class="alert alert-warning m-3">No Checklist Template found for this equipment type.</div>`;
-                document.getElementById('modal-maintenance-loader').style.display = 'none';
-            }
-        });
 }

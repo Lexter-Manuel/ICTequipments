@@ -189,6 +189,11 @@ require_once '../config/session-check.php';
     
     <script>
         var BASE_URL = window.location.origin + "/ictequipment/";
+        var CURRENT_USER = {
+            id:   <?php echo json_encode($_SESSION['user_id'] ?? 0); ?>,
+            name: <?php echo json_encode($_SESSION['user_name'] ?? ''); ?>,
+            role: <?php echo json_encode($_SESSION['role'] ?? ''); ?>
+        };
     </script>
     <script src="assets/bootstrap/bootstrap.bundle.min.js"></script>
     <script src="../node_modules/cropperjs/dist/cropper.min.js"></script>

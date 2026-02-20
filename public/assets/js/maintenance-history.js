@@ -1,17 +1,12 @@
-var HIST_API = '../ajax/get_maintenance_history.php';
+var HIST_API = `${BASE_URL}ajax/get_maintenance_history.php`;
 
-/* =========================================================
-   STATE
-   ========================================================= */
+
 var activeHistDivisionId   = null;
-var activeHistDivisionData = null;  // { assets, assetLookup, units, employees }
-var activeHistDivisionMeta = null;  // { name, stats }
+var activeHistDivisionData = null;
+var activeHistDivisionMeta = null;
 var activeHistSubtab       = 'grouped';
-var summaryTreeCache       = null;  // cache summary data so we don't refetch on every toggle
+var summaryTreeCache       = null;
 
-/* =========================================================
-   HELPERS
-   ========================================================= */
 var iconMap   = { 'System Unit': 'fa-desktop', 'Monitor': 'fa-tv', 'Printer': 'fa-print', 'Laptop': 'fa-laptop', 'All-in-One': 'fa-desktop' };
 var typeClass = { 'Printer': 'type-printer', 'Monitor': 'type-monitor' };
 var condMap   = { 'Excellent': 'mnt-badge-excellent', 'Good': 'mnt-badge-good', 'Fair': 'mnt-badge-fair', 'Poor': 'mnt-badge-poor' };
@@ -43,9 +38,6 @@ async function apiFetch(params) {
     return resp.json();
 }
 
-/* =========================================================
-   ON LOAD
-   ========================================================= */
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
         loadStats();

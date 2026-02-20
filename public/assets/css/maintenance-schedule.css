@@ -753,9 +753,6 @@
     flex-shrink: 0;
 }
 
-.dv-emp-equip-icon.type-printer { background: rgba(99,102,241,0.09); color: #6366f1; }
-.dv-emp-equip-icon.type-monitor { background: rgba(245,158,11,0.09);  color: var(--color-warning); }
-
 .dv-emp-equip-info { flex: 1; min-width: 0; }
 
 .dv-emp-equip-name {

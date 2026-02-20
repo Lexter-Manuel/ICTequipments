@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3310
--- Generation Time: Feb 19, 2026 at 06:15 AM
+-- Generation Time: Feb 20, 2026 at 01:08 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -220,7 +220,7 @@ CREATE TABLE `tbl_accounts` (
 --
 
 INSERT INTO `tbl_accounts` (`id`, `user_name`, `email`, `password`, `role`, `status`, `failed_login_attempts`, `locked_until`, `last_login`, `last_login_ip`, `2fa_enabled`, `2fa_secret`, `created_at`, `updated_at`, `created_by`) VALUES
-(3, 'SystemSuperAdmin', 'inventory@upriis.local', '$2y$12$RAUQs6D0FBVNz.ky7N6rJegTTOCmDxYpO850YwZMlxyWX4bLDKl9G', 'Super Admin', 'Active', 0, NULL, NULL, NULL, 0, NULL, '2026-02-09 23:26:19', '2026-02-19 04:26:33', NULL);
+(3, 'SystemSuperAdmin', 'inventory@upriis.local', '$2y$12$RAUQs6D0FBVNz.ky7N6rJegTTOCmDxYpO850YwZMlxyWX4bLDKl9G', 'Super Admin', 'Active', 0, NULL, NULL, NULL, 0, NULL, '2026-02-09 23:26:19', '2026-02-19 07:31:14', NULL);
 
 -- --------------------------------------------------------
 
@@ -276,9 +276,23 @@ INSERT INTO `tbl_checklist_category` (`categoryId`, `templateId`, `categoryName`
 (19, 8, 'I. PHYSICAL INSPECTION, INTERIORS AND CLEANING', 1),
 (20, 8, 'II. HARDWARE PERFORMANCE CHECK', 2),
 (21, 8, 'Untitled', 3),
-(22, 9, 'I. PHYSICAL INSPECTION, INTERIORS AND CLEANING', 1),
-(23, 9, 'II. HARDWARE PERFORMANCE CHECK', 2),
-(24, 9, 'Untitled', 3);
+(25, 10, 'I. PHYSICAL INSPECTION & CLEANING', 1),
+(26, 10, 'II. DISPLAY PERFORMANCE CHECK', 2),
+(27, 10, 'III. CONNECTIVITY & CABLES', 3),
+(28, 11, 'I. PHYSICAL INSPECTION & CLEANING', 1),
+(29, 11, 'II. PRINT QUALITY CHECK', 2),
+(30, 11, 'III. MECHANICAL & CONSUMABLES', 3),
+(31, 12, 'I. PHYSICAL INSPECTION & CLEANING', 1),
+(32, 12, 'II. HARDWARE PERFORMANCE CHECK', 2),
+(33, 12, 'III. DISPLAY & PERIPHERALS', 3),
+(34, 12, 'IV. SOFTWARE & SYSTEM CHECK', 4),
+(35, 9, 'I. PHYSICAL INSPECTION, INTERIORS AND CLEANING', 1),
+(36, 9, 'II. HARDWARE PERFORMANCE CHECK', 2),
+(37, 9, 'UNTITLED', 3),
+(38, 9, 'Untitled', 4),
+(39, 13, 'I. PHYSICAL INSPECTION, INTERIORS AND CLEANING', 1),
+(40, 13, 'II. HARDWARE PERFORMANCE CHECK', 2),
+(41, 13, 'Untitled', 3);
 
 -- --------------------------------------------------------
 
@@ -310,9 +324,52 @@ INSERT INTO `tbl_checklist_item` (`itemId`, `categoryId`, `taskDescription`, `se
 (19, 19, 'Dust removal performed', 1),
 (20, 19, 'Parts are intact', 2),
 (21, 20, 'Power Supply is working properly', 1),
-(22, 22, 'Dust removal performed', 1),
-(23, 22, 'Parts are intact', 2),
-(24, 23, 'Power Supply is working properly', 1);
+(25, 25, 'Screen surface cleaned (no smudges/dust)', 1),
+(26, 25, 'Monitor casing wiped and free of dust', 2),
+(27, 25, 'Ventilation openings clear of obstruction', 3),
+(28, 25, 'Stand/mount secure and stable', 4),
+(29, 26, 'No dead or stuck pixels detected', 1),
+(30, 26, 'Brightness and contrast levels acceptable', 2),
+(31, 26, 'Color reproduction is accurate', 3),
+(32, 26, 'No visible backlight bleed or flickering', 4),
+(33, 27, 'Power cable securely connected', 1),
+(34, 27, 'Video cable (HDMI/VGA/DP) securely connected', 2),
+(35, 27, 'No visible cable damage or fraying', 3),
+(36, 28, 'Exterior casing cleaned and free of dust', 1),
+(37, 28, 'Paper tray clean and properly aligned', 2),
+(38, 28, 'Ventilation openings clear of obstruction', 3),
+(39, 28, 'No paper debris inside printer', 4),
+(40, 29, 'Test page printed successfully', 1),
+(41, 29, 'Print alignment is correct', 2),
+(42, 29, 'No streaks, smudges, or banding on output', 3),
+(43, 29, 'Color output accurate (if color printer)', 4),
+(44, 30, 'Ink/toner levels checked and adequate', 1),
+(45, 30, 'Paper feed mechanism operates smoothly', 2),
+(46, 30, 'Print head cleaned (inkjet) or drum inspected (laser)', 3),
+(47, 30, 'Rollers clean and in good condition', 4),
+(48, 31, 'Exterior casing and screen cleaned', 1),
+(49, 31, 'Ventilation openings clear and dust-free', 2),
+(50, 31, 'All ports free of debris', 3),
+(51, 31, 'Stand/mount secure and stable', 4),
+(52, 32, 'Power supply unit is working properly', 1),
+(53, 32, 'CPU temperature within normal range', 2),
+(54, 32, 'RAM test passed (no errors)', 3),
+(55, 32, 'Storage health check (SSD/HDD status)', 4),
+(56, 32, 'Fan(s) operating normally', 5),
+(57, 33, 'Display has no dead pixels or flickering', 1),
+(58, 33, 'Built-in webcam functioning (if applicable)', 2),
+(59, 33, 'Built-in speakers/microphone working', 3),
+(60, 33, 'USB ports and card reader functional', 4),
+(61, 34, 'Operating system boots without errors', 1),
+(62, 34, 'Antivirus definitions up to date', 2),
+(63, 34, 'Windows updates installed', 3),
+(64, 34, 'Essential software applications functional', 4),
+(65, 35, 'Dust removal performed', 1),
+(66, 35, 'Parts are intact', 2),
+(67, 36, 'Power Supply is working properly', 1),
+(68, 39, 'Dust removal performed', 1),
+(69, 39, 'Parts are intact', 2),
+(70, 40, 'Power Supply is working properly', 1);
 
 -- --------------------------------------------------------
 
@@ -343,6 +400,18 @@ CREATE TABLE `tbl_employee` (
 
 INSERT INTO `tbl_employee` (`employeeId`, `firstName`, `middleName`, `lastName`, `suffixName`, `position`, `birthDate`, `sex`, `employmentStatus`, `photoPath`, `location_id`, `createdAt`, `updatedAt`, `is_active`) VALUES
 (1, 'Lexter', 'N.', 'Manuel', '', 'OJT Trainee', '2002-11-06', 'Male', 'Casual', 'employee_1_1770881693.jpeg', 4, '2026-02-10 03:41:25', '2026-02-12 07:34:53', 1),
+(100, 'Juan', 'P.', 'Dela Cruz', '', 'Project Engineer', '1990-05-15', 'Male', 'Permanent', NULL, 18, '2026-02-19 06:06:48', NULL, 1),
+(101, 'Maria', 'S.', 'Santos', '', 'Accountant III', '1988-08-22', 'Female', 'Permanent', NULL, 29, '2026-02-19 06:06:48', NULL, 1),
+(102, 'Pedro', 'R.', 'Reyes', '', 'O&M Technician', '1992-03-10', 'Male', 'Permanent', NULL, 19, '2026-02-19 06:06:48', NULL, 1),
+(103, 'Ana', 'G.', 'Garcia', '', 'Property Custodian', '1985-11-30', 'Female', 'Permanent', NULL, 11, '2026-02-19 06:06:48', NULL, 1),
+(104, 'Carlos', 'M.', 'Lopez', '', 'Legal Officer II', '1991-07-14', 'Male', 'Permanent', NULL, 6, '2026-02-19 06:06:48', NULL, 1),
+(105, 'Carmen', 'D.', 'Villar', '', 'Records Officer', '1993-01-25', 'Female', 'Permanent', NULL, 25, '2026-02-19 06:06:48', NULL, 1),
+(106, 'Roberto', 'T.', 'Manalo', '', 'Cashier II', '1989-09-03', 'Male', 'Permanent', NULL, 15, '2026-02-19 06:06:48', NULL, 1),
+(107, 'Elena', 'C.', 'Ramos', '', 'PR Officer', '1994-04-18', 'Female', 'Permanent', NULL, 5, '2026-02-19 06:06:48', NULL, 1),
+(108, 'Miguel', 'A.', 'Torres', '', 'BAC Secretary', '1987-12-08', 'Male', 'Permanent', NULL, 22, '2026-02-19 06:06:48', NULL, 1),
+(109, 'Sofia', 'L.', 'Mendoza', '', 'Equipment Mgmt Staff', '1995-06-20', 'Female', 'Permanent', NULL, 20, '2026-02-19 06:06:48', NULL, 1),
+(110, 'Jose', 'B.', 'Aquino', '', 'IDS Staff', '1996-02-11', 'Male', 'Casual', NULL, 21, '2026-02-19 06:06:48', NULL, 1),
+(111, 'Lucia', 'N.', 'Bautista', '', 'FISA Analyst', '1990-10-05', 'Female', 'Permanent', NULL, 16, '2026-02-19 06:06:48', NULL, 1),
 (645987, 'Demi', NULL, 'Xochitl', '', 'OJT Trainee', '2006-02-10', 'Male', 'Casual', 'employee_645987_1771379914.jpeg', 13, '2026-02-11 03:04:45', '2026-02-18 01:58:34', 1);
 
 -- --------------------------------------------------------
@@ -421,6 +490,57 @@ CREATE TABLE `tbl_maintenance_record` (
   `notedBy` varchar(100) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `tbl_maintenance_record`
+--
+
+INSERT INTO `tbl_maintenance_record` (`recordId`, `scheduleId`, `equipmentTypeId`, `equipmentId`, `accountId`, `maintenanceDate`, `checklistJson`, `remarks`, `overallStatus`, `conditionRating`, `preparedBy`, `checkedBy`, `notedBy`) VALUES
+(6, 15, 1, 2, 0, '2026-02-19 13:51:09', '[{\"desc\":\"Dust removal performed\",\"status\":\"Yes\"},{\"desc\":\"Parts are intact\",\"status\":\"No\"},{\"desc\":\"Power Supply is working properly\",\"status\":\"Yes\"}]', '', 'For Replacement', 'Good', 'Current User', 'Template Default', 'Template Default'),
+(10, 27, 1, 17, 3, '2026-02-15 10:00:00', '{\"categories\":[{\"name\":\"Physical Inspection\",\"items\":[{\"task\":\"Dust removal performed\",\"status\":\"OK\"},{\"task\":\"Parts are intact\",\"status\":\"OK\"}]},{\"name\":\"Hardware Check\",\"items\":[{\"task\":\"Power Supply working\",\"status\":\"OK\"}]}]}', 'All components in excellent condition. Thermal paste refreshed.', 'Operational', 'Excellent', 'Lexter Manuel', 'ICT Head', 'Department Manager'),
+(11, 47, 3, 37, 3, '2026-02-15 10:30:00', '{\"categories\":[{\"name\":\"Physical Inspection\",\"items\":[{\"task\":\"Screen clean\",\"status\":\"OK\"},{\"task\":\"No dead pixels\",\"status\":\"OK\"}]}]}', 'Monitor functioning perfectly. No issues found.', 'Operational', 'Excellent', 'Lexter Manuel', 'ICT Head', 'Department Manager'),
+(12, 64, 4, 24, 3, '2026-02-15 11:00:00', '{\"categories\":[{\"name\":\"Physical Inspection\",\"items\":[{\"task\":\"Exterior clean\",\"status\":\"OK\"},{\"task\":\"Print head aligned\",\"status\":\"OK\"}]}]}', 'Printer in good condition. Ink levels adequate.', 'Operational', 'Good', 'Lexter Manuel', 'ICT Head', 'Department Manager'),
+(13, 24, 1, 14, 3, '2026-02-14 09:00:00', '{\"categories\":[{\"name\":\"Physical Inspection\",\"items\":[{\"task\":\"Dust removal performed\",\"status\":\"OK\"},{\"task\":\"Parts are intact\",\"status\":\"OK\"}]}]}', 'System running smoothly. SSD health at 95%.', 'Operational', 'Excellent', 'Demi Xochitl', 'Legal Head', 'Department Manager'),
+(14, 44, 3, 34, 3, '2026-02-14 09:30:00', '{\"categories\":[{\"name\":\"Physical Inspection\",\"items\":[{\"task\":\"Screen clean\",\"status\":\"OK\"}]}]}', 'Monitor in good condition.', 'Operational', 'Good', 'Demi Xochitl', 'Legal Head', 'Department Manager'),
+(15, 32, 1, 22, 3, '2026-02-14 14:00:00', '{\"categories\":[{\"name\":\"Physical Inspection\",\"items\":[{\"task\":\"Dust removal performed\",\"status\":\"OK\"}]},{\"name\":\"Hardware Check\",\"items\":[{\"task\":\"RAM test passed\",\"status\":\"OK\"}]}]}', 'FISA system unit cleaned and tested. All clear.', 'Operational', 'Good', 'Lexter Manuel', 'Admin Section Head', 'Department Manager'),
+(16, 52, 3, 42, 3, '2026-02-14 14:30:00', '{\"categories\":[{\"name\":\"Physical Inspection\",\"items\":[{\"task\":\"Screen clean\",\"status\":\"OK\"}]}]}', 'Monitor working well. Slight color shift noted but acceptable.', 'Operational', 'Good', 'Lexter Manuel', 'Admin Section Head', 'Department Manager'),
+(17, 21, 1, 11, 3, '2026-02-12 09:15:00', '{\"categories\":[{\"name\":\"Physical Inspection\",\"items\":[{\"task\":\"Dust removal performed\",\"status\":\"OK\"},{\"task\":\"Parts are intact\",\"status\":\"OK\"}]},{\"name\":\"Hardware Check\",\"items\":[{\"task\":\"Power Supply working\",\"status\":\"OK\"},{\"task\":\"Fan noise check\",\"status\":\"OK\"}]}]}', 'System unit thoroughly cleaned. Fan replaced due to noise.', 'Operational', 'Good', 'Demi Xochitl', 'Finance Section Head', 'Department Manager'),
+(18, 41, 3, 31, 3, '2026-02-12 09:45:00', '{\"categories\":[{\"name\":\"Physical Inspection\",\"items\":[{\"task\":\"Screen clean\",\"status\":\"OK\"},{\"task\":\"No dead pixels\",\"status\":\"OK\"}]}]}', 'Monitor in excellent condition.', 'Operational', 'Excellent', 'Demi Xochitl', 'Finance Section Head', 'Department Manager'),
+(19, 61, 4, 21, 3, '2026-02-12 10:15:00', '{\"categories\":[{\"name\":\"Physical Inspection\",\"items\":[{\"task\":\"Exterior clean\",\"status\":\"OK\"}]},{\"name\":\"Print Quality\",\"items\":[{\"task\":\"Test page printed\",\"status\":\"OK\"}]}]}', 'LaserJet printer functioning well. Toner at 60%.', 'Operational', 'Good', 'Demi Xochitl', 'Finance Section Head', 'Department Manager'),
+(20, 20, 1, 10, 3, '2026-02-10 10:00:00', '{\"categories\":[{\"name\":\"Physical Inspection\",\"items\":[{\"task\":\"Dust removal performed\",\"status\":\"OK\"},{\"task\":\"Parts are intact\",\"status\":\"Minor Issue\"}]},{\"name\":\"Hardware Check\",\"items\":[{\"task\":\"Power Supply working\",\"status\":\"OK\"}]}]}', 'Minor dust buildup inside. RAM slot 2 slightly loose - reseated.', 'Operational', 'Fair', 'Lexter Manuel', 'Engineering Section Head', 'EOD Manager'),
+(21, 40, 3, 30, 3, '2026-02-10 10:30:00', '{\"categories\":[{\"name\":\"Physical Inspection\",\"items\":[{\"task\":\"Screen clean\",\"status\":\"OK\"}]}]}', 'Monitor OK. Slight backlight bleed on lower-left corner.', 'Operational', 'Good', 'Lexter Manuel', 'Engineering Section Head', 'EOD Manager'),
+(22, 60, 4, 20, 3, '2026-02-10 11:00:00', '{\"categories\":[{\"name\":\"Physical Inspection\",\"items\":[{\"task\":\"Exterior clean\",\"status\":\"OK\"}]},{\"name\":\"Print Quality\",\"items\":[{\"task\":\"Nozzle check\",\"status\":\"Minor Issue\"}]}]}', 'Print head cleaned. Nozzle check showed minor clog - resolved after cleaning cycle.', 'Operational', 'Fair', 'Lexter Manuel', 'Engineering Section Head', 'EOD Manager'),
+(23, 22, 1, 12, 3, '2026-02-08 08:30:00', '{\"categories\":[{\"name\":\"Physical Inspection\",\"items\":[{\"task\":\"Dust removal performed\",\"status\":\"OK\"},{\"task\":\"Parts are intact\",\"status\":\"OK\"}]},{\"name\":\"Hardware Check\",\"items\":[{\"task\":\"Power Supply working\",\"status\":\"OK\"}]}]}', 'System unit in good condition. Disk health 92%.', 'Operational', 'Good', 'Demi Xochitl', 'Operation Section Head', 'EOD Manager'),
+(24, 42, 3, 32, 3, '2026-02-08 09:00:00', '{\"categories\":[{\"name\":\"Physical Inspection\",\"items\":[{\"task\":\"Screen clean\",\"status\":\"OK\"},{\"task\":\"No dead pixels\",\"status\":\"OK\"}]}]}', 'Monitor excellent. Calibrated for optimal display.', 'Operational', 'Excellent', 'Demi Xochitl', 'Operation Section Head', 'EOD Manager'),
+(25, 28, 1, 18, 3, '2026-02-06 13:00:00', '{\"categories\":[{\"name\":\"Physical Inspection\",\"items\":[{\"task\":\"Dust removal performed\",\"status\":\"OK\"}]},{\"name\":\"Hardware Check\",\"items\":[{\"task\":\"Power Supply working\",\"status\":\"OK\"}]}]}', 'PR system unit cleaned successfully.', 'Operational', 'Good', 'Lexter Manuel', 'ODM Head', 'Department Manager'),
+(26, 48, 3, 38, 3, '2026-02-06 13:30:00', '{\"categories\":[{\"name\":\"Physical Inspection\",\"items\":[{\"task\":\"Screen clean\",\"status\":\"OK\"}]}]}', 'Monitor in good working condition.', 'Operational', 'Good', 'Lexter Manuel', 'ODM Head', 'Department Manager'),
+(27, 65, 4, 25, 3, '2026-02-06 14:00:00', '{\"categories\":[{\"name\":\"Physical Inspection\",\"items\":[{\"task\":\"Exterior clean\",\"status\":\"OK\"}]},{\"name\":\"Print Quality\",\"items\":[{\"task\":\"Test page\",\"status\":\"OK\"}]}]}', 'Brother printer working well. Paper feed smooth.', 'Operational', 'Excellent', 'Lexter Manuel', 'ODM Head', 'Department Manager'),
+(28, 26, 1, 16, 3, '2026-02-03 09:00:00', '{\"categories\":[{\"name\":\"Physical Inspection\",\"items\":[{\"task\":\"Dust removal performed\",\"status\":\"OK\"},{\"task\":\"Parts are intact\",\"status\":\"OK\"}]}]}', 'Cashiering PC cleaned. Runs well for daily operations.', 'Operational', 'Good', 'Demi Xochitl', 'Finance Section Head', 'Department Manager'),
+(29, 46, 3, 36, 3, '2026-02-03 09:30:00', '{\"categories\":[{\"name\":\"Physical Inspection\",\"items\":[{\"task\":\"Screen clean\",\"status\":\"OK\"}]}]}', 'Monitor functioning normally.', 'Operational', 'Good', 'Demi Xochitl', 'Finance Section Head', 'Department Manager'),
+(30, 23, 1, 13, 3, '2026-02-01 10:00:00', '{\"categories\":[{\"name\":\"Physical Inspection\",\"items\":[{\"task\":\"Dust removal performed\",\"status\":\"OK\"},{\"task\":\"Parts are intact\",\"status\":\"Minor Issue\"}]},{\"name\":\"Hardware Check\",\"items\":[{\"task\":\"HDD health check\",\"status\":\"Warning\"}]}]}', 'HDD showing early signs of degradation (87% health). Recommended SSD upgrade within 6 months.', 'Operational', 'Fair', 'Lexter Manuel', 'Admin Section Head', 'Department Manager'),
+(31, 43, 3, 33, 3, '2026-02-01 10:30:00', '{\"categories\":[{\"name\":\"Physical Inspection\",\"items\":[{\"task\":\"Screen clean\",\"status\":\"OK\"}]}]}', 'Monitor working fine.', 'Operational', 'Good', 'Lexter Manuel', 'Admin Section Head', 'Department Manager'),
+(32, 62, 4, 22, 3, '2026-02-01 11:00:00', '{\"categories\":[{\"name\":\"Physical Inspection\",\"items\":[{\"task\":\"Exterior clean\",\"status\":\"OK\"}]},{\"name\":\"Print Quality\",\"items\":[{\"task\":\"Ink levels checked\",\"status\":\"OK\"}]}]}', 'Canon printer cleaned. Ink levels at 70%.', 'Operational', 'Good', 'Lexter Manuel', 'Admin Section Head', 'Department Manager'),
+(33, 29, 1, 19, 3, '2026-01-30 09:00:00', '{\"categories\":[{\"name\":\"Physical Inspection\",\"items\":[{\"task\":\"Dust removal performed\",\"status\":\"OK\"},{\"task\":\"Parts are intact\",\"status\":\"OK\"}]}]}', 'BAC system unit in excellent shape.', 'Operational', 'Excellent', 'Demi Xochitl', 'ODM Head', 'Department Manager'),
+(34, 49, 3, 39, 3, '2026-01-30 09:30:00', '{\"categories\":[{\"name\":\"Physical Inspection\",\"items\":[{\"task\":\"Screen clean\",\"status\":\"OK\"},{\"task\":\"No dead pixels\",\"status\":\"OK\"}]}]}', 'HP monitor excellent. No issues.', 'Operational', 'Excellent', 'Demi Xochitl', 'ODM Head', 'Department Manager'),
+(35, 66, 4, 26, 3, '2026-01-30 14:00:00', '{\"categories\":[{\"name\":\"Physical Inspection\",\"items\":[{\"task\":\"Exterior clean\",\"status\":\"OK\"}]},{\"name\":\"Print Quality\",\"items\":[{\"task\":\"Test page\",\"status\":\"Minor Issue\"}]}]}', 'Epson printer showing slight banding. Cleaned print heads.', 'Operational', 'Fair', 'Lexter Manuel', 'ODM Head', 'Department Manager'),
+(36, 25, 1, 15, 3, '2026-01-28 08:30:00', '{\"categories\":[{\"name\":\"Physical Inspection\",\"items\":[{\"task\":\"Dust removal performed\",\"status\":\"OK\"},{\"task\":\"Parts are intact\",\"status\":\"OK\"}]},{\"name\":\"Hardware Check\",\"items\":[{\"task\":\"Power Supply working\",\"status\":\"OK\"},{\"task\":\"SSD health\",\"status\":\"OK\"}]}]}', 'Records PC in excellent condition. SSD health at 98%.', 'Operational', 'Excellent', 'Lexter Manuel', 'Admin Section Head', 'Department Manager'),
+(37, 45, 3, 35, 3, '2026-01-28 09:00:00', '{\"categories\":[{\"name\":\"Physical Inspection\",\"items\":[{\"task\":\"Screen clean\",\"status\":\"OK\"}]}]}', 'Older monitor but still performing well. Minor backlight aging.', 'Operational', 'Good', 'Lexter Manuel', 'Admin Section Head', 'Department Manager'),
+(38, 63, 4, 23, 3, '2026-01-28 09:30:00', '{\"categories\":[{\"name\":\"Physical Inspection\",\"items\":[{\"task\":\"Exterior clean\",\"status\":\"OK\"}]},{\"name\":\"Print Quality\",\"items\":[{\"task\":\"Ink levels\",\"status\":\"OK\"},{\"task\":\"Feed mechanism\",\"status\":\"OK\"}]}]}', 'Epson L5290 in good condition. Ink refilled.', 'Operational', 'Good', 'Lexter Manuel', 'Admin Section Head', 'Department Manager'),
+(39, 30, 1, 20, 3, '2026-01-20 10:00:00', '{\"categories\":[{\"name\":\"Physical Inspection\",\"items\":[{\"task\":\"Dust removal performed\",\"status\":\"OK\"},{\"task\":\"Parts are intact\",\"status\":\"OK\"}]}]}', 'Equipment Management PC cleaned and tested.', 'Operational', 'Good', 'Demi Xochitl', 'Engineering Section Head', 'EOD Manager'),
+(40, 50, 3, 40, 3, '2026-01-20 10:30:00', '{\"categories\":[{\"name\":\"Physical Inspection\",\"items\":[{\"task\":\"Screen clean\",\"status\":\"OK\"}]}]}', 'Monitor in good shape.', 'Operational', 'Good', 'Demi Xochitl', 'Engineering Section Head', 'EOD Manager'),
+(41, 31, 1, 21, 3, '2026-01-20 13:00:00', '{\"categories\":[{\"name\":\"Physical Inspection\",\"items\":[{\"task\":\"Dust removal performed\",\"status\":\"OK\"}]},{\"name\":\"Hardware Check\",\"items\":[{\"task\":\"Power Supply working\",\"status\":\"OK\"}]}]}', 'IDS PC maintained successfully.', 'Operational', 'Excellent', 'Demi Xochitl', 'Engineering Section Head', 'EOD Manager'),
+(42, 51, 3, 41, 3, '2026-01-20 13:30:00', '{\"categories\":[{\"name\":\"Physical Inspection\",\"items\":[{\"task\":\"Screen clean\",\"status\":\"OK\"}]}]}', 'Monitor working well.', 'Operational', 'Good', 'Demi Xochitl', 'Engineering Section Head', 'EOD Manager'),
+(43, 70, 2, 2, 3, '2026-01-15 10:00:00', '{\"categories\":[{\"name\":\"Physical Inspection\",\"items\":[{\"task\":\"Exterior clean\",\"status\":\"OK\"},{\"task\":\"All-in-one internals\",\"status\":\"OK\"}]}]}', 'All-in-One PC cleaned. Good performance.', 'Operational', 'Good', 'Demi Xochitl', 'ICT Head', 'Department Manager'),
+(44, 20, 1, 10, 3, '2025-12-20 09:00:00', '{\"categories\":[{\"name\":\"Physical Inspection\",\"items\":[{\"task\":\"Dust removal\",\"status\":\"OK\"}]}]}', 'Quarterly check. System unit OK.', 'Operational', 'Good', 'Lexter Manuel', 'Engineering Section Head', 'EOD Manager'),
+(45, 22, 1, 12, 3, '2025-12-20 10:00:00', '{\"categories\":[{\"name\":\"Physical Inspection\",\"items\":[{\"task\":\"Dust removal\",\"status\":\"OK\"}]}]}', 'Operation Section PC quarterly maintenance done.', 'Operational', 'Excellent', 'Lexter Manuel', 'Operation Section Head', 'EOD Manager'),
+(46, 23, 1, 13, 3, '2025-12-15 14:00:00', '{\"categories\":[{\"name\":\"Physical Inspection\",\"items\":[{\"task\":\"Dust removal\",\"status\":\"OK\"},{\"task\":\"Parts intact\",\"status\":\"Minor Issue\"}]}]}', 'Property Unit PC - noted HDD starting to slow down.', 'Operational', 'Fair', 'Demi Xochitl', 'Admin Section Head', 'Department Manager'),
+(47, 21, 1, 11, 3, '2025-12-10 09:30:00', '{\"categories\":[{\"name\":\"Physical Inspection\",\"items\":[{\"task\":\"Dust removal\",\"status\":\"OK\"}]}]}', 'Accounting PC quarterly maintenance complete.', 'Operational', 'Good', 'Demi Xochitl', 'Finance Section Head', 'Department Manager'),
+(48, 30, 1, 20, 3, '2025-11-15 10:00:00', '{\"categories\":[{\"name\":\"Physical Inspection\",\"items\":[{\"task\":\"Dust removal\",\"status\":\"OK\"},{\"task\":\"Parts intact\",\"status\":\"FAIL\"}]},{\"name\":\"Hardware Check\",\"items\":[{\"task\":\"Power Supply\",\"status\":\"Warning\"}]}]}', 'PSU showing intermittent issues. Recommended for replacement if budget allows.', 'Operational', 'Poor', 'Lexter Manuel', 'Engineering Section Head', 'EOD Manager'),
+(49, 27, 0, 0, 0, '2026-02-01 00:00:00', NULL, 'Emergency maintenance - system unit overheating. Cleaned fans and replaced thermal paste.', 'Operational', 'Good', 'ICT Staff', NULL, NULL),
+(50, 29, 0, 0, 0, '2026-02-10 00:00:00', NULL, 'Emergency check - random shutdowns reported. Replaced faulty RAM module.', 'Operational', 'Good', 'ICT Staff', NULL, NULL),
+(51, 62, 0, 0, 0, '2026-01-15 00:00:00', NULL, 'Emergency maintenance - recurring paper jams. Cleaned rollers and realigned paper tray.', 'Operational', 'Fair', 'ICT Staff', NULL, NULL),
+(52, 23, 1, 13, 0, '2026-02-19 15:45:19', '[{\"desc\":\"Dust removal performed\",\"status\":\"Yes\"},{\"desc\":\"Parts are intact\",\"status\":\"Yes\"},{\"desc\":\"Power Supply is working properly\",\"status\":\"Yes\"}]', '', 'Operational', 'Good', 'Current User', 'Template Default', 'Template Default'),
+(53, 30, 1, 20, 0, '2026-02-19 16:12:27', '[{\"desc\":\"Dust removal performed\",\"status\":\"No\"},{\"desc\":\"Parts are intact\",\"status\":\"No\"},{\"desc\":\"Power Supply is working properly\",\"status\":\"N\\/A\"}]', 'sadasd', 'For Replacement', 'Good', 'Current User', 'Template Default', 'Template Default');
+
 -- --------------------------------------------------------
 
 --
@@ -444,20 +564,54 @@ CREATE TABLE `tbl_maintenance_schedule` (
 --
 
 INSERT INTO `tbl_maintenance_schedule` (`scheduleId`, `equipmentType`, `equipmentId`, `maintenanceFrequency`, `lastMaintenanceDate`, `nextDueDate`, `isActive`, `createdAt`, `updatedAt`) VALUES
-(2, '3', 15, '', NULL, '2026-08-15', 1, '2026-02-16 03:51:54', '2026-02-16 03:51:54'),
-(3, '3', 16, '', NULL, '2026-08-15', 1, '2026-02-16 03:52:10', '2026-02-16 03:52:10'),
-(4, '3', 17, '', NULL, '2026-08-15', 1, '2026-02-16 03:54:21', '2026-02-16 03:54:21'),
-(5, '3', 18, '', NULL, '2026-08-15', 1, '2026-02-16 03:55:19', '2026-02-16 03:55:19'),
-(6, '3', 19, '', NULL, '2026-08-15', 1, '2026-02-16 03:58:17', '2026-02-16 03:58:17'),
-(7, '4', 4, '', NULL, '2026-08-15', 1, '2026-02-16 04:31:34', '2026-02-16 04:31:34'),
-(8, '4', 5, '', NULL, '2026-08-15', 1, '2026-02-16 04:31:52', '2026-02-16 04:31:52'),
+(2, '3', 15, '', NULL, '2026-08-15', 0, '2026-02-16 03:51:54', '2026-02-19 07:23:15'),
+(3, '3', 16, '', NULL, '2026-08-15', 0, '2026-02-16 03:52:10', '2026-02-19 07:23:15'),
+(4, '3', 17, '', NULL, '2026-08-15', 0, '2026-02-16 03:54:21', '2026-02-19 07:23:15'),
+(5, '3', 18, '', NULL, '2026-08-15', 0, '2026-02-16 03:55:19', '2026-02-19 07:23:15'),
+(6, '3', 19, '', NULL, '2026-08-15', 0, '2026-02-16 03:58:17', '2026-02-19 07:23:15'),
+(7, '4', 4, '', NULL, '2026-08-15', 0, '2026-02-16 04:31:34', '2026-02-19 07:23:15'),
+(8, '4', 5, '', NULL, '2026-08-15', 0, '2026-02-16 04:31:52', '2026-02-19 07:23:15'),
 (9, '4', 6, '', NULL, '2026-08-15', 1, '2026-02-16 04:33:15', '2026-02-16 04:33:15'),
-(10, '4', 7, '', '2025-08-15', '2026-08-17', 1, '2026-02-18 03:07:57', '2026-02-18 03:09:35'),
-(11, '2', 3, 'Semi-Annual', NULL, '2026-08-17', 1, '2026-02-18 07:08:25', '2026-02-18 07:08:25'),
-(13, '1', 1, '', NULL, '2026-08-18', 1, '2026-02-19 02:59:08', '2026-02-19 02:59:08'),
-(14, '3', 20, '', NULL, '2026-08-18', 1, '2026-02-19 03:08:55', '2026-02-19 03:08:55'),
-(15, '1', 2, '', NULL, '2026-08-18', 1, '2026-02-19 03:39:44', '2026-02-19 03:39:44'),
-(16, '4', 8, '', NULL, '2026-08-18', 1, '2026-02-19 03:40:12', '2026-02-19 03:40:12');
+(10, '4', 7, '', '2025-08-15', '2026-08-17', 0, '2026-02-18 03:07:57', '2026-02-19 07:23:15'),
+(11, '2', 3, 'Semi-Annual', NULL, '2026-08-17', 0, '2026-02-18 07:08:25', '2026-02-19 07:23:15'),
+(13, '1', 1, '', NULL, '2026-08-18', 0, '2026-02-19 02:59:08', '2026-02-19 07:23:15'),
+(14, '3', 20, '', NULL, '2026-08-18', 0, '2026-02-19 03:08:55', '2026-02-19 07:23:15'),
+(15, '1', 2, '', '2026-02-19', '2026-08-18', 0, '2026-02-19 03:39:44', '2026-02-19 07:23:15'),
+(16, '4', 8, '', NULL, '2026-08-18', 0, '2026-02-19 03:40:12', '2026-02-19 07:23:15'),
+(20, '1', 10, 'Semi-Annual', '2025-08-22', '2026-02-22', 1, '2026-02-19 06:06:48', '2026-02-19 07:23:15'),
+(21, '1', 11, 'Semi-Annual', '2025-10-05', '2026-04-05', 1, '2026-02-19 06:06:48', '2026-02-19 07:23:15'),
+(22, '1', 12, 'Semi-Annual', '2025-08-24', '2026-02-24', 1, '2026-02-19 06:06:48', '2026-02-19 07:23:15'),
+(23, '1', 13, 'Semi-Annual', '2026-02-19', '2026-08-18', 1, '2026-02-19 06:06:48', '2026-02-19 07:45:19'),
+(24, '1', 14, 'Annual', '2025-08-06', '2026-08-06', 1, '2026-02-19 06:06:48', '2026-02-19 07:23:15'),
+(25, '1', 15, 'Semi-Annual', '2025-08-10', '2026-02-10', 1, '2026-02-19 06:06:48', '2026-02-19 07:23:15'),
+(26, '1', 16, 'Semi-Annual', '2025-09-10', '2026-03-10', 1, '2026-02-19 06:06:48', '2026-02-19 07:23:15'),
+(27, '1', 17, 'Semi-Annual', '2026-02-01', '2026-08-01', 1, '2026-02-19 06:06:48', '2026-02-19 07:23:15'),
+(28, '1', 18, 'Semi-Annual', '2025-10-01', '2026-04-01', 1, '2026-02-19 06:06:48', '2026-02-19 07:23:15'),
+(29, '1', 19, 'Semi-Annual', '2026-02-10', '2026-08-10', 1, '2026-02-19 06:06:48', '2026-02-19 07:23:15'),
+(30, '1', 20, 'Semi-Annual', '2026-02-19', '2026-08-18', 1, '2026-02-19 06:06:48', '2026-02-19 08:12:27'),
+(31, '1', 21, 'Semi-Annual', '2025-10-20', '2026-04-20', 1, '2026-02-19 06:06:48', '2026-02-19 07:23:15'),
+(32, '1', 22, 'Semi-Annual', '2025-10-10', '2026-04-10', 1, '2026-02-19 06:06:48', '2026-02-19 07:23:15'),
+(40, '3', 30, 'Semi-Annual', '2025-08-22', '2026-02-22', 1, '2026-02-19 06:06:48', '2026-02-19 07:23:15'),
+(41, '3', 31, 'Semi-Annual', '2025-10-05', '2026-04-05', 1, '2026-02-19 06:06:48', '2026-02-19 07:23:15'),
+(42, '3', 32, 'Semi-Annual', '2025-08-24', '2026-02-24', 1, '2026-02-19 06:06:48', '2026-02-19 07:23:15'),
+(43, '3', 33, 'Semi-Annual', '2025-09-20', '2026-03-20', 1, '2026-02-19 06:06:48', '2026-02-19 07:23:15'),
+(44, '3', 34, 'Annual', '2025-08-06', '2026-08-06', 1, '2026-02-19 06:06:48', '2026-02-19 07:23:15'),
+(45, '3', 35, 'Semi-Annual', '2025-08-10', '2026-02-10', 1, '2026-02-19 06:06:48', '2026-02-19 07:23:15'),
+(46, '3', 36, 'Semi-Annual', '2025-09-10', '2026-03-10', 1, '2026-02-19 06:06:48', '2026-02-19 07:23:15'),
+(47, '3', 37, 'Semi-Annual', '2025-10-15', '2026-04-15', 1, '2026-02-19 06:06:48', '2026-02-19 07:23:15'),
+(48, '3', 38, 'Semi-Annual', '2025-10-01', '2026-04-01', 1, '2026-02-19 06:06:48', '2026-02-19 07:23:15'),
+(49, '3', 39, 'Semi-Annual', '2025-09-15', '2026-03-15', 1, '2026-02-19 06:06:48', '2026-02-19 07:23:15'),
+(50, '3', 40, 'Semi-Annual', '2025-08-05', '2026-02-05', 1, '2026-02-19 06:06:48', '2026-02-19 07:23:15'),
+(51, '3', 41, 'Semi-Annual', '2025-10-20', '2026-04-20', 1, '2026-02-19 06:06:48', '2026-02-19 07:23:15'),
+(52, '3', 42, 'Semi-Annual', '2025-10-10', '2026-04-10', 1, '2026-02-19 06:06:48', '2026-02-19 07:23:15'),
+(60, '4', 20, 'Semi-Annual', '2025-08-22', '2026-02-22', 1, '2026-02-19 06:06:48', '2026-02-19 07:23:15'),
+(61, '4', 21, 'Semi-Annual', '2025-10-05', '2026-04-05', 1, '2026-02-19 06:06:48', '2026-02-19 07:23:15'),
+(62, '4', 22, 'Semi-Annual', '2026-01-15', '2026-07-15', 1, '2026-02-19 06:06:48', '2026-02-19 07:23:15'),
+(63, '4', 23, 'Semi-Annual', '2025-08-10', '2026-02-10', 1, '2026-02-19 06:06:48', '2026-02-19 07:23:15'),
+(64, '4', 24, 'Semi-Annual', '2025-10-15', '2026-04-15', 1, '2026-02-19 06:06:48', '2026-02-19 07:23:15'),
+(65, '4', 25, 'Semi-Annual', '2025-10-01', '2026-04-01', 1, '2026-02-19 06:06:48', '2026-02-19 07:23:15'),
+(66, '4', 26, 'Semi-Annual', '2025-09-15', '2026-03-15', 1, '2026-02-19 06:06:48', '2026-02-19 07:23:15'),
+(70, '2', 2, 'Semi-Annual', '2025-10-15', '2026-04-15', 1, '2026-02-19 06:06:48', '2026-02-19 07:23:15');
 
 -- --------------------------------------------------------
 
@@ -482,7 +636,11 @@ CREATE TABLE `tbl_maintenance_template` (
 
 INSERT INTO `tbl_maintenance_template` (`templateId`, `templateName`, `targetTypeId`, `frequency`, `structure_json`, `signatories_json`, `isActive`, `createdAt`) VALUES
 (8, 'ICT PREVENTIVE MAINTENANCE', '1', 'Semi-Annual', NULL, '{\"verifiedByName\":\"[Select Supervisor Name]\",\"verifiedByTitle\":\"DIVISION \\/ SECTION HEAD\",\"notedByName\":\"[Select Head of Office]\",\"notedByTitle\":\"HEAD OF OFFICE\"}', 1, '2026-02-18 06:02:38'),
-(9, 'ICT PREVENTIVE MAINTENANCE', '1', 'Semi-Annual', NULL, '{\"verifiedByName\":\"TEST\",\"verifiedByTitle\":\"DIVISION \\/ SECTION HEAD\",\"notedByName\":\"[Select Head of Office]\",\"notedByTitle\":\"HEAD OF OFFICE\"}', 1, '2026-02-18 06:02:55');
+(9, 'SYSTEM UNIT PREVENTIVE MAINTENANCE', '1', 'Semi-Annual', NULL, '{\"verifiedByName\":\"TEST\",\"verifiedByTitle\":\"DIVISION \\/ SECTION HEAD\",\"notedByName\":\"[Select Head of Office]\",\"notedByTitle\":\"HEAD OF OFFICE\"}', 1, '2026-02-18 06:02:55'),
+(10, 'MONITOR PREVENTIVE MAINTENANCE', '3', 'Semi-Annual', NULL, '{\"verifiedByName\":\"[Select Supervisor Name]\",\"verifiedByTitle\":\"DIVISION / SECTION HEAD\",\"notedByName\":\"[Select Head of Office]\",\"notedByTitle\":\"HEAD OF OFFICE\"}', 1, '2026-02-19 06:28:43'),
+(11, 'PRINTER PREVENTIVE MAINTENANCE', '4', 'Quarterly', NULL, '{\"verifiedByName\":\"[Select Supervisor Name]\",\"verifiedByTitle\":\"DIVISION / SECTION HEAD\",\"notedByName\":\"[Select Head of Office]\",\"notedByTitle\":\"HEAD OF OFFICE\"}', 1, '2026-02-19 06:28:43'),
+(12, 'ALL-IN-ONE PC PREVENTIVE MAINTENANCE', '2', 'Semi-Annual', NULL, '{\"verifiedByName\":\"[Select Supervisor Name]\",\"verifiedByTitle\":\"DIVISION / SECTION HEAD\",\"notedByName\":\"[Select Head of Office]\",\"notedByTitle\":\"HEAD OF OFFICE\"}', 1, '2026-02-19 06:28:43'),
+(13, 'MULTI-TEMPLATE TEST', '2,5,3,1', 'Semi-Annual', NULL, '{\"verifiedByName\":\"[Select Supervisor Name]\",\"verifiedByTitle\":\"DIVISION \\/ SECTION HEAD\",\"notedByName\":\"[Select Head of Office]\",\"notedByTitle\":\"HEAD OF OFFICE\"}', 1, '2026-02-19 06:57:14');
 
 -- --------------------------------------------------------
 
@@ -509,7 +667,20 @@ INSERT INTO `tbl_monitor` (`monitorId`, `monitorBrand`, `monitorSize`, `monitorS
 (17, '5141', '24', '214141234134', '2022', NULL),
 (18, '11111111', '11111111111111', '11111111111', '2000', NULL),
 (19, '555555555', '555555555', '5555555555', '2000', NULL),
-(20, 'test', '24 inches', 'test', '2025', 1);
+(20, 'test', '24 inches', 'test', '2025', 1),
+(30, 'Dell P2422H', '24 inches', 'MO-2023-030', '2023', 100),
+(31, 'LG 24MK430H', '24 inches', 'MO-2023-031', '2023', 101),
+(32, 'Samsung S24C450', '24 inches', 'MO-2024-032', '2024', 102),
+(33, 'HP V24e G5', '24 inches', 'MO-2023-033', '2023', 103),
+(34, 'Dell E2420H', '24 inches', 'MO-2024-034', '2024', 104),
+(35, 'LG 22MK430H', '22 inches', 'MO-2022-035', '2022', 105),
+(36, 'Acer V246HQL', '24 inches', 'MO-2024-036', '2024', 106),
+(37, 'Dell P2723QE', '27 inches', 'MO-2025-037', '2025', 1),
+(38, 'Samsung LS24C360', '24 inches', 'MO-2025-038', '2025', 107),
+(39, 'HP M24fw', '24 inches', 'MO-2024-039', '2024', 108),
+(40, 'LG 24MP400', '24 inches', 'MO-2025-040', '2025', 109),
+(41, 'Dell SE2422H', '24 inches', 'MO-2023-041', '2023', 110),
+(42, 'Acer KA242Y', '24 inches', 'MO-2023-042', '2023', 111);
 
 -- --------------------------------------------------------
 
@@ -562,7 +733,14 @@ INSERT INTO `tbl_printer` (`printerId`, `printerBrand`, `printerModel`, `printer
 (4, '66666', '666666', '6666666', '2000', NULL),
 (5, '666667657', '666666657 56', '66666667657', '2000', NULL),
 (7, 'HP DESKJET210', '2012413', 'SN_DK1142', '2003', 645987),
-(8, 'test', 'test', 'test', '2025', 645987);
+(8, 'test', 'test', 'test', '2025', 645987),
+(20, 'Epson L3150', 'EcoTank L3150', 'PR-2023-020', '2023', 100),
+(21, 'HP LaserJet Pro M404n', 'M404n', 'PR-2024-021', '2024', 101),
+(22, 'Canon PIXMA G3010', 'G3010', 'PR-2023-022', '2023', 103),
+(23, 'Epson L5290', 'EcoTank L5290', 'PR-2024-023', '2024', 105),
+(24, 'HP LaserJet M110we', 'M110we', 'PR-2025-024', '2025', 1),
+(25, 'Brother DCP-T520W', 'DCP-T520W', 'PR-2024-025', '2024', 107),
+(26, 'Epson L3110', 'EcoTank L3110', 'PR-2023-026', '2023', 108);
 
 -- --------------------------------------------------------
 
@@ -614,7 +792,20 @@ CREATE TABLE `tbl_systemunit` (
 
 INSERT INTO `tbl_systemunit` (`systemunitId`, `systemUnitCategory`, `systemUnitBrand`, `specificationProcessor`, `specificationMemory`, `specificationGPU`, `specificationStorage`, `systemUnitSerial`, `yearAcquired`, `employeeId`) VALUES
 (1, 'Pre-Built', 'test', 'test', 'tets', 'test', 'test', 'test', '2025', 645987),
-(2, 'Custom Built', 'test2', 'test2', 'test2', 'test2', 'test2', 'test2', '2025', 645987);
+(2, 'Custom Built', 'test2', 'test2', 'test2', 'test2', 'test2', 'test2', '2025', 645987),
+(10, 'Pre-Built', 'Dell OptiPlex 5070', 'Intel Core i5-9500', '8GB DDR4', 'Intel UHD 630', '256GB SSD', 'SU-2023-010', '2023', 100),
+(11, 'Pre-Built', 'HP ProDesk 400 G6', 'Intel Core i5-9500T', '16GB DDR4', 'Intel UHD 630', '512GB SSD', 'SU-2023-011', '2023', 101),
+(12, 'Pre-Built', 'Lenovo ThinkCentre M70', 'Intel Core i3-10100', '8GB DDR4', 'Intel UHD 630', '256GB SSD', 'SU-2024-012', '2024', 102),
+(13, 'Pre-Built', 'Acer Veriton M200', 'Intel Core i5-10400', '8GB DDR4', 'Intel UHD 630', '500GB HDD', 'SU-2023-013', '2023', 103),
+(14, 'Pre-Built', 'Dell OptiPlex 3080', 'Intel Core i5-10500', '16GB DDR4', 'Intel UHD 630', '512GB SSD', 'SU-2024-014', '2024', 104),
+(15, 'Pre-Built', 'HP EliteDesk 800 G5', 'Intel Core i7-9700', '16GB DDR4', 'Intel UHD 630', '512GB SSD', 'SU-2022-015', '2022', 105),
+(16, 'Pre-Built', 'Lenovo V530', 'Intel Core i3-9100', '8GB DDR4', 'Intel UHD Graphics', '256GB SSD', 'SU-2024-016', '2024', 106),
+(17, 'Custom Built', 'Custom Build ICT', 'AMD Ryzen 7 5700X', '32GB DDR4', 'NVIDIA RTX 3060', '1TB NVMe', 'SU-2025-017', '2025', 1),
+(18, 'Pre-Built', 'Dell Vostro 3710', 'Intel Core i5-12400', '8GB DDR4', 'Intel UHD 730', '512GB SSD', 'SU-2025-018', '2025', 107),
+(19, 'Pre-Built', 'HP ProDesk 405 G8', 'AMD Ryzen 5 5600G', '16GB DDR4', 'AMD Radeon Graphics', '512GB SSD', 'SU-2024-019', '2024', 108),
+(20, 'Pre-Built', 'Acer Veriton S2690', 'Intel Core i5-12400', '8GB DDR4', 'Intel UHD 730', '256GB SSD', 'SU-2025-020', '2025', 109),
+(21, 'Pre-Built', 'Lenovo ThinkCentre M80', 'Intel Core i5-10500', '16GB DDR4', 'Intel UHD 630', '512GB SSD', 'SU-2023-021', '2023', 110),
+(22, 'Pre-Built', 'Dell OptiPlex 7090', 'Intel Core i7-10700', '16GB DDR4', 'Intel UHD 630', '1TB SSD', 'SU-2023-022', '2023', 111);
 
 -- --------------------------------------------------------
 
@@ -947,7 +1138,7 @@ ALTER TABLE `location_type`
 -- AUTO_INCREMENT for table `login_attempts`
 --
 ALTER TABLE `login_attempts`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=68;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=71;
 
 --
 -- AUTO_INCREMENT for table `password_resets`
@@ -983,13 +1174,13 @@ ALTER TABLE `tbl_allinone`
 -- AUTO_INCREMENT for table `tbl_checklist_category`
 --
 ALTER TABLE `tbl_checklist_category`
-  MODIFY `categoryId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
+  MODIFY `categoryId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=42;
 
 --
 -- AUTO_INCREMENT for table `tbl_checklist_item`
 --
 ALTER TABLE `tbl_checklist_item`
-  MODIFY `itemId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
+  MODIFY `itemId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=71;
 
 --
 -- AUTO_INCREMENT for table `tbl_employee`
@@ -1013,25 +1204,25 @@ ALTER TABLE `tbl_maintenance_frequency`
 -- AUTO_INCREMENT for table `tbl_maintenance_record`
 --
 ALTER TABLE `tbl_maintenance_record`
-  MODIFY `recordId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `recordId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=54;
 
 --
 -- AUTO_INCREMENT for table `tbl_maintenance_schedule`
 --
 ALTER TABLE `tbl_maintenance_schedule`
-  MODIFY `scheduleId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+  MODIFY `scheduleId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=71;
 
 --
 -- AUTO_INCREMENT for table `tbl_maintenance_template`
 --
 ALTER TABLE `tbl_maintenance_template`
-  MODIFY `templateId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `templateId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT for table `tbl_monitor`
 --
 ALTER TABLE `tbl_monitor`
-  MODIFY `monitorId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+  MODIFY `monitorId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=43;
 
 --
 -- AUTO_INCREMENT for table `tbl_otherequipment`
@@ -1043,7 +1234,7 @@ ALTER TABLE `tbl_otherequipment`
 -- AUTO_INCREMENT for table `tbl_printer`
 --
 ALTER TABLE `tbl_printer`
-  MODIFY `printerId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `printerId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
 
 --
 -- AUTO_INCREMENT for table `tbl_software`
@@ -1055,7 +1246,7 @@ ALTER TABLE `tbl_software`
 -- AUTO_INCREMENT for table `tbl_systemunit`
 --
 ALTER TABLE `tbl_systemunit`
-  MODIFY `systemunitId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `systemunitId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
 
 --
 -- Constraints for dumped tables

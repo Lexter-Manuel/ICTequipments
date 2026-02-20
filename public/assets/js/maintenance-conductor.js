@@ -1,11 +1,193 @@
 /**
  * maintenance-conductor.js
  * Handles performing maintenance with dynamic templates and real asset data.
+ * Also provides the reusable openMaintenanceModal() used by schedule & roster pages.
  */
 
 // Global State
 var conductorScheduleId = null;
 var currentAssetData = null;
+
+// Equipment Type Map — shared across all pages
+var EQUIPMENT_TYPE_MAP = {};
+var _typeMapLoaded = false;
+
+function ensureEquipmentTypeMap() {
+    if (_typeMapLoaded) return Promise.resolve();
+    return fetch(BASE_URL + 'ajax/get_equipment_types.php')
+        .then(function(r) { return r.json(); })
+        .then(function(res) {
+            if (res.success) {
+                res.data.forEach(function(t) {
+                    var key = t.typeName.toLowerCase().replace(/[^a-z0-9]/g, '');
+                    EQUIPMENT_TYPE_MAP[key] = t.typeId;
+                });
+                _typeMapLoaded = true;
+            }
+        })
+        .catch(function(err) { console.error('Failed to load equipment type map:', err); });
+}
+
+// ============================================================
+// REUSABLE: Open Maintenance Modal
+// ============================================================
+// opts: {
+//   scheduleId   : number|null — if null, will look up / auto-create
+//   equipmentId  : number      — needed when scheduleId is null
+//   equipmentType: number|string — numeric type ID, or type name string ("System Unit")
+//   typeName     : string      — display label for the type
+//   brand        : string
+//   serial       : string
+//   owner        : string
+//   location     : string
+// }
+function openMaintenanceModal(opts) {
+    var modalEl = document.getElementById('maintenanceModal');
+    if (!modalEl) {
+        console.error('maintenanceModal element not found. Include maintenance_modal.php.');
+        return;
+    }
+
+    var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+    modal.show();
+
+    var container = document.getElementById('modal-maintenance-container');
+    var loader    = document.getElementById('modal-maintenance-loader');
+    loader.style.display = 'block';
+    container.innerHTML = '';
+
+    // Resolve type string → numeric ID if needed
+    var resolveType;
+    if (opts.equipmentType && isNaN(Number(opts.equipmentType))) {
+        // It's a string like "System Unit"
+        resolveType = ensureEquipmentTypeMap().then(function() {
+            var key = opts.equipmentType.toLowerCase().replace(/[^a-z0-9]/g, '');
+            var resolved = EQUIPMENT_TYPE_MAP[key];
+            if (!resolved) {
+                throw new Error('Unknown equipment type: ' + opts.equipmentType);
+            }
+            opts.typeName = opts.typeName || opts.equipmentType;
+            opts.equipmentType = resolved;
+        });
+    } else {
+        resolveType = Promise.resolve();
+    }
+
+    resolveType.then(function() {
+        var typeId = opts.equipmentType;
+
+        // Build fetch list: always need templates. If no scheduleId, also need assets.
+        var fetches = [
+            fetch(BASE_URL + 'ajax/manage_templates.php?action=list_by_type&type=' + typeId).then(function(r) { return r.json(); })
+        ];
+        if (!opts.scheduleId) {
+            fetches.push(
+                fetch(BASE_URL + 'ajax/get_maintenance_assets.php?type=' + typeId).then(function(r) { return r.json(); })
+            );
+        }
+
+        return Promise.all(fetches);
+    })
+    .then(function(results) {
+        loader.style.display = 'none';
+        var tmplRes  = results[0];
+        var assetRes = results[1]; // undefined when scheduleId was provided
+
+        // Check templates
+        if (!tmplRes.success || !tmplRes.data || tmplRes.data.length === 0) {
+            container.innerHTML = '<div class="alert alert-warning m-4 text-center">'
+                + 'No checklist templates found for <strong>' + (opts.typeName || 'this type') + '</strong>.'
+                + '<br>Please create one in "Maintenance Templates" first.</div>';
+            return;
+        }
+
+        // Resolve scheduleId if unknown
+        var resolvedScheduleId = opts.scheduleId || null;
+        var needsAutoCreate = false;
+
+        if (!resolvedScheduleId && assetRes && assetRes.data) {
+            var match = assetRes.data.find(function(a) { return a.equipmentId == opts.equipmentId; });
+            if (match) {
+                resolvedScheduleId = match.scheduleId;
+            } else {
+                needsAutoCreate = true;
+            }
+        } else if (!resolvedScheduleId) {
+            needsAutoCreate = true;
+        }
+
+        // Build template options
+        var optionsHtml = tmplRes.data.map(function(t) {
+            return '<option value="' + t.templateId + '">' + t.templateName + ' (' + t.frequency + ')</option>';
+        }).join('');
+
+        // Render selection UI
+        container.innerHTML = ''
+            + '<div class="row justify-content-center p-4">'
+            + '  <div class="col-md-8 text-center">'
+            + '    <div class="bg-primary-xlight text-primary rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 70px; height: 70px;">'
+            + '      <i class="fas fa-clipboard-list fa-2x"></i>'
+            + '    </div>'
+            + '    <h5 class="fw-bold">Maintenance Selection</h5>'
+            + '    <p class="text-muted small mb-4">Select the checklist template to use for <strong>' + (opts.brand || 'this equipment') + '</strong>.</p>'
+            + '    <div class="card bg-light border-0 p-3 mb-4 text-start">'
+            + '      <div class="mb-3">'
+            + '        <label class="form-label fw-bold small text-muted text-uppercase">1. Asset Details</label>'
+            + '        <input type="text" class="form-control" value="' + (opts.brand || '') + ' — ' + (opts.serial || 'N/A') + '" readonly disabled>'
+            + '      </div>'
+            + '      <div class="mb-0">'
+            + '        <label class="form-label fw-bold small text-muted text-uppercase">2. Select Checklist Template</label>'
+            + '        <select class="form-select form-select-lg shadow-sm border-primary" id="modalTemplateSelect">'
+            + '          ' + optionsHtml
+            + '        </select>'
+            + '      </div>'
+            + '    </div>'
+            + '    <div class="d-grid gap-2">'
+            + '      <button class="btn btn-primary btn-lg" id="btnStartModalMaint">'
+            + '        Start Inspection <i class="fas fa-arrow-right ms-2"></i>'
+            + '      </button>'
+            + '    </div>'
+            + '  </div>'
+            + '</div>';
+
+        // Attach start handler
+        document.getElementById('btnStartModalMaint').onclick = function() {
+            var templateId = document.getElementById('modalTemplateSelect').value;
+
+            // Set currentAssetData for the conductor
+            currentAssetData = {
+                owner:    opts.owner    || 'N/A',
+                location: opts.location || 'N/A',
+                serial:   opts.serial   || 'N/A',
+                brand:    opts.brand    || 'N/A',
+                type:     opts.typeName || 'Equipment'
+            };
+
+            if (needsAutoCreate) {
+                container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div><p class="mt-2">Initializing schedule…</p></div>';
+                fetch(BASE_URL + 'ajax/quick_add_schedule.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ equipmentId: opts.equipmentId, equipmentType: opts.equipmentType })
+                })
+                .then(function(r) { return r.json(); })
+                .then(function(res) {
+                    if (res.success) {
+                        startMaintenanceSequence(res.scheduleId, templateId, 'modal-maintenance-container');
+                    } else {
+                        container.innerHTML = '<div class="alert alert-danger m-3">Failed to create schedule: ' + res.message + '</div>';
+                    }
+                });
+            } else {
+                startMaintenanceSequence(resolvedScheduleId, templateId, 'modal-maintenance-container');
+            }
+        };
+    })
+    .catch(function(err) {
+        loader.style.display = 'none';
+        container.innerHTML = '<div class="alert alert-danger m-3">Error: ' + err.message + '</div>';
+    });
+}
 
 // ============================================================
 // 1. Load Equipment Types into Dropdown
@@ -292,8 +474,8 @@ function renderMaintenanceForm(template, container) {
                     <div class="mc-signatory-card">
                         <div class="mc-signatory-header">Prepared / Conducted by</div>
                         <div class="mc-signatory-body">
-                            <div class="mc-signatory-name">Current User (You)</div>
-                            <div class="mc-signatory-line">ICT Staff</div>
+                            <div class="mc-signatory-name">${(typeof CURRENT_USER !== 'undefined' && CURRENT_USER.name) || 'Current User'} (You)</div>
+                            <div class="mc-signatory-line">${(typeof CURRENT_USER !== 'undefined' && CURRENT_USER.role) || 'ICT Staff'}</div>
                         </div>
                     </div>
                     <div class="mc-signatory-card">
@@ -374,7 +556,7 @@ function saveMaintenanceRecord() {
         remarks:       formData.get('remarks'),
         overallStatus: overallStatus,
         signatories: {
-            preparedBy: 'Current User',
+            preparedBy: (typeof CURRENT_USER !== 'undefined' && CURRENT_USER.name) || 'Current User',
             checkedBy:  'Template Default',
             notedBy:    'Template Default'
         }

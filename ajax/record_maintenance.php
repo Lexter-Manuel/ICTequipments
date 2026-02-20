@@ -1,6 +1,16 @@
 <?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 require_once '../config/database.php';
 header('Content-Type: application/json');
+
+// Require a logged-in user
+if (empty($_SESSION['user_id'])) {
+    http_response_code(401);
+    echo json_encode(['success' => false, 'message' => 'Not authenticated']);
+    exit;
+}
 
 $db = getDB();
 
@@ -44,11 +54,11 @@ try {
             ':sid'    => $input['scheduleId'],
             ':tid'    => $realTypeId,       // <--- Uses the ID found in the database
             ':eid'    => $realEquipmentId,  // <--- Uses the ID found in the database
-            ':uid'    => $_SESSION['user_id'] ?? 0,
+            ':uid'    => $_SESSION['user_id'],
             ':json'   => json_encode($input['checklistData']),
             ':remarks'=> $input['remarks'],
             ':status' => $input['overallStatus'] ?? 'Operational',
-            ':prep'   => $input['signatories']['preparedBy'],
+            ':prep'   => !empty($input['signatories']['preparedBy']) ? $input['signatories']['preparedBy'] : ($_SESSION['user_name'] ?? 'Unknown'),
             ':check'  => $input['signatories']['checkedBy'],
             ':note'   => $input['signatories']['notedBy']
         ]);
