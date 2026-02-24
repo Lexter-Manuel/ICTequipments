@@ -1,4 +1,3 @@
-
 var SCHED_API = '../ajax/get_maintenance_schedule.php';
 
 /* ── state ── */
@@ -33,7 +32,7 @@ var TYPE_CLASS = {
 function initSchedulePage() {
     loadStats();
     loadDetailedSchedule(1);
-    loadDivisionFilter();
+    loadSectionUnitFilter();
     loadSummaryView();
 
     // Enter key on search
@@ -67,19 +66,20 @@ async function loadStats() {
 /* =========================================================
    DIVISION FILTER DROPDOWN
    ========================================================= */
-async function loadDivisionFilter() {
+async function loadSectionUnitFilter() {
     try {
-        var r = await fetch(`${SCHED_API}?view=divisions`);
+        var r = await fetch((typeof BASE_URL !== 'undefined' ? BASE_URL : '') + 'ajax/get_section_units.php');
         var j = await r.json();
         if (!j.success) return;
-        var sel = document.getElementById('schedDivisionFilter');
-        j.data.forEach(d => {
+        var sel = document.getElementById('schedSectionUnitFilter');
+        j.data.forEach(function(loc) {
             var opt = document.createElement('option');
-            opt.value = d.location_id;
-            opt.textContent = d.location_name;
+            opt.value = loc.location_name;
+            var badge = loc.location_type_id == 2 ? '[Section]' : '[Unit]';
+            opt.textContent = loc.location_name + ' ' + badge;
             sel.appendChild(opt);
         });
-    } catch (e) { console.error('loadDivisionFilter', e); }
+    } catch (e) { console.error('loadSectionUnitFilter', e); }
 }
 
 /* =========================================================
@@ -90,18 +90,18 @@ async function loadDetailedSchedule(page) {
     var tbody = document.getElementById('schedDetailedBody');
     tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4"><span class="spinner-border spinner-border-sm me-2"></span> Loading schedule…</td></tr>';
 
-    var search   = (document.getElementById('schedSearchInput')?.value || '').trim();
-    var division = document.getElementById('schedDivisionFilter')?.value || '';
-    var status   = document.getElementById('schedStatusFilter')?.value || '';
+    var search      = (document.getElementById('schedSearchInput')?.value || '').trim();
+    var sectionUnit  = document.getElementById('schedSectionUnitFilter')?.value || '';
+    var status       = document.getElementById('schedStatusFilter')?.value || '';
 
     var params = new URLSearchParams({
         view: 'detailed',
         page: schedCurrentPage,
         limit: schedPageLimit,
     });
-    if (search)   params.set('search', search);
-    if (division) params.set('division', division);
-    if (status)   params.set('status', status);
+    if (search)      params.set('search', search);
+    if (sectionUnit) params.set('sectionUnit', sectionUnit);
+    if (status)      params.set('status', status);
 
     try {
         var r = await fetch(`${SCHED_API}?${params}`);
@@ -168,21 +168,38 @@ async function loadDetailedSchedule(page) {
 
 function renderPagination(p) {
     var wrap = document.getElementById('schedPagination');
+    if (!wrap) return;
     if (p.totalPages <= 1) { wrap.innerHTML = ''; return; }
-    var html = '';
-    var maxShow = 5;
-    var start = Math.max(1, p.page - Math.floor(maxShow / 2));
-    var end   = Math.min(p.totalPages, start + maxShow - 1);
-    if (end - start < maxShow - 1) start = Math.max(1, end - maxShow + 1);
 
-    if (start > 1) html += `<a class="mnt-page-btn" onclick="loadDetailedSchedule(1)">1</a>`;
-    if (start > 2) html += `<span class="mnt-page-btn ellipsis">…</span>`;
-    for (var i = start; i <= end; i++) {
-        html += `<a class="mnt-page-btn${i === p.page ? ' active' : ''}" onclick="loadDetailedSchedule(${i})">${i}</a>`;
-    }
-    if (end < p.totalPages - 1) html += `<span class="mnt-page-btn ellipsis">…</span>`;
-    if (end < p.totalPages) html += `<a class="mnt-page-btn" onclick="loadDetailedSchedule(${p.totalPages})">${p.totalPages}</a>`;
+    var html = `<button class="page-btn" onclick="loadDetailedSchedule(${p.page - 1})" ${p.page === 1 ? 'disabled' : ''}>
+        <i class="fas fa-chevron-left"></i></button>`;
+
+    getSchedPaginationRange(p.page, p.totalPages).forEach(function(n) {
+        if (n === '...') {
+            html += `<span class="page-ellipsis">…</span>`;
+        } else {
+            html += `<button class="page-btn ${n === p.page ? 'active' : ''}" onclick="loadDetailedSchedule(${n})">${n}</button>`;
+        }
+    });
+
+    html += `<button class="page-btn" onclick="loadDetailedSchedule(${p.page + 1})" ${p.page === p.totalPages ? 'disabled' : ''}>
+        <i class="fas fa-chevron-right"></i></button>`;
+
     wrap.innerHTML = html;
+}
+
+function getSchedPaginationRange(current, total) {
+    if (total <= 7) return Array.from({length: total}, function(_, i) { return i + 1; });
+    if (current <= 4) return [1, 2, 3, 4, 5, '...', total];
+    if (current >= total - 3) return [1, '...', total-4, total-3, total-2, total-1, total];
+    return [1, '...', current-1, current, current+1, '...', total];
+}
+
+function changeSchedPerPage() {
+    var sel = document.getElementById('schedPerPageSelect');
+    if (!sel) return;
+    schedPageLimit = parseInt(sel.value);
+    loadDetailedSchedule(1);
 }
 
 /* =========================================================

@@ -12,6 +12,9 @@ require_once '../../config/config.php';
 // Log logout activity
 if (isset($_SESSION['user_id'])) {
     logActivity($_SESSION['user_id'], 'logout', 'User logged out');
+    
+    // Clear "Remember Me" token
+    clearRememberToken($_SESSION['user_id']);
 }
 
 // Unset all session variables

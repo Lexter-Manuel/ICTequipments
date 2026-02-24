@@ -110,6 +110,7 @@ try {
                     $items = $stmtItem->fetchAll(PDO::FETCH_ASSOC);
 
                     $catData = [
+                        'categoryId' => (int)$cat['categoryId'],
                         'title' => $cat['categoryName'],
                         'order' => $cat['sequenceOrder'],
                         'items' => []
@@ -117,6 +118,7 @@ try {
 
                     foreach ($items as $item) {
                         $catData['items'][] = [
+                            'itemId' => (int)$item['itemId'],
                             'text' => $item['taskDescription'],
                             'order' => $item['sequenceOrder']
                         ];

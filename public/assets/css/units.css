@@ -51,6 +51,11 @@
     font-size: var(--text-md);
 }
 
+h3, p{
+    color: #fff;
+    margin-bottom: 0;
+}
+
 /* Section subgroup inside a division */
 .section-subgroup {
     border-top: 1px solid var(--border-color);

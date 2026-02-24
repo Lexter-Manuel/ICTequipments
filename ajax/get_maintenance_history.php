@@ -3,22 +3,47 @@ require_once '../config/database.php';
 header('Content-Type: application/json');
 $db = getDB();
 
-$view   = $_GET['view']   ?? 'detailed';
-$range  = $_GET['range']  ?? 'Last 3 Months';
-$search = $_GET['search'] ?? '';
-$page   = max(1, (int)($_GET['page'] ?? 1));
-$limit  = max(1, min(100, (int)($_GET['limit'] ?? 10)));
+$view     = $_GET['view']     ?? 'detailed';
+$search   = $_GET['search']   ?? '';
+$page     = max(1, (int)($_GET['page']  ?? 1));
+$limit    = max(1, min(100, (int)($_GET['limit'] ?? 10)));
 
-// Reusable date condition builder
-function buildDateCondition($range, $alias = 'mr') {
-    switch ($range) {
-        case 'Last 7 Days':   return "$alias.maintenanceDate >= DATE_SUB(NOW(), INTERVAL 7 DAY)";
-        case 'This Month':    return "$alias.maintenanceDate >= DATE_FORMAT(NOW(), '%Y-%m-01')";
-        case 'Last 3 Months': return "$alias.maintenanceDate >= DATE_SUB(NOW(), INTERVAL 3 MONTH)";
-        case 'This Year':     return "$alias.maintenanceDate >= DATE_FORMAT(NOW(), '%Y-01-01')";
-        case 'All Time':      return "1=1";
-        default:              return "$alias.maintenanceDate >= DATE_SUB(NOW(), INTERVAL 3 MONTH)";
+// New: accept explicit dateFrom / dateTo  (YYYY-MM-DD)
+// Empty strings mean "All Time"
+$dateFrom    = trim($_GET['dateFrom'] ?? '');
+$dateTo      = trim($_GET['dateTo']   ?? '');
+$sectionUnit = trim($_GET['sectionUnit'] ?? '');
+
+/**
+ * Build a SQL date condition string (and optionally bind params).
+ *
+ * Pass $bindings by reference; the function will push named params into it.
+ *
+ * @param string  $dateFrom   YYYY-MM-DD or empty
+ * @param string  $dateTo     YYYY-MM-DD or empty
+ * @param array   &$bindings  Receives ':dateFrom' / ':dateTo' when needed
+ * @param string  $alias      Table alias prefix (default 'mr')
+ * @return string             SQL fragment (no leading AND)
+ */
+function buildDateCondition(string $dateFrom, string $dateTo, array &$bindings, string $alias = 'mr'): string {
+    if ($dateFrom === '' && $dateTo === '') {
+        return '1=1'; // All Time
     }
+
+    if ($dateFrom !== '' && $dateTo !== '') {
+        $bindings[':dateFrom'] = $dateFrom;
+        $bindings[':dateTo']   = $dateTo;
+        return "DATE($alias.maintenanceDate) BETWEEN :dateFrom AND :dateTo";
+    }
+
+    if ($dateFrom !== '') {
+        $bindings[':dateFrom'] = $dateFrom;
+        return "DATE($alias.maintenanceDate) >= :dateFrom";
+    }
+
+    // Only dateTo supplied
+    $bindings[':dateTo'] = $dateTo;
+    return "DATE($alias.maintenanceDate) <= :dateTo";
 }
 
 try {
@@ -27,7 +52,15 @@ try {
     // MODE: STATS — Aggregate counts for the stat cards
     // =================================================================
     if ($view === 'stats') {
-        $dateCondition = buildDateCondition($range);
+        $bindings      = [];
+        $dateCondition = buildDateCondition($dateFrom, $dateTo, $bindings);
+
+        $statsWhere = [$dateCondition];
+        if ($sectionUnit) {
+            $statsWhere[]          = "v_stat.location_name = :sectionUnit";
+            $bindings[':sectionUnit'] = $sectionUnit;
+        }
+        $statsWhereSQL = implode(' AND ', $statsWhere);
 
         $sql = "
             SELECT 
@@ -36,12 +69,31 @@ try {
                 SUM(CASE WHEN mr.conditionRating IN ('Excellent','Good') THEN 1 ELSE 0 END) AS excellentGood,
                 0 AS pending
             FROM tbl_maintenance_record mr
-            WHERE $dateCondition
+            " . ($sectionUnit ? "LEFT JOIN tbl_maintenance_schedule ms_stat ON mr.scheduleId = ms_stat.scheduleId
+            LEFT JOIN view_maintenance_master v_stat ON ms_stat.equipmentId = v_stat.id AND ms_stat.equipmentType = v_stat.type_id" : '') . "
+            WHERE $statsWhereSQL
         ";
-        $stmt = $db->query($sql);
+        $stmt = $db->prepare($sql);
+        foreach ($bindings as $k => $v) $stmt->bindValue($k, $v);
+        $stmt->execute();
         $stats = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        // Pending = schedules that are active but have no record in range
+        // Pending = active schedules overdue with no record in range
+        $pendingBindings = [];
+        $pendingDateCond = buildDateCondition($dateFrom, $dateTo, $pendingBindings, 'mr2');
+
+        // Rename params to avoid clash
+        $pendingParamMap = [];
+        foreach ($pendingBindings as $k => $v) {
+            $newKey = $k . '_p';
+            $pendingParamMap[$newKey] = $v;
+        }
+        $pendingDateCondRenamed = str_replace(
+            array_keys($pendingBindings),
+            array_keys($pendingParamMap),
+            $pendingDateCond
+        );
+
         $pendingSql = "
             SELECT COUNT(*) AS pending
             FROM tbl_maintenance_schedule ms
@@ -50,13 +102,14 @@ try {
               AND NOT EXISTS (
                   SELECT 1 FROM tbl_maintenance_record mr2
                   WHERE mr2.scheduleId = ms.scheduleId
-                    AND $dateCondition
+                    AND $pendingDateCondRenamed
               )
         ";
-        $pendingStmt = $db->query(str_replace('mr.maintenanceDate', 'mr2.maintenanceDate', $pendingSql));
+        $pendingStmt = $db->prepare($pendingSql);
+        foreach ($pendingParamMap as $k => $v) $pendingStmt->bindValue($k, $v);
+        $pendingStmt->execute();
         $stats['pending'] = (int)$pendingStmt->fetchColumn();
 
-        // Cast to int
         $stats['totalRecords']  = (int)$stats['totalRecords'];
         $stats['maintained']    = (int)$stats['maintained'];
         $stats['excellentGood'] = (int)$stats['excellentGood'];
@@ -69,16 +122,20 @@ try {
     // MODE: DETAILED — Paginated list for the table view
     // =================================================================
     if ($view === 'detailed') {
-        $dateCondition = buildDateCondition($range);
-        $offset = ($page - 1) * $limit;
+        $bindings      = [];
+        $dateCondition = buildDateCondition($dateFrom, $dateTo, $bindings);
+        $offset        = ($page - 1) * $limit;
 
-        // Build WHERE parts
         $whereParts = [$dateCondition];
-        $params = [];
 
         if ($search) {
-            $whereParts[] = "(v.serial LIKE :s OR v.brand LIKE :s OR mr.preparedBy LIKE :s OR mr.remarks LIKE :s OR v.owner_name LIKE :s)";
-            $params[':s'] = "%$search%";
+            $whereParts[]      = "(v.serial LIKE :s OR v.brand LIKE :s OR mr.preparedBy LIKE :s OR mr.remarks LIKE :s OR v.owner_name LIKE :s)";
+            $bindings[':s']    = "%$search%";
+        }
+
+        if ($sectionUnit) {
+            $whereParts[]             = "v.location_name = :sectionUnit";
+            $bindings[':sectionUnit'] = $sectionUnit;
         }
 
         $where = implode(' AND ', $whereParts);
@@ -92,7 +149,7 @@ try {
             WHERE $where
         ";
         $countStmt = $db->prepare($countSql);
-        foreach ($params as $k => $val) $countStmt->bindValue($k, $val);
+        foreach ($bindings as $k => $v) $countStmt->bindValue($k, $v);
         $countStmt->execute();
         $totalCount = (int)$countStmt->fetchColumn();
 
@@ -118,7 +175,7 @@ try {
             LIMIT :lim OFFSET :off
         ";
         $stmt = $db->prepare($sql);
-        foreach ($params as $k => $val) $stmt->bindValue($k, $val);
+        foreach ($bindings as $k => $v) $stmt->bindValue($k, $v);
         $stmt->bindValue(':lim', $limit, PDO::PARAM_INT);
         $stmt->bindValue(':off', $offset, PDO::PARAM_INT);
         $stmt->execute();
@@ -227,7 +284,6 @@ try {
             $allLocs[$r['location_id']] = $r;
         }
 
-        // Recursive gather descendant IDs
         function getDescendantIds($parentId, &$allLocs) {
             $ids = [$parentId];
             foreach ($allLocs as $loc) {
@@ -240,7 +296,6 @@ try {
 
         $descendantIds = getDescendantIds($divisionId, $allLocs);
 
-        // Get names for these locations
         $locationNames = [];
         foreach ($descendantIds as $lid) {
             if (isset($allLocs[$lid])) {
@@ -254,9 +309,27 @@ try {
         }
 
         // Build placeholders for IN clause
-        $placeholders = implode(',', array_fill(0, count($locationNames), '?'));
+        $inPlaceholders = implode(',', array_fill(0, count($locationNames), '?'));
 
-        // Fetch maintenance records for equipment in these locations
+        // Build date condition for division query (positional style to avoid conflict)
+        $bindings         = [];
+        $dateCondFragment = buildDateCondition($dateFrom, $dateTo, $bindings);
+
+        // Convert named bindings to positional for consistency with location IN params
+        // We'll use a separate prepare with mixed approach: named for date, positional for IN
+        $locationInParams = $locationNames; // indexed array → positional ?
+
+        // Combine: date bindings stay named, location bindings stay positional
+        // Easiest: rebuild query using named params for dates and named params for locations too
+        $locNamedParams = [];
+        foreach ($locationNames as $idx => $name) {
+            $locNamedParams[':loc' . $idx] = $name;
+        }
+        $locPlaceholderStr = implode(',', array_keys($locNamedParams));
+
+        $dateBindings = [];
+        $dateCondSQL  = buildDateCondition($dateFrom, $dateTo, $dateBindings);
+
         $sql = "
             SELECT 
                 mr.recordId,
@@ -275,17 +348,19 @@ try {
             FROM tbl_maintenance_record mr
             LEFT JOIN tbl_maintenance_schedule ms ON mr.scheduleId = ms.scheduleId
             LEFT JOIN view_maintenance_master v ON ms.equipmentId = v.id AND ms.equipmentType = v.type_id
-            WHERE v.location_name IN ($placeholders)
+            WHERE v.location_name IN ($locPlaceholderStr)
+              AND $dateCondSQL
             ORDER BY mr.maintenanceDate DESC
         ";
         $stmt = $db->prepare($sql);
-        $stmt->execute($locationNames);
+        foreach ($locNamedParams as $k => $v) $stmt->bindValue($k, $v);
+        foreach ($dateBindings as $k => $v) $stmt->bindValue($k, $v);
+        $stmt->execute();
         $assets = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // Collect unique unit names for the filter dropdown
         $unitNames = array_values(array_unique(array_filter(array_column($assets, 'location_name'))));
 
-        // Fetch employees in these locations with their assigned equipment
+        // Fetch employees in these locations
         $empSql = "
             SELECT 
                 e.employeeId,
@@ -296,16 +371,14 @@ try {
             FROM tbl_employee e
             LEFT JOIN location l ON e.location_id = l.location_id
             WHERE e.is_active = 1
-              AND l.location_name IN ($placeholders)
+              AND l.location_name IN ($locPlaceholderStr)
             ORDER BY e.lastName, e.firstName
         ";
         $empStmt = $db->prepare($empSql);
-        $empStmt->execute($locationNames);
+        foreach ($locNamedParams as $k => $v) $empStmt->bindValue($k, $v);
+        $empStmt->execute();
         $employees = $empStmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // For each employee, find which maintenance records belong to their equipment
-        // We link via: employee -> their equipment (via employeeId in each equipment table)
-        // But it's simpler to match by location_name + owner_name
         foreach ($employees as &$emp) {
             $emp['assets'] = [];
             foreach ($assets as $asset) {
@@ -316,7 +389,6 @@ try {
         }
         unset($emp);
 
-        // Build asset lookup keyed by recordId for frontend
         $assetLookup = [];
         foreach ($assets as $a) {
             $assetLookup[$a['recordId']] = $a;

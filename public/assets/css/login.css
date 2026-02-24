@@ -36,7 +36,6 @@
 
 body {
     font-family: var(--font-body);
-    background: linear-gradient(140deg, var(--primary-green) 0%, var(--primary-dark) 100%);
     min-height: 100vh;
     display: flex;
     align-items: center;
@@ -55,7 +54,8 @@ body {
     background: var(--bg-white);
     border-radius: 20px;
     overflow: hidden;
-    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.30);
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.30),
+                inset 0 0 0 1px rgba(255, 255, 255, 0.50);
     animation: loginSlideIn 0.55s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -245,7 +245,8 @@ body {
 }
 
 .form-group input[type="email"],
-.form-group input[type="password"] {
+.form-group input[type="password"],
+.form-group input[type="text"] {
     width: 100%;
     padding: 13px 16px;
     border: 1.5px solid var(--border-color);

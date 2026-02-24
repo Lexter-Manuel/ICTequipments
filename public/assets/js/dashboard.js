@@ -82,9 +82,10 @@ class DashboardApp {
                 'printer': '../modules/inventory/printer.php',
                 'software': '../modules/inventory/software.php',
                 'otherequipment': '../modules/inventory/other_equipment.php',
-                'divisions': '../modules/organization/divisions.php',
-                'sections': '../modules/organization/sections.php',
-                'units': '../modules/organization/units.php',
+                'organization': '../modules/organization/organization.php',
+                'divisions': '../modules/organization/organization.php',
+                'sections': '../modules/organization/organization.php',
+                'units': '../modules/organization/organization.php',
                 'maintenance-schedule': '../modules/maintenance/maintenance-schedule.php',
                 'maintenance-templates': '../modules/maintenance/maintenance-templates.php',
                 'equipment-assignment': '../modules/maintenance/equipment-assignment.php',
@@ -94,8 +95,9 @@ class DashboardApp {
                 'schedule': '../modules/maintenance/schedule.php',
                 'history': '../modules/maintenance/history.php',
                 'notifications': '../modules/maintenance/notifications.php',
-                'inventory-report': '../modules/reports/inventory_report.php',
-                'analytics': '../modules/reports/analytics.php',
+                'equipment-summary': '../modules/reports/equipment-summary.php',
+                'maintenance-summary': '../modules/reports/maintenance-summary.php',
+                'audit-trail': '../modules/reports/audit-trail.php',
                 'accounts': '../modules/users/accounts.php',
                 'settings': '../modules/settings/settings.php'
             };
@@ -126,6 +128,19 @@ class DashboardApp {
     }
     
     /**
+     * Update sidebar active state to match the current page
+     * @param {string} pageName - The page name to activate
+     */
+    updateSidebarActive(pageName) {
+        var navItems = document.querySelectorAll('.nav-item[data-page]');
+        navItems.forEach(nav => nav.classList.remove('active'));
+        var match = document.querySelector(`.nav-item[data-page="${pageName}"]`);
+        if (match) {
+            match.classList.add('active');
+        }
+    }
+
+    /**
      * Render the loaded page content
      * @param {string} html - The HTML content to render
      * @param {string} pageName - The page name for tracking
@@ -134,6 +149,9 @@ class DashboardApp {
         this.contentArea.innerHTML = html;
         this.currentPage = pageName;
         
+        // Update sidebar active state
+        this.updateSidebarActive(pageName);
+
         // Update breadcrumb
         this.updateBreadcrumb(pageName);
         
@@ -166,9 +184,10 @@ class DashboardApp {
             'allinone': 'All-in-One PCs',
             'software': 'Software Licenses',
             'otherequipment': 'Other ICT Equipment',
-            'divisions': 'Divisions',
-            'sections': 'Sections',
-            'units': 'Units',
+            'organization': 'Organization',
+            'divisions': 'Organization',
+            'sections': 'Organization',
+            'units': 'Organization',
             'schedule-templates': 'Schedule Templates',
             'equipment-assignment': 'Equipment Assignment',
             'perform-maintenance': 'Perform Maintenance',
@@ -176,8 +195,9 @@ class DashboardApp {
             'schedule': 'Maintenance Schedule',
             'history': 'Maintenance History',
             'notifications': 'Notifications',
-            'inventory-report': 'Inventory Report',
-            'analytics': 'Analytics',
+            'equipment-summary': 'Equipment Summary',
+            'maintenance-summary': 'Maintenance Summary',
+            'audit-trail': 'Audit Trail',
             'accounts': 'Accounts',
             'settings': 'System Settings'
         };

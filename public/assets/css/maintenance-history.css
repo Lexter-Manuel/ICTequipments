@@ -559,11 +559,11 @@
     padding: 6px 0;
     transform: rotate(45deg);
 }
-.dv-emp-card.compliance-high::before { background: var(--color-danger); }
+.dv-emp-card.compliance-high::before { background: var(--color-success); }
 
 .dv-emp-card.compliance-medium::before { background: var(--color-warning);}
 
-.dv-emp-card.compliance-low::before { background: var(--color-success);}
+.dv-emp-card.compliance-low::before { background: var(--color-danger);}
 
 .dv-emp-card:hover {
     border-color: var(--primary-green);
@@ -790,4 +790,48 @@
     .dv-emp-card-header { gap: var(--space-3); }
     .dv-emp-avatar { width: 44px; height: 44px; font-size: 1.1rem; }
     .dv-emp-name { font-size: var(--text-base); }
+}
+
+
+.mnt-date-picker-group {
+    display: none;
+    align-items: center;
+    gap: 6px;
+}
+.mnt-date-picker-group.active {
+    display: flex;
+}
+.mnt-date-picker-group label {
+    font-size: 12px;
+    color: var(--text-light);
+    white-space: nowrap;
+}
+.mnt-date-picker-group input[type="date"],
+.mnt-date-picker-group input[type="week"],
+.mnt-date-picker-group input[type="month"],
+.mnt-date-picker-group input[type="number"] {
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 20px 10px;
+    font-size: 13px;
+    background: var(--bg-white);
+    color: var(--text-dark);
+    height: 36px;
+}
+.mnt-date-picker-group input[type="number"] {
+    width: 80px;
+}
+.mnt-date-sep {
+    color: var(--text-light);
+    font-size: 12px;
+}
+
+.mnt-filter-actions {
+    display: flex;
+    flex-direction: column;
+    align-self: flex-start;
+}
+
+.btn-primary {
+    padding: 14px 20px;
 }

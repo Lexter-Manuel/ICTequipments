@@ -177,6 +177,159 @@ function jsonResponse($data, $statusCode = 200) {
 }
 
 /**
+ * Create a "Remember Me" token and set it as a cookie.
+ * Uses a selector/validator split for security (no timing attacks).
+ */
+function createRememberToken($userId) {
+    try {
+        $selector = bin2hex(random_bytes(16));   // public lookup key
+        $validator = bin2hex(random_bytes(32));   // secret validated via hash
+        $hashedValidator = hash('sha256', $validator);
+        $expires = date('Y-m-d H:i:s', time() + REMEMBER_ME_LIFETIME);
+
+        $db = Database::getInstance()->getConnection();
+
+        // Remove any existing tokens for this user (one active token per user)
+        $stmt = $db->prepare("DELETE FROM remember_tokens WHERE user_id = ?");
+        $stmt->execute([$userId]);
+
+        // Insert new token
+        $stmt = $db->prepare("
+            INSERT INTO remember_tokens (user_id, selector, hashed_validator, expires_at)
+            VALUES (?, ?, ?, ?)
+        ");
+        $stmt->execute([$userId, $selector, $hashedValidator, $expires]);
+
+        // Set cookie  –  value is "selector:validator"
+        setcookie('remember_me', $selector . ':' . $validator, [
+            'expires'  => time() + REMEMBER_ME_LIFETIME,
+            'path'     => '/',
+            'httponly'  => true,
+            'samesite' => 'Strict'
+        ]);
+    } catch (Exception $e) {
+        error_log("Remember Token Error: " . $e->getMessage());
+    }
+}
+
+/**
+ * Validate a "Remember Me" cookie and auto-login the user.
+ * Returns true if auto-login succeeded, false otherwise.
+ */
+function validateRememberToken() {
+    if (empty($_COOKIE['remember_me'])) {
+        return false;
+    }
+
+    $parts = explode(':', $_COOKIE['remember_me']);
+    if (count($parts) !== 2) {
+        clearRememberCookie();
+        return false;
+    }
+
+    [$selector, $validator] = $parts;
+
+    $db = Database::getInstance()->getConnection();
+
+    // Purge expired tokens
+    $db->exec("DELETE FROM remember_tokens WHERE expires_at < NOW()");
+
+    // Lookup by selector
+    $stmt = $db->prepare("
+        SELECT rt.*, u.id AS uid, u.user_name, u.email, u.role, u.status
+        FROM remember_tokens rt
+        JOIN tbl_accounts u ON u.id = rt.user_id
+        WHERE rt.selector = ?
+        LIMIT 1
+    ");
+    $stmt->execute([$selector]);
+    $row = $stmt->fetch();
+
+    if (!$row) {
+        clearRememberCookie();
+        return false;
+    }
+
+    // Constant-time comparison of validator
+    if (!hash_equals($row['hashed_validator'], hash('sha256', $validator))) {
+        // Possible token theft – delete all tokens for this user
+        $stmt = $db->prepare("DELETE FROM remember_tokens WHERE user_id = ?");
+        $stmt->execute([$row['user_id']]);
+        clearRememberCookie();
+        return false;
+    }
+
+    // Account must still be active
+    if ($row['status'] !== 'Active') {
+        $stmt = $db->prepare("DELETE FROM remember_tokens WHERE user_id = ?");
+        $stmt->execute([$row['user_id']]);
+        clearRememberCookie();
+        return false;
+    }
+
+    // Auto-login: set session
+    session_regenerate_id(true);
+    $_SESSION['user_id']       = $row['uid'];
+    $_SESSION['user_name']     = $row['user_name'];
+    $_SESSION['email']         = $row['email'];
+    $_SESSION['role']          = $row['role'];
+    $_SESSION['logged_in_at']  = time();
+    $_SESSION['last_activity'] = time();
+    $_SESSION['created']       = time();
+
+    // Rotate the token (one-time use) for extra security
+    $newValidator = bin2hex(random_bytes(32));
+    $newHashedValidator = hash('sha256', $newValidator);
+    $newExpires = date('Y-m-d H:i:s', time() + REMEMBER_ME_LIFETIME);
+
+    $stmt = $db->prepare("
+        UPDATE remember_tokens
+        SET hashed_validator = ?, expires_at = ?
+        WHERE selector = ?
+    ");
+    $stmt->execute([$newHashedValidator, $newExpires, $selector]);
+
+    // Update cookie with new validator
+    setcookie('remember_me', $selector . ':' . $newValidator, [
+        'expires'  => time() + REMEMBER_ME_LIFETIME,
+        'path'     => '/',
+        'httponly'  => true,
+        'samesite' => 'Strict'
+    ]);
+
+    return true;
+}
+
+/**
+ * Clear the Remember Me cookie and remove tokens for a user.
+ */
+function clearRememberToken($userId = null) {
+    clearRememberCookie();
+
+    if ($userId) {
+        try {
+            $db = Database::getInstance()->getConnection();
+            $stmt = $db->prepare("DELETE FROM remember_tokens WHERE user_id = ?");
+            $stmt->execute([$userId]);
+        } catch (PDOException $e) {
+            error_log("Clear Remember Token Error: " . $e->getMessage());
+        }
+    }
+}
+
+/**
+ * Clear the Remember Me cookie.
+ */
+function clearRememberCookie() {
+    setcookie('remember_me', '', [
+        'expires'  => time() - 3600,
+        'path'     => '/',
+        'httponly'  => true,
+        'samesite' => 'Strict'
+    ]);
+}
+
+/**
  * Get client IP address
  */
 function getClientIP() {

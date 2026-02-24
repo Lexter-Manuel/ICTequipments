@@ -5,6 +5,35 @@
 <link rel="stylesheet" href="assets/css/maintenance.css?v=<?php echo time(); ?>">
 <link rel="stylesheet" href="assets/css/maintenance-history.css?v=<?php echo time(); ?>">
 
+<style>
+.mnt-date-mode-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+    flex-wrap: wrap;
+}
+
+.mnt-date-picker-group {
+    display: none;
+}
+
+.mnt-date-picker-group.active {
+    display: block;
+}
+
+.mnt-date-mode-wrap.mode-stack {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+}
+
+.mnt-date-mode-wrap.mode-full > select {
+    flex: 0 0 100%;
+}
+</style>
+
 <div class="page-content">
 
     <!-- ── PAGE HEADER ── -->
@@ -15,7 +44,6 @@
             </div>
             <div>
                 <h1 class="mnt-page-title">Maintenance History</h1>
-                <p class="mnt-page-subtitle">Archive of completed maintenance activities</p>
             </div>
         </div>
         <div class="mnt-header-right">
@@ -27,7 +55,7 @@
                     <i class="fas fa-building"></i> Per Section
                 </button>
             </div>
-            <button class="mnt-btn-export" onclick="exportReport()">
+            <button id="exportHistoryBtn" class="mnt-btn-export" onclick="exportReport()">
                 <i class="fas fa-file-excel"></i> Export
             </button>
         </div>
@@ -57,26 +85,77 @@
         </div>
     </div>
 
+    <!-- ── FILTER BAR ── -->
     <div class="mnt-filter-bar" id="histFilterBar">
+
+        <!-- Date Mode Selector -->
         <div class="mnt-filter-group">
             <span class="mnt-filter-label">Date Range</span>
-            <select class="mnt-filter-select" id="histDateRange">
-                <option value="Last 7 Days">Last 7 Days</option>
-                <option value="This Month">This Month</option>
-                <option value="Last 3 Months" selected>Last 3 Months</option>
-                <option value="This Year">This Year</option>
-                <option value="All Time">All Time</option>
-            </select>
+            <div class="mnt-date-mode-wrap">
+                <select class="mnt-filter-select" id="histDateMode" onchange="onHistDateModeChange()">
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly" selected>Monthly</option>
+                    <option value="yearly">Yearly</option>
+                    <option value="custom">Custom Range</option>
+                    <option value="alltime">All Time</option>
+                </select>
+
+                <!-- Daily picker -->
+                <div class="mnt-date-picker-group" id="histPickerDaily">
+                    <input type="date" id="histPickerDailyVal">
+                </div>
+
+                <!-- Weekly picker -->
+                <div class="mnt-date-picker-group" id="histPickerWeekly">
+                    <input type="week" id="histPickerWeeklyVal">
+                </div>
+
+                <!-- Monthly picker -->
+                <div class="mnt-date-picker-group active" id="histPickerMonthly">
+                    <input type="month" id="histPickerMonthlyVal">
+                </div>
+
+                <!-- Yearly picker -->
+                <div class="mnt-date-picker-group" id="histPickerYearly">
+                    <input type="number" id="histPickerYearlyVal" min="2000" max="2099" placeholder="Year">
+                </div>
+            
+                <!-- Custom Range picker -->
+                <div class="mnt-date-picker-group" id="histPickerCustom">
+                    <input type="date" id="histPickerCustomFrom">
+                    <span class="mnt-date-sep">to</span>
+                    <input type="date" id="histPickerCustomTo">
+                </div>
+
+                <!-- All Time: no picker shown -->
+            </div>
         </div>
-        <div class="mnt-filter-group grow-2">
+
+        <!-- sectionUnit -->
+        <div class="mnt-filter-group">
+            <span class="mnt-filter-label">Section/Unit</span>
+            <div class="mnt-sectionUnit-wrap">
+                <select class="mnt-filter-select" id="histSectionUnitFilter">
+                    <option value="">All Sections/Units</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="mnt-filter-group">
             <span class="mnt-filter-label">Search</span>
             <div class="mnt-search-wrap">
                 <i class="fas fa-search"></i>
-                <input type="text" class="mnt-filter-input" id="histSearchInput" placeholder="Search serial, technician, or remarks…">
+                <input type="text" class="mnt-filter-input" id="histSearchInput"
+                       placeholder="Search serial, technician, or remarks…">
             </div>
         </div>
+
         <div class="mnt-filter-actions">
-            <button class="btn btn-primary" onclick="loadDetailedHistory()"><i class="fas fa-filter"></i> Apply</button>
+            <span class="mnt-filter-label" style="opacity: 0;">space</span>
+            <button class="btn btn-primary" onclick="loadDetailedHistory()">
+                <i class="fas fa-filter"></i> Apply
+            </button>
         </div>
     </div>
 
@@ -107,9 +186,19 @@
                     </tbody>
                 </table>
             </div>
-            <div class="mnt-table-footer">
+           <div class="mnt-table-footer">
                 <span class="mnt-record-count" id="histRecordCount">Loading…</span>
                 <div class="mnt-pagination" id="histPagination"></div>
+                <div class="per-page-control">
+                    <label>Rows:
+                        <select id="histPerPageSelect" onchange="changeHistPerPage()">
+                            <option value="10" selected>10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                    </label>
+                </div>
             </div>
         </div>
     </div>
@@ -223,5 +312,175 @@
     </div><!-- /#history-summary -->
 
 </div><!-- /.page-content -->
+
+<script>
+
+function onHistDateModeChange() {
+    const mode = document.getElementById('histDateMode').value;
+    const wrap = document.querySelector('.mnt-date-mode-wrap');
+    wrap.classList.remove('mode-full', 'mode-stack');
+
+    // Hide all picker groups first
+    document.querySelectorAll('.mnt-date-picker-group').forEach(el => el.classList.remove('active'));
+
+    const today = new Date();
+    const pad   = n => String(n).padStart(2, '0');
+    const iso   = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+
+    switch (mode) {
+        case 'daily':
+            document.getElementById('histPickerDaily').classList.add('active');
+            if (!document.getElementById('histPickerDailyVal').value) {
+                document.getElementById('histPickerDailyVal').value = iso(today);
+            }
+            break;
+
+        case 'weekly':
+            document.getElementById('histPickerWeekly').classList.add('active');
+            if (!document.getElementById('histPickerWeeklyVal').value) {
+                // Default to current ISO week
+                const jan4 = new Date(today.getFullYear(), 0, 4);
+                const week = Math.ceil(((today - jan4) / 86400000 + jan4.getDay() + 1) / 7);
+                document.getElementById('histPickerWeeklyVal').value =
+                    `${today.getFullYear()}-W${pad(week)}`;
+            }
+            break;
+
+        case 'monthly':
+            document.getElementById('histPickerMonthly').classList.add('active');
+            if (!document.getElementById('histPickerMonthlyVal').value) {
+                document.getElementById('histPickerMonthlyVal').value =
+                    `${today.getFullYear()}-${pad(today.getMonth()+1)}`;
+            }
+            break;
+
+        case 'yearly':
+            document.getElementById('histPickerYearly').classList.add('active');
+            if (!document.getElementById('histPickerYearlyVal').value) {
+                document.getElementById('histPickerYearlyVal').value = today.getFullYear();
+            }
+            break;
+
+        case 'custom':
+            document.getElementById('histPickerCustom').classList.add('active');
+            wrap.classList.add('mode-stack'); // 👈 stack 100% / 100%
+            if (!document.getElementById('histPickerCustomFrom').value) {
+                document.getElementById('histPickerCustomFrom').value =
+                    `${today.getFullYear()}-${pad(today.getMonth()+1)}-01`;
+                document.getElementById('histPickerCustomTo').value = iso(today);
+            }
+            break;
+
+        case 'alltime':
+            // No picker needed
+            wrap.classList.add('mode-full');
+            break;
+    }
+}
+
+function getHistDateParams() {
+    const mode = document.getElementById('histDateMode').value;
+    const pad  = n => String(n).padStart(2, '0');
+    let dateFrom = '', dateTo = '', rangeLabel = '';
+
+    const today    = new Date();
+    const isoToday = `${today.getFullYear()}-${pad(today.getMonth()+1)}-${pad(today.getDate())}`;
+
+    switch (mode) {
+
+        case 'daily': {
+            const v = document.getElementById('histPickerDailyVal').value || isoToday;
+            dateFrom = dateTo = v;
+            rangeLabel = `Daily: ${v}`;
+            break;
+        }
+
+        case 'weekly': {
+            const v = document.getElementById('histPickerWeeklyVal').value; // "YYYY-Www"
+            if (v) {
+                // Parse ISO week → Monday (start) and Sunday (end)
+                const [yearStr, weekStr] = v.split('-W');
+                const year = parseInt(yearStr), week = parseInt(weekStr);
+                // Jan 4 of the year is always in week 1
+                const jan4   = new Date(year, 0, 4);
+                const monday = new Date(jan4);
+                monday.setDate(jan4.getDate() - ((jan4.getDay() + 6) % 7) + (week - 1) * 7);
+                const sunday = new Date(monday);
+                sunday.setDate(monday.getDate() + 6);
+                const fmtD   = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+                dateFrom = fmtD(monday);
+                dateTo   = fmtD(sunday);
+                rangeLabel = `Week ${pad(week)}, ${year} (${dateFrom} – ${dateTo})`;
+            }
+            break;
+        }
+
+        case 'monthly': {
+            const v = document.getElementById('histPickerMonthlyVal').value; // "YYYY-MM"
+            if (v) {
+                const [y, m] = v.split('-').map(Number);
+                const lastDay = new Date(y, m, 0).getDate();
+                dateFrom = `${y}-${pad(m)}-01`;
+                dateTo   = `${y}-${pad(m)}-${pad(lastDay)}`;
+                rangeLabel = `${new Date(y, m-1).toLocaleString('default',{month:'long'})} ${y}`;
+            }
+            break;
+        }
+
+        case 'yearly': {
+            const y = parseInt(document.getElementById('histPickerYearlyVal').value) || today.getFullYear();
+            dateFrom = `${y}-01-01`;
+            dateTo   = `${y}-12-31`;
+            rangeLabel = `Year ${y}`;
+            break;
+        }
+
+        case 'custom': {
+            dateFrom   = document.getElementById('histPickerCustomFrom').value;
+            dateTo     = document.getElementById('histPickerCustomTo').value;
+            rangeLabel = `Custom: ${dateFrom} – ${dateTo}`;
+            break;
+        }
+
+        case 'alltime':
+        default:
+            dateFrom = '';
+            dateTo   = '';
+            rangeLabel = 'All Time';
+            break;
+    }
+
+    return { dateFrom, dateTo, rangeLabel };
+}
+
+// Initialise pickers to sensible defaults on page load
+(function initHistDatePicker() {
+    const today = new Date();
+    const pad   = n => String(n).padStart(2, '0');
+    // Default mode is "monthly" — set current month
+    document.getElementById('histPickerMonthlyVal').value =
+        `${today.getFullYear()}-${pad(today.getMonth()+1)}`;
+})();
+
+// Load section/unit filter options
+(async function loadSectionUnitFilter() {
+    try {
+        const resp = await fetch(`${typeof BASE_URL !== 'undefined' ? BASE_URL : ''}ajax/get_section_units.php`);
+        const json = await resp.json();
+        if (json.success && json.data) {
+            const sel = document.getElementById('histSectionUnitFilter');
+            json.data.forEach(loc => {
+                const opt   = document.createElement('option');
+                opt.value   = loc.location_name;
+                const badge = loc.location_type_id == 2 ? '[Section]' : '[Unit]';
+                opt.textContent = `${loc.location_name} ${badge}`;
+                sel.appendChild(opt);
+            });
+        }
+    } catch (e) {
+        console.error('Failed to load section/unit filter:', e);
+    }
+})();
+</script>
 
 <script src="assets/js/maintenance-history.js?v=<?php echo time(); ?>"></script>

@@ -10,6 +10,9 @@ var editCropper = null;
 var editCurrentImageFile = null;
 var editCropModal;
 var currentEmployeeId = null;
+var currentEmployeeEquipment = []; // Stores all equipment for FAB panel
+var fabMaintenanceQueue = [];
+var fabQueueIndex = 0;
 
 // Table State
 var currentPage = 1;
@@ -188,6 +191,8 @@ function viewEmployee(employeeId) {
                 document.getElementById('roster-list-view').style.display = 'none';
                 document.getElementById('employee-profile-view').style.display = 'block';
                 window.scrollTo(0, 0);
+                buildFabEquipmentList(data);
+                showMaintenanceFab(true);
             } else {
                 showAlert('danger', data.message || 'Failed to load profile');
             }
@@ -202,6 +207,7 @@ function closeEmployeeProfile() {
     document.getElementById('employee-profile-view').style.display = 'none';
     document.getElementById('roster-list-view').style.display = 'block';
     currentEmployeeId = null;
+    showMaintenanceFab(false);
 }
 
 function editEmployeeFromProfile() {
@@ -847,6 +853,20 @@ ensureEquipmentTypeMap();
 
 // ========================================
 // MAINTENANCE — thin wrapper around shared openMaintenanceModal()
+// ========================================
+// GENERATE EMPLOYEE CHECKLIST REPORT
+// ========================================
+function generateEmployeeReport() {
+    if (!currentEmployeeId) {
+        showAlert('warning', 'No employee selected.');
+        return;
+    }
+    window.open(
+        BASE_URL + 'includes/generative/generate_employee_checklist_report.php?employeeId=' + currentEmployeeId,
+        '_blank'
+    );
+}
+
 // (openMaintenanceModal lives in maintenance-conductor.js, loaded globally)
 // ========================================
 function openRosterMaintenance(equipmentId, typeString, brand, serial) {
@@ -865,3 +885,162 @@ function openRosterMaintenance(equipmentId, typeString, brand, serial) {
         location:      location
     });
 }
+
+// ========================================
+// FLOATING ACTION BUTTON — Maintenance FAB
+// ========================================
+
+/**
+ * Show or hide the maintenance FAB
+ */
+function showMaintenanceFab(show) {
+    var wrapper = document.getElementById('fabMaintenanceWrapper');
+    if (!wrapper) return;
+    wrapper.setAttribute('data-hidden', show ? 'false' : 'true');
+    // Also close panel when hiding
+    if (!show) toggleFabPanel(false);
+}
+
+/**
+ * Toggle the equipment fly-out panel
+ */
+function toggleFabPanel(forceState) {
+    var panel = document.getElementById('fabEquipmentPanel');
+    if (!panel) return;
+    var shouldOpen = typeof forceState === 'boolean' ? forceState : !panel.classList.contains('open');
+    panel.classList.toggle('open', shouldOpen);
+}
+
+/**
+ * Build the equipment list shown in the FAB panel from profile data
+ */
+function buildFabEquipmentList(data) {
+    var list = document.getElementById('fabEquipmentList');
+    var badge = document.getElementById('fabEquipmentCount');
+    if (!list) return;
+
+    currentEmployeeEquipment = [];
+    var html = '';
+
+    // Gather all equipment into a flat list
+    if (data.systemUnits && data.systemUnits.length) {
+        data.systemUnits.forEach(function(item) {
+            currentEmployeeEquipment.push({
+                id: item.systemunitId, type: 'systemunit', typeName: 'System Unit',
+                brand: item.systemUnitBrand, serial: item.systemUnitSerial, icon: 'desktop'
+            });
+        });
+    }
+    if (data.allinones && data.allinones.length) {
+        data.allinones.forEach(function(item) {
+            currentEmployeeEquipment.push({
+                id: item.allinoneId, type: 'allinone', typeName: 'All-in-One PC',
+                brand: item.allinoneBrand, serial: item.allinoneSerial || 'N/A', icon: 'computer'
+            });
+        });
+    }
+    if (data.monitors && data.monitors.length) {
+        data.monitors.forEach(function(item) {
+            currentEmployeeEquipment.push({
+                id: item.monitorId, type: 'monitor', typeName: 'Monitor',
+                brand: item.monitorBrand, serial: item.monitorSerial, icon: 'tv'
+            });
+        });
+    }
+    if (data.printers && data.printers.length) {
+        data.printers.forEach(function(item) {
+            currentEmployeeEquipment.push({
+                id: item.printerId, type: 'printer', typeName: 'Printer',
+                brand: item.printerBrand, serial: item.printerSerial, icon: 'print'
+            });
+        });
+    }
+    if (data.other && data.other.length) {
+        data.other.forEach(function(item) {
+            var realType = item.equipmentType || 'other';
+            currentEmployeeEquipment.push({
+                id: item.otherEquipmentId, type: realType, typeName: item.equipmentType || 'Other',
+                brand: item.brand, serial: item.serialNumber, icon: 'server'
+            });
+        });
+    }
+
+    // Update badge count
+    if (badge) badge.textContent = currentEmployeeEquipment.length;
+
+    // Build list HTML
+    if (currentEmployeeEquipment.length === 0) {
+        html = '<div class="fab-panel-empty"><i class="fas fa-box-open"></i>No equipment assigned to this employee.</div>';
+    } else {
+        currentEmployeeEquipment.forEach(function(eq, idx) {
+            var iconClass = 'type-other';
+            if (eq.type === 'systemunit') iconClass = 'type-systemunit';
+            else if (eq.type === 'allinone') iconClass = 'type-allinone';
+            else if (eq.type === 'monitor') iconClass = 'type-monitor';
+            else if (eq.type === 'printer') iconClass = 'type-printer';
+
+            html += '<div class="fab-eq-item" onclick="fabStartMaintenance(' + idx + ')">'
+                + '<div class="fab-eq-icon ' + iconClass + '"><i class="fas fa-' + eq.icon + '"></i></div>'
+                + '<div class="fab-eq-info">'
+                + '  <div class="fab-eq-name">' + (eq.brand || 'Unknown') + '</div>'
+                + '  <div class="fab-eq-serial">' + eq.typeName + ' &bull; ' + (eq.serial || 'N/A') + '</div>'
+                + '</div>'
+                + '<div class="fab-eq-go"><i class="fas fa-wrench"></i></div>'
+                + '</div>';
+        });
+    }
+
+    list.innerHTML = html;
+
+    // Show/hide Perform All footer
+    var footer = document.getElementById('fabPanelFooter');
+    if (footer) {
+        footer.style.display = currentEmployeeEquipment.length > 0 ? '' : 'none';
+    }
+}
+
+/**
+ * Start maintenance for an equipment item from the FAB panel
+ */
+function fabStartMaintenance(index) {
+    var eq = currentEmployeeEquipment[index];
+    if (!eq) return;
+    toggleFabPanel(false);
+    openRosterMaintenance(eq.id, eq.type, eq.brand, eq.serial);
+}
+
+/**
+ * Perform All — queue every equipment item and walk through them one by one
+ */
+function fabPerformAll() {
+    if (currentEmployeeEquipment.length === 0) return;
+    fabMaintenanceQueue = currentEmployeeEquipment.slice();
+    fabQueueIndex = 0;
+    window._fabQueueActive = true;
+    toggleFabPanel(false);
+    fabOpenNext();
+}
+
+function fabOpenNext() {
+    if (fabQueueIndex >= fabMaintenanceQueue.length) {
+        window._fabQueueActive = false;
+        showAlert('success', 'All equipment maintenance completed!');
+        // Refresh profile to reflect updates
+        if (currentEmployeeId) viewEmployee(currentEmployeeId);
+        return;
+    }
+    var eq = fabMaintenanceQueue[fabQueueIndex];
+    fabQueueIndex++;
+    var remaining = fabMaintenanceQueue.length - fabQueueIndex;
+    console.log('[FAB Queue] Starting ' + fabQueueIndex + ' of ' + fabMaintenanceQueue.length + ' — ' + eq.typeName + ' ' + (eq.brand || ''));
+    openRosterMaintenance(eq.id, eq.type, eq.brand, eq.serial);
+}
+
+// Close FAB panel when clicking outside
+document.addEventListener('click', function(e) {
+    var wrapper = document.getElementById('fabMaintenanceWrapper');
+    if (!wrapper) return;
+    if (!wrapper.contains(e.target)) {
+        toggleFabPanel(false);
+    }
+});

@@ -59,6 +59,10 @@
     cursor: default;
 }
 
+h3, p{
+    color: #fff;
+    margin-bottom: 0;
+}
 .division-group-header i { opacity: 0.85; }
 
 /* ---- Sections container ---- */

@@ -1,0 +1,542 @@
+/* ============================================================
+   ORGANIZATION.CSS — NIA UPRIIS ICT Inventory
+   Merged page: Divisions · Sections · Units
+   Depends on: root.css (must be loaded first)
+   ============================================================ */
+
+/* ── Tab bar ── */
+.org-tabs {
+    list-style: none;
+    display: flex;
+    gap: var(--space-2);
+    margin: 0 0 var(--space-6) 0;
+    padding: 0;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.org-tab {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-5);
+    font-weight: 600;
+    font-size: var(--text-base);
+    color: var(--text-medium);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    transition: color var(--transition-fast), border-color var(--transition-fast);
+    user-select: none;
+}
+
+.org-tab:hover {
+    color: var(--primary-green);
+}
+
+.org-tab.active {
+    color: var(--primary-green);
+    border-bottom-color: var(--primary-green);
+}
+
+.org-tab i {
+    font-size: 15px;
+}
+
+.org-tab-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 6px;
+    font-size: var(--text-xs);
+    font-weight: 700;
+    color: #fff;
+    background: var(--text-light);
+    border-radius: 12px;
+    line-height: 1;
+}
+
+.org-tab.active .org-tab-count {
+    background: var(--primary-green);
+}
+
+/* ── Tab panels ── */
+.org-tab-panel {
+    display: none;
+}
+
+.org-tab-panel.active {
+    display: block;
+    animation: orgFadeIn 0.25s ease;
+}
+
+@keyframes orgFadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Panel toolbar ── */
+.panel-toolbar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-5);
+    flex-wrap: wrap;
+}
+
+.panel-toolbar select {
+    padding: 10px 14px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--bg-white);
+    font-size: var(--text-base);
+    color: var(--text-dark);
+    min-width: 200px;
+    cursor: pointer;
+    transition: border-color var(--transition-fast);
+}
+
+.panel-toolbar select:focus {
+    outline: none;
+    border-color: var(--primary-green);
+    box-shadow: 0 0 0 3px rgba(45,122,79,0.12);
+}
+
+.panel-toolbar .btn-primary {
+    margin-left: auto;
+}
+
+/* ── Divisions grid ── */
+.divisions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: var(--space-6);
+    margin-bottom: var(--space-8);
+}
+
+.division-card {
+    background: var(--bg-white);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: var(--space-6);
+    box-shadow: var(--shadow-soft);
+    transition: transform var(--transition-base), box-shadow var(--transition-base);
+}
+
+.division-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-hover);
+}
+
+.division-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: var(--space-4);
+    padding-bottom: var(--space-4);
+    border-bottom: 2px solid var(--border-color);
+}
+
+.division-badge {
+    display: inline-block;
+    padding: 5px 13px;
+    background: var(--primary-green);
+    color: #fff;
+    border-radius: var(--radius-sm);
+    font-weight: 700;
+    font-size: var(--text-sm);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.division-actions {
+    display: flex;
+    gap: var(--space-2);
+}
+
+.division-name {
+    font-size: var(--text-md);
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: var(--space-3);
+    line-height: 1.4;
+}
+
+.division-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    color: var(--text-medium);
+    font-size: var(--text-sm);
+    flex-wrap: wrap;
+}
+
+.division-meta i { color: var(--primary-green); }
+
+/* ── Division group (used in sections & units panels) ── */
+.division-group {
+    margin-bottom: var(--space-6);
+    background: var(--bg-white);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-soft);
+}
+
+.division-group-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-4) var(--space-6);
+    background: linear-gradient(90deg, var(--primary-green), var(--primary-dark));
+    color: #fff;
+    font-weight: 700;
+    font-size: var(--text-md);
+}
+
+.division-group-header h3,
+.division-group-header p {
+    color: #fff;
+    margin-bottom: 0;
+}
+
+/* ── Sections ── */
+.sections-container {
+    padding: var(--space-4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.section-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-4) var(--space-5);
+    background: var(--bg-light);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    transition: all var(--transition-fast);
+}
+
+.section-item:hover {
+    background: var(--primary-xlight);
+    border-color: var(--primary-green);
+}
+
+.section-info {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    flex: 1;
+    min-width: 0;
+}
+
+.section-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    background: var(--primary-green);
+    color: #fff;
+    border-radius: var(--radius-sm);
+    font-weight: 700;
+    font-size: var(--text-xs);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    flex-shrink: 0;
+}
+
+.section-name {
+    font-weight: 600;
+    font-size: var(--text-base);
+    color: var(--text-dark);
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.section-meta {
+    display: flex;
+    gap: var(--space-4);
+    color: var(--text-medium);
+    font-size: var(--text-sm);
+    flex-shrink: 0;
+}
+
+.section-meta i { color: var(--primary-green); }
+
+.section-actions {
+    display: flex;
+    gap: var(--space-2);
+    flex-shrink: 0;
+    margin-left: var(--space-4);
+}
+
+/* ── Units (section subgroup) ── */
+.section-subgroup {
+    border-top: 1px solid var(--border-color);
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-5);
+    background: var(--bg-light);
+    font-weight: 600;
+    font-size: var(--text-base);
+    color: var(--text-dark);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.section-header i { color: var(--primary-green); }
+
+.units-container {
+    padding: var(--space-3) var(--space-4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.unit-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-3) var(--space-4);
+    background: var(--bg-white);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    transition: all var(--transition-fast);
+}
+
+.unit-item:hover {
+    background: var(--primary-xlight);
+    border-color: var(--primary-green);
+}
+
+.unit-info {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    flex: 1;
+    min-width: 0;
+}
+
+.unit-badge {
+    display: inline-block;
+    padding: 2px 9px;
+    background: var(--color-info);
+    color: #fff;
+    border-radius: var(--radius-sm);
+    font-weight: 700;
+    font-size: var(--text-xs);
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    flex-shrink: 0;
+}
+
+.unit-name {
+    font-weight: 600;
+    font-size: var(--text-base);
+    color: var(--text-dark);
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.unit-meta {
+    display: flex;
+    gap: var(--space-4);
+    color: var(--text-medium);
+    font-size: var(--text-sm);
+    flex-shrink: 0;
+}
+
+.unit-meta i { color: var(--primary-green); }
+
+.unit-actions {
+    display: flex;
+    gap: var(--space-2);
+    flex-shrink: 0;
+    margin-left: var(--space-4);
+}
+
+/* ── Parent-type toggle (unit modal) ── */
+.parent-type-toggle {
+    display: flex;
+    gap: var(--space-2);
+    margin-bottom: var(--space-4);
+}
+
+.parent-type-toggle button {
+    flex: 1;
+    padding: 12px 16px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--bg-white);
+    color: var(--text-medium);
+    font-size: var(--text-base);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+}
+
+.parent-type-toggle button:hover {
+    border-color: var(--primary-light);
+    background: var(--primary-xlight);
+    color: var(--primary-dark);
+    transform: translateY(-1px);
+}
+
+.parent-type-toggle button.active {
+    background: var(--primary-green);
+    border-color: var(--primary-green);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(45, 122, 79, 0.25);
+}
+
+.parent-type-toggle button.active i { color: #fff; }
+
+.parent-type-toggle button i {
+    font-size: 16px;
+    color: var(--primary-green);
+    transition: color var(--transition-fast);
+}
+
+.parent-type-toggle button:hover i { color: var(--primary-dark); }
+
+/* ── Hierarchy info badge ── */
+.hierarchy-info {
+    display: inline-flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    background: var(--primary-xlight);
+    color: var(--primary-dark);
+    border-radius: var(--radius-md);
+    padding: var(--space-3) var(--space-4);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    margin-bottom: var(--space-5);
+    border-left: 3px solid var(--primary-green);
+    width: 100%;
+}
+
+.hierarchy-info i {
+    color: var(--primary-green);
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.hierarchy-info strong { color: var(--primary-dark); }
+
+/* ── Modal form improvements ── */
+.modal-body .form-control {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    color: var(--text-dark);
+    background: var(--bg-white);
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.modal-body .form-control:focus {
+    outline: none;
+    border-color: var(--primary-green);
+    box-shadow: 0 0 0 3px rgba(45, 122, 79, 0.12);
+}
+
+.modal-body select.form-control {
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%232d7a4f' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 12px;
+    padding-right: 36px;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+}
+
+.modal-body textarea.form-control {
+    resize: vertical;
+    min-height: 80px;
+    line-height: 1.5;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: var(--space-2);
+    font-weight: 600;
+    font-size: var(--text-base);
+    color: var(--text-dark);
+}
+
+/* ── Empty state ── */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.empty-state i {
+    font-size: 48px;
+    color: var(--text-light);
+    margin-bottom: var(--space-4);
+}
+
+.empty-state h3 {
+    color: var(--text-dark);
+    margin-bottom: var(--space-2);
+}
+
+.empty-state p {
+    color: var(--text-medium);
+    margin-bottom: var(--space-5);
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .org-tabs {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        gap: 0;
+    }
+
+    .org-tab {
+        white-space: nowrap;
+        padding: var(--space-3) var(--space-4);
+        font-size: var(--text-sm);
+    }
+
+    .divisions-grid { grid-template-columns: 1fr; gap: var(--space-4); }
+    .section-item { flex-direction: column; align-items: flex-start; gap: var(--space-3); }
+    .section-info { flex-direction: column; align-items: flex-start; }
+    .section-meta { flex-wrap: wrap; gap: var(--space-2); }
+    .section-actions { margin-left: 0; }
+    .unit-item { flex-direction: column; align-items: flex-start; gap: var(--space-2); }
+    .unit-info { flex-direction: column; align-items: flex-start; }
+    .unit-actions { margin-left: 0; }
+
+    .panel-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .panel-toolbar .btn-primary {
+        margin-left: 0;
+    }
+    .panel-toolbar select {
+        min-width: auto;
+        width: 100%;
+    }
+}

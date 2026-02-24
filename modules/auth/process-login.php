@@ -126,14 +126,9 @@ try {
     $_SESSION['last_activity'] = time();
     $_SESSION['created'] = time();
     
-    // Set cookie lifetime based on remember me
+    // Create persistent "Remember Me" token if requested
     if ($remember) {
-        setcookie(session_name(), session_id(), [
-            'expires' => time() + REMEMBER_ME_LIFETIME,
-            'path' => '/',
-            'httponly' => true,
-            'samesite' => 'Strict'
-        ]);
+        createRememberToken($user['id']);
     }
     
     // Log successful login

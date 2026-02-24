@@ -2,14 +2,20 @@
 // modules/auth/login.php
 session_start();
 
+require_once '../../config/database.php';
+require_once '../../config/config.php';
+
 // Redirect if already logged in
 if (isset($_SESSION['user_id'])) {
     header('Location: ../../public/dashboard.php');
     exit();
 }
 
-require_once '../../config/database.php';
-require_once '../../config/config.php';
+// Try auto-login via "Remember Me" cookie
+if (!empty($_COOKIE['remember_me']) && validateRememberToken()) {
+    header('Location: ../../public/dashboard.php');
+    exit();
+}
 
 // Generate CSRF token
 $csrf_token = generateCSRFToken();
@@ -21,7 +27,7 @@ $csrf_token = generateCSRFToken();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - NIA UPRIIS Admin</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../../public/assets/css/login.css">
+    <link rel="stylesheet" href="../../public/assets/css/login.css?v=<?php echo time(); ?>">
 </head>
 <body>
     <div class="login-wrapper">
@@ -96,9 +102,8 @@ $csrf_token = generateCSRFToken();
                         <label class="checkbox-label">
                             <input type="checkbox" name="remember" value="1" id="rememberMe">
                             <span class="checkmark"></span>
-                            <span class="checkbox-text">Remember me for 30 days</span>
+                            <span class="checkbox-text">Remember me</span>
                         </label>
-                        <a href="forgot-password.php" class="forgot-link">Forgot Password?</a>
                     </div>
                     
                     <!-- Submit Button -->
@@ -128,6 +133,6 @@ $csrf_token = generateCSRFToken();
         </div>
     </div>
     
-    <script src="../../public/assets/js/login.js"></script>
+    <script src="../../public/assets/js/login.js?v=<?php echo time(); ?>"></script>
 </body>
 </html>

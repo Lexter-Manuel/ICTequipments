@@ -17,7 +17,8 @@ $db = getDB();
 
 $view       = $_GET['view']       ?? 'detailed';
 $search     = trim($_GET['search']  ?? '');
-$division   = $_GET['division']   ?? '';   // location_id of division
+$sectionUnit = trim($_GET['sectionUnit'] ?? '');
+$division   = $_GET['division']   ?? '';   // location_id of division (for summary drill-down)
 $status     = $_GET['status']     ?? '';   // overdue | due_soon | scheduled
 $unit       = $_GET['unit']       ?? '';   // location_id of unit (division view)
 $page       = max(1, (int)($_GET['page']  ?? 1));
@@ -130,10 +131,10 @@ if ($view === 'detailed') {
         $params[':s4'] = "%$search%";
     }
 
-    // Division filter (accepts location_id of division)
-    if ($division) {
-        $whereParts[] = "lt.division_id = :div";
-        $params[':div'] = $division;
+    // Section/Unit filter (by location_name)
+    if ($sectionUnit) {
+        $whereParts[] = "v.location_name = :sectionUnit";
+        $params[':sectionUnit'] = $sectionUnit;
     }
 
     // Status filter

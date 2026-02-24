@@ -42,16 +42,22 @@ try {
         $realEquipmentId = $schedInfo['equipmentId'];
         $realTypeId = $schedInfo['equipmentType']; // Matches tbl_maintenance_record.equipmentTypeId
 
+        // Resolve templateId (may be null for older front-end versions)
+        $templateId = !empty($input['templateId']) ? (int)$input['templateId'] : null;
+
         // 2. Insert into tbl_maintenance_record (The History Log)
+        // checklistJson is kept as a read-only backup for backward compatibility;
+        // tbl_maintenance_response is the primary normalised storage.
         $stmtRecord = $db->prepare("
             INSERT INTO tbl_maintenance_record 
-            (scheduleId, equipmentTypeId, equipmentId, accountId, maintenanceDate, checklistJson, remarks, overallStatus, preparedBy, checkedBy, notedBy) 
+            (scheduleId, templateId, equipmentTypeId, equipmentId, accountId, maintenanceDate, checklistJson, remarks, overallStatus, preparedBy, checkedBy, notedBy) 
             VALUES 
-            (:sid, :tid, :eid, :uid, NOW(), :json, :remarks, :status, :prep, :check, :note)
+            (:sid, :tmpl, :tid, :eid, :uid, NOW(), :json, :remarks, :status, :prep, :check, :note)
         ");
 
         $stmtRecord->execute([
             ':sid'    => $input['scheduleId'],
+            ':tmpl'   => $templateId,
             ':tid'    => $realTypeId,       // <--- Uses the ID found in the database
             ':eid'    => $realEquipmentId,  // <--- Uses the ID found in the database
             ':uid'    => $_SESSION['user_id'],
@@ -62,6 +68,42 @@ try {
             ':check'  => $input['signatories']['checkedBy'],
             ':note'   => $input['signatories']['notedBy']
         ]);
+
+        $newRecordId = (int)$db->lastInsertId();
+
+        // 2b. Insert individual checklist responses into tbl_maintenance_response
+        if (!empty($input['checklistData']) && is_array($input['checklistData'])) {
+            $stmtResp = $db->prepare("
+                INSERT INTO tbl_maintenance_response
+                (recordId, itemId, categoryId, categoryName, taskDescription, response, sequenceOrder)
+                VALUES (:rid, :iid, :cid, :catName, :task, :resp, :seq)
+            ");
+
+            foreach ($input['checklistData'] as $idx => $item) {
+                $itemId     = !empty($item['itemId'])     ? (int)$item['itemId']     : null;
+                $categoryId = !empty($item['categoryId']) ? (int)$item['categoryId'] : null;
+                $catName    = $item['categoryName'] ?? 'General';
+                $task       = $item['desc'] ?? $item['taskDescription'] ?? '';
+                $resp       = $item['status'] ?? 'N/A';
+                $seq        = !empty($item['seq']) ? (int)$item['seq'] : ($idx + 1);
+
+                // Normalise response to ENUM values
+                $respLower = strtolower(trim($resp));
+                if (in_array($respLower, ['yes', 'ok', 'done', 'pass', '1', 'true']))  $resp = 'Yes';
+                elseif (in_array($respLower, ['no', 'fail', 'failed', '0', 'false']))   $resp = 'No';
+                else                                                                     $resp = 'N/A';
+
+                $stmtResp->execute([
+                    ':rid'     => $newRecordId,
+                    ':iid'     => $itemId,
+                    ':cid'     => $categoryId,
+                    ':catName' => $catName,
+                    ':task'    => $task,
+                    ':resp'    => $resp,
+                    ':seq'     => $seq
+                ]);
+            }
+        }
 
         // 3. Calculate Next Due Date (Update the Schedule)
         $stmtFreq = $db->prepare("SELECT maintenanceFrequency FROM tbl_maintenance_schedule WHERE scheduleId = ?");

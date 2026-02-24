@@ -45,16 +45,12 @@ require_once '../config/session-check.php';
                 </a>
                 <a href="#" class="nav-item" data-page="roster">
                     <i class="fas fa-users"></i>
-                    <span>Emplopyee Roster</span>
+                    <span>Employee Roster</span>
                 </a>
             </div>
             
             <div class="nav-section">
                 <div class="nav-section-title">Inventory</div>
-                <a href="#" class="nav-item" data-page="employees">
-                    <i class="fas fa-users"></i>
-                    <span>Employees</span>
-                </a>
                 <a href="#" class="nav-item" data-page="computer">
                     <i class="fas fa-desktop"></i>
                     <span>Computer</span>
@@ -70,22 +66,6 @@ require_once '../config/session-check.php';
                 <a href="#" class="nav-item" data-page="otherequipment">
                     <i class="fas fa-server"></i>
                     <span>Other ICT Equipment</span>
-                </a>
-            </div>
-            
-            <div class="nav-section">
-                <div class="nav-section-title">Organization</div>
-                <a href="#" class="nav-item" data-page="divisions">
-                    <i class="fas fa-building"></i>
-                    <span>Divisions</span>
-                </a>
-                <a href="#" class="nav-item" data-page="sections">
-                    <i class="fas fa-sitemap"></i>
-                    <span>Sections</span>
-                </a>
-                <a href="#" class="nav-item" data-page="units">
-                    <i class="fas fa-th-large"></i>
-                    <span>Units</span>
                 </a>
             </div>
             
@@ -111,18 +91,30 @@ require_once '../config/session-check.php';
             
             <div class="nav-section">
                 <div class="nav-section-title">Reports</div>
-                <a href="#" class="nav-item" data-page="inventory-report">
-                    <i class="fas fa-file-alt"></i>
-                    <span>Inventory Report</span>
+                <a href="#" class="nav-item" data-page="equipment-summary">
+                    <i class="fas fa-boxes"></i>
+                    <span>Equipment Summary</span>
                 </a>
-                <a href="#" class="nav-item" data-page="analytics">
-                    <i class="fas fa-chart-bar"></i>
-                    <span>Analytics</span>
+                <a href="#" class="nav-item" data-page="maintenance-summary">
+                    <i class="fas fa-tools"></i>
+                    <span>Maintenance Summary</span>
+                </a>
+                <a href="#" class="nav-item" data-page="audit-trail">
+                    <i class="fas fa-history"></i>
+                    <span>Audit Trail</span>
                 </a>
             </div>
             
             <div class="nav-section">
                 <div class="nav-section-title">Settings</div>
+                <a href="#" class="nav-item" data-page="organization">
+                    <i class="fas fa-sitemap"></i>
+                    <span>Organization</span>
+                </a>
+                <a href="#" class="nav-item" data-page="employees">
+                    <i class="fas fa-users"></i>
+                    <span>Employees</span>
+                </a>
                 <a href="#" class="nav-item" data-page="accounts">
                     <i class="fas fa-user-shield"></i>
                     <span>Accounts</span>
@@ -196,7 +188,7 @@ require_once '../config/session-check.php';
         };
     </script>
     <script src="assets/bootstrap/bootstrap.bundle.min.js"></script>
-    <script src="../node_modules/cropperjs/dist/cropper.min.js"></script>
+    <script src="../vendor/node_modules/cropperjs/dist/cropper.min.js"></script>
     <script src="assets/js/dashboard.js?v=<?php echo time()?>"></script>
     <script src="assets/js/maintenance-conductor.js?v=<?php echo time(); ?>"></script>
 </body>

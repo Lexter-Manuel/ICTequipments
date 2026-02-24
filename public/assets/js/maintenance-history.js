@@ -1,5 +1,7 @@
 var HIST_API = `${BASE_URL}ajax/get_maintenance_history.php`;
 
+var histCurrentPage = 1;
+var histPerPage     = 10;
 
 var activeHistDivisionId   = null;
 var activeHistDivisionData = null;
@@ -53,9 +55,10 @@ if (document.readyState === 'loading') {
    STATS
    ========================================================= */
 async function loadStats() {
-    var range = document.getElementById('histDateRange')?.value || 'Last 3 Months';
+    var dp = (typeof getHistDateParams === 'function') ? getHistDateParams() : { dateFrom: '', dateTo: '', rangeLabel: 'All Time' };
+    var sectionUnit = document.getElementById('histSectionUnitFilter')?.value || '';
     try {
-        var res = await apiFetch({ view: 'stats', range });
+        var res = await apiFetch({ view: 'stats', dateFrom: dp.dateFrom, dateTo: dp.dateTo, sectionUnit: sectionUnit });
         if (res.success) {
             document.getElementById('statTotalRecords').textContent  = res.data.totalRecords;
             document.getElementById('statMaintained').textContent    = res.data.maintained;
@@ -71,8 +74,11 @@ async function loadStats() {
    DETAILED VIEW — Paginated Table
    ========================================================= */
 async function loadDetailedHistory(page = 1) {
-    var range  = document.getElementById('histDateRange')?.value || 'Last 3 Months';
+    histCurrentPage = page;
+    var limit  = histPerPage;
+    var dp     = (typeof getHistDateParams === 'function') ? getHistDateParams() : { dateFrom: '', dateTo: '', rangeLabel: 'All Time' };
     var search = document.getElementById('histSearchInput')?.value || '';
+    var sectionUnit = document.getElementById('histSectionUnitFilter')?.value || '';
     var tbody  = document.getElementById('histDetailedBody');
 
     tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:60px;color:var(--text-light);">
@@ -83,7 +89,7 @@ async function loadDetailedHistory(page = 1) {
     loadStats();
 
     try {
-        var res = await apiFetch({ view: 'detailed', range, search, page, limit: 10 });
+        var res = await apiFetch({ view: 'detailed', dateFrom: dp.dateFrom, dateTo: dp.dateTo, search, page, limit, sectionUnit: sectionUnit });
         if (!res.success) throw new Error(res.message);
 
         var rows = res.data;
@@ -154,27 +160,38 @@ async function loadDetailedHistory(page = 1) {
 
 function renderPagination(pag) {
     var container = document.getElementById('histPagination');
+    if (!container) return;
     if (pag.totalPages <= 1) { container.innerHTML = ''; return; }
 
-    var html = '';
-    var maxVisible = 5;
-    var startPage = Math.max(1, pag.page - Math.floor(maxVisible / 2));
-    var endPage   = Math.min(pag.totalPages, startPage + maxVisible - 1);
-    if (endPage - startPage < maxVisible - 1) startPage = Math.max(1, endPage - maxVisible + 1);
+    var html = `<button class="page-btn" onclick="loadDetailedHistory(${pag.page - 1})" ${pag.page === 1 ? 'disabled' : ''}>
+        <i class="fas fa-chevron-left"></i></button>`;
 
-    if (startPage > 1) {
-        html += `<a class="mnt-page-btn" onclick="loadDetailedHistory(1)">1</a>`;
-        if (startPage > 2) html += `<span class="mnt-page-btn ellipsis">…</span>`;
-    }
-    for (var i = startPage; i <= endPage; i++) {
-        html += `<a class="mnt-page-btn ${i === pag.page ? 'active' : ''}" onclick="loadDetailedHistory(${i})">${i}</a>`;
-    }
-    if (endPage < pag.totalPages) {
-        if (endPage < pag.totalPages - 1) html += `<span class="mnt-page-btn ellipsis">…</span>`;
-        html += `<a class="mnt-page-btn" onclick="loadDetailedHistory(${pag.totalPages})">${pag.totalPages}</a>`;
-    }
+    getHistPaginationRange(pag.page, pag.totalPages).forEach(function(p) {
+        if (p === '...') {
+            html += `<span class="page-ellipsis">…</span>`;
+        } else {
+            html += `<button class="page-btn ${p === pag.page ? 'active' : ''}" onclick="loadDetailedHistory(${p})">${p}</button>`;
+        }
+    });
+
+    html += `<button class="page-btn" onclick="loadDetailedHistory(${pag.page + 1})" ${pag.page === pag.totalPages ? 'disabled' : ''}>
+        <i class="fas fa-chevron-right"></i></button>`;
 
     container.innerHTML = html;
+}
+
+function getHistPaginationRange(current, total) {
+    if (total <= 7) return Array.from({length: total}, function(_, i) { return i + 1; });
+    if (current <= 4) return [1, 2, 3, 4, 5, '...', total];
+    if (current >= total - 3) return [1, '...', total-4, total-3, total-2, total-1, total];
+    return [1, '...', current-1, current, current+1, '...', total];
+}
+
+function changeHistPerPage() {
+    var sel = document.getElementById('histPerPageSelect');
+    if (!sel) return;
+    histPerPage = parseInt(sel.value);
+    loadDetailedHistory(1);
 }
 
 /* =========================================================
@@ -417,7 +434,6 @@ function renderHistoryDivision() {
     else                                       renderHistEmployees(assets);
 }
 
-/* ---- Render: Grouped by Same Maintenance Date ---- */
 function renderHistGrouped(assets) {
     var panel = document.getElementById('dvHistPanelGrouped');
 
@@ -454,7 +470,6 @@ function renderHistGrouped(assets) {
             <div class="dv-date-group-header">
                 <div class="dv-date-group-marker"></div>
                 <div class="dv-date-group-label">${escHtml(dateLabel)}</div>
-                <div class="dv-date-group-sublabel">Maintenance Date</div>
                 <div class="dv-date-group-count"><i class="fas fa-tools"></i> ${group.length} Equipment</div>
             </div>
             <div class="dv-group-table-wrap">
@@ -673,14 +688,18 @@ function dvEmptyState(msg) {
 }
 
 function exportReport() {
-    var range  = document.getElementById('histDateRange')?.value || 'Last 3 Months';
+    var dp     = (typeof getHistDateParams === 'function') ? getHistDateParams() : { dateFrom: '', dateTo: '', rangeLabel: 'All Time' };
     var search = document.getElementById('histSearchInput')?.value || '';
-    // Open export URL (can be extended to a real export endpoint)
-    alert('Exporting maintenance history report...\n\nThis will generate an Excel file with:\n- Complete maintenance records\n- Technician summaries\n- Equipment condition trends\n- Compliance statistics\n\nFilters: ' + range + (search ? ', search: ' + search : ''));
+    var sectionUnit = document.getElementById('histSectionUnitFilter')?.value || '';
+    var params = new URLSearchParams({ dateFrom: dp.dateFrom, dateTo: dp.dateTo, rangeLabel: dp.rangeLabel });
+    if (search) params.set('search', search);
+    if (sectionUnit) params.set('sectionUnit', sectionUnit);
+    window.open(BASE_URL + 'includes/generative/generate_maintenance_history.php?' + params.toString(), '_blank');
 }
 
 function viewReport(recordId) {
-    alert('Opening maintenance report #' + recordId + '...\n\nThis will display:\n- Detailed checklist results\n- Technician notes\n- Signatory information');
+    var params = new URLSearchParams({ recordId: recordId });
+    window.open(BASE_URL + 'includes/generative/generate_checklist_report.php?' + params.toString(), '_blank');
 }
 
 async function goToEmployeeProfile(employeeId) {

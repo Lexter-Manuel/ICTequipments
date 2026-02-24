@@ -208,6 +208,9 @@ $jobOrderCount = count(array_filter($employees, fn($e) => $e['employmentStatus']
             <i class="fas fa-arrow-left"></i> Back to Roster
         </button>
         <div class="header-actions">
+            <button class="btn btn-success" onclick="generateEmployeeReport()">
+                <i class="fas fa-file-pdf"></i> Generate Report
+            </button>
             <button class="btn btn-secondary" onclick="editEmployeeFromProfile()">
                 <i class="fas fa-edit"></i> Edit
             </button>
@@ -269,6 +272,31 @@ $jobOrderCount = count(array_filter($employees, fn($e) => $e['employmentStatus']
         <div class="profile-section-content">
             <div id="software-licenses-container"></div>
         </div>
+    </div>
+
+    <!-- Floating Maintenance FAB -->
+    <div class="fab-maintenance-wrapper" id="fabMaintenanceWrapper" data-hidden="true">
+        <div class="fab-equipment-panel" id="fabEquipmentPanel">
+            <div class="fab-panel-header">
+                <i class="fas fa-tools"></i>
+                <span>Perform Maintenance</span>
+                <button class="fab-panel-close" onclick="toggleFabPanel(false)">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="fab-panel-body" id="fabEquipmentList">
+                <!-- Populated dynamically -->
+            </div>
+            <div class="fab-panel-footer" id="fabPanelFooter" style="display:none;">
+                <button class="fab-perform-all-btn" onclick="fabPerformAll()">
+                    <i class="fas fa-play-circle"></i> Perform All Maintenance
+                </button>
+            </div>
+        </div>
+        <button class="fab-maintenance-btn" id="fabMaintenanceBtn" onclick="toggleFabPanel()" title="Perform Maintenance on Equipment">
+            <i class="fas fa-tools fab-icon-main"></i>
+            <span class="fab-badge" id="fabEquipmentCount">0</span>
+        </button>
     </div>
 </div>
 

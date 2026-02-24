@@ -16,7 +16,6 @@
             </div>
             <div>
                 <h1 class="mnt-page-title">Maintenance Schedule</h1>
-                <p class="mnt-page-subtitle">Track upcoming and overdue maintenance tasks</p>
             </div>
         </div>
         <div class="mnt-header-right">
@@ -66,9 +65,9 @@
             </div>
         </div>
         <div class="mnt-filter-group">
-            <span class="mnt-filter-label">Division / Section</span>
-            <select class="mnt-filter-select" id="schedDivisionFilter">
-                <option value="">All Divisions</option>
+            <span class="mnt-filter-label">Section/Unit</span>
+            <select class="mnt-filter-select" id="schedSectionUnitFilter">
+                <option value="">All Sections/Units</option>
                 <!-- populated by JS -->
             </select>
         </div>
@@ -112,6 +111,16 @@
             <div class="mnt-table-footer">
                 <span class="mnt-record-count" id="schedRecordCount"></span>
                 <div class="mnt-pagination" id="schedPagination"></div>
+                <div class="per-page-control">
+                    <label>Rows:
+                        <select id="schedPerPageSelect" onchange="changeSchedPerPage()">
+                            <option value="10" selected>10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                    </label>
+                </div>
             </div>
         </div>
     </div>

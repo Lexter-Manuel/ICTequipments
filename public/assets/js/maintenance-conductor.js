@@ -7,6 +7,7 @@
 // Global State
 var conductorScheduleId = null;
 var currentAssetData = null;
+var currentTemplateSignatories = {}; // Stores the template's signatory names for submission
 
 // Equipment Type Map — shared across all pages
 var EQUIPMENT_TYPE_MAP = {};
@@ -325,6 +326,16 @@ function startMaintenanceSequence(scheduleId, templateId, containerId) {
                 return;
             }
             conductorScheduleId = scheduleId;
+
+            // Capture signatories from the template for later submission
+            try {
+                currentTemplateSignatories = res.data.signatories_json
+                    ? JSON.parse(res.data.signatories_json)
+                    : {};
+            } catch (e) {
+                currentTemplateSignatories = {};
+            }
+
             renderMaintenanceForm(res.data, container);
         })
         .catch(err => {
@@ -348,11 +359,13 @@ function renderMaintenanceForm(template, container) {
 
     // Build checklist rows
     let checklistRows = '';
+    let seqCounter = 0;
     if (structure.categories) {
         structure.categories.forEach((cat, catIdx) => {
             const itemCount = cat.items.length;
             cat.items.forEach((item, itemIdx) => {
                 const uniqueName = `check_${catIdx}_${itemIdx}`;
+                seqCounter++;
                 checklistRows += `<tr>`;
                 if (itemIdx === 0) {
                     checklistRows += `<td rowspan="${itemCount}" class="mc-category-cell">${cat.title}</td>`;
@@ -361,6 +374,10 @@ function renderMaintenanceForm(template, container) {
                     <td class="mc-desc-cell">
                         ${item.text}
                         <input type="hidden" name="tasks[${uniqueName}][desc]" value="${item.text}">
+                        <input type="hidden" name="tasks[${uniqueName}][itemId]" value="${item.itemId || 0}">
+                        <input type="hidden" name="tasks[${uniqueName}][categoryId]" value="${cat.categoryId || 0}">
+                        <input type="hidden" name="tasks[${uniqueName}][categoryName]" value="${cat.title}">
+                        <input type="hidden" name="tasks[${uniqueName}][seq]" value="${seqCounter}">
                     </td>
                     <td class="mc-radio-cell">
                         <input class="mc-radio" type="radio" name="tasks[${uniqueName}][status]" value="Yes" required>
@@ -550,6 +567,7 @@ function saveMaintenanceRecord() {
 
     const payload = {
         scheduleId:    conductorScheduleId,
+        templateId:    formData.get('templateId') || null,
         equipmentId:   0,
         equipmentTypeId: 0,
         checklistData: checklistData,
@@ -557,8 +575,8 @@ function saveMaintenanceRecord() {
         overallStatus: overallStatus,
         signatories: {
             preparedBy: (typeof CURRENT_USER !== 'undefined' && CURRENT_USER.name) || 'Current User',
-            checkedBy:  'Template Default',
-            notedBy:    'Template Default'
+            checkedBy:  currentTemplateSignatories.verifiedByName || '',
+            notedBy:    currentTemplateSignatories.notedByName    || ''
         }
     };
 
@@ -570,6 +588,18 @@ function saveMaintenanceRecord() {
     .then(r => r.json())
     .then(res => {
         if (res.success) {
+            // If FAB "Perform All" queue is active, advance to next item
+            if (window._fabQueueActive && typeof fabOpenNext === 'function') {
+                var modalEl = document.getElementById('maintenanceModal');
+                if (modalEl) {
+                    var bsModal = bootstrap.Modal.getInstance(modalEl);
+                    if (bsModal) bsModal.hide();
+                }
+                var remaining = (fabMaintenanceQueue || []).length - (fabQueueIndex || 0);
+                showAlert('success', 'Record saved! ' + (remaining > 0 ? remaining + ' equipment remaining…' : 'All done!'));
+                setTimeout(function() { fabOpenNext(); }, 400);
+                return;
+            }
             alert('Maintenance record submitted successfully!');
             location.reload();
         } else {
