@@ -1,0 +1,276 @@
+/* ── Category content panels ── */
+.category-content {
+    display: none;
+    background: var(--bg-white);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: var(--space-6);
+}
+
+.category-content.active { display: block; }
+
+.equip-subtoggle-nav {
+    margin-bottom: var(--space-5);
+    width: fit-content;
+}
+
+.sub-tab-content {
+    display: none;
+}
+
+.sub-tab-content.active { display: block; }
+
+/* ── Computer Spec Display ── */
+.spec-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-bottom: 4px;
+    font-size: var(--text-sm);
+    color: var(--text-medium);
+}
+
+.spec-item i {
+    width: 14px;
+    color: var(--primary-green);
+    flex-shrink: 0;
+}
+
+.spec-value {
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+/* ── Filters Bar ── */
+.filters-bar {
+    background: var(--bg-light);
+    padding: var(--space-3);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--space-4);
+    display: flex;
+    gap: var(--space-3);
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.filter-group {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex: 1;
+    min-width: 200px;
+}
+
+.filter-group label {
+    white-space: nowrap;
+    font-size: var(--text-base);
+    font-weight: 500;
+    color: var(--text-dark);
+}
+
+.filter-group select,
+.filter-group input {
+    padding: 8px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--bg-white);
+    width: 100%;
+    font-size: var(--text-base);
+    color: var(--text-dark);
+    transition: border-color var(--transition-fast);
+}
+
+.filter-group select:focus,
+.filter-group input:focus {
+    outline: none;
+    border-color: var(--primary-green);
+    box-shadow: 0 0 0 3px rgba(45, 122, 79, 0.10);
+}
+
+/* ── Stat item (inline variant) ── */
+.stat-item {
+    background: var(--bg-light);
+    padding: var(--space-4);
+    border-radius: var(--radius-md);
+    border-left: 4px solid var(--primary-green);
+}
+
+.stat-item .stat-label { font-size: var(--text-sm); }
+.stat-item .stat-value { font-size: 28px; }
+
+/* ── Printer-specific ── */
+.brand-model {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.brand-model strong { color: var(--text-dark); font-size: var(--text-base); }
+.brand-model span   { color: var(--text-medium); font-size: var(--text-sm); }
+
+.assigned-employee {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: var(--text-sm);
+    color: var(--text-dark);
+    font-weight: 500;
+}
+
+.assigned-employee i {
+    color: var(--primary-green);
+    font-size: 12px;
+}
+
+.year-acquired {
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+.printer-tag {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: var(--radius-sm);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    background: var(--primary-xlight);
+    color: var(--primary-green);
+    border: 1px solid rgba(45, 122, 79, 0.18);
+}
+
+/* ── Other Equipment-specific ── */
+.equipment-type {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+.equipment-type i {
+    color: var(--primary-green);
+    font-size: 14px;
+}
+
+.equipment-details {
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--text-light);
+    font-style: italic;
+}
+
+.location-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: var(--text-sm);
+    color: var(--text-medium);
+    background: var(--bg-light);
+    padding: 5px 10px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+}
+
+.location-badge i {
+    color: var(--primary-green);
+    flex-shrink: 0;
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: var(--space-5);
+    margin-top: var(--space-4);
+}
+
+.detail-item {
+    padding: var(--space-4);
+    background: var(--bg-light);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+}
+
+.detail-label {
+    font-size: var(--text-xs);
+    color: var(--text-medium);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 5px;
+}
+
+.detail-value {
+    font-size: 15px;
+    color: var(--text-dark);
+    font-weight: 600;
+}
+
+.btn-outline-primary {
+    background: transparent;
+    color: var(--primary-green);
+    border: 1.5px solid var(--primary-green);
+}
+
+.btn-outline-primary:hover:not(:disabled) {
+    background: var(--primary-xlight);
+    color: var(--primary-dark);
+}
+
+.exportEquipment {
+    padding: 15px 20px
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+/* Tablet: toggle nav needs to stay usable */
+@media (max-width: 1024px) {
+    .equip-toggle-nav { flex-wrap: wrap; }
+    .equip-toggle-nav .toggle-btn { flex: 1; min-width: 120px; justify-content: center; }
+}
+
+@media (max-width: 768px) {
+    /* page-header stack: put export button above the toggle nav */
+    .page-header .header-actions {
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+    }
+    .stat-item { display: none;}
+    .equip-toggle-nav { width: 100%; }
+    .equip-toggle-nav .toggle-btn { flex: 1; justify-content: center; }
+
+    .exportEquipment { width: 100%; justify-content: center; }
+
+    .filters-bar { flex-direction: column; align-items: stretch; }
+    .filter-group { width: 100%; min-width: 100%; }
+    .filters-bar .btn { width: 100%; justify-content: center; }
+
+    .category-content { padding: var(--space-4); }
+    .equip-subtoggle-nav { width: 100%; }
+    .equip-subtoggle-nav .subtoggle-btn { flex: 1; justify-content: center; }
+}
+
+@media (max-width: 640px) {
+    .category-content { padding: var(--space-3); }
+
+    .equip-toggle-nav .toggle-btn { font-size: 12px; padding: 7px 10px; gap: var(--space-1); }
+    .equip-subtoggle-nav .subtoggle-btn { font-size: 12px; padding: 6px 8px; }
+
+    .stat-item .stat-value { font-size: 22px; }
+
+    .detail-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 480px) {
+    .equip-toggle-nav .toggle-btn i { display: none; }
+    .equip-subtoggle-nav .subtoggle-btn i { display: none; }
+    .equip-toggle-nav .toggle-btn { font-size: 11px; padding: 7px 8px; }
+    .equip-subtoggle-nav .subtoggle-btn { font-size: 11px; padding: 6px 6px; }
+}
+
+@media print {
+    .equip-toggle-nav, .equip-subtoggle-nav, .filters-bar .btn { display: none !important; }
+    .category-content, .sub-tab-content { display: block !important; border: none; padding: 0; }
+}

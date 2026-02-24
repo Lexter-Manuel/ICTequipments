@@ -141,26 +141,86 @@ function regenerateSession() {
     }
 }
 
+
+// ============================================================
+// AUDIT TRAIL — Standardised action constants
+// Action  = WHAT operation was performed (the verb)
+// Module  = WHERE it happened (the noun/section)
+// Description = human-readable sentence about WHAT changed
+// ============================================================
+
+// --- Auth ---
+define('ACTION_LOGIN',          'LOGIN');
+define('ACTION_LOGOUT',         'LOGOUT');
+define('ACTION_LOGIN_FAILED',   'LOGIN_FAILED');
+define('ACTION_PASSWORD_RESET', 'PASSWORD_RESET');
+
+// --- CRUD ---
+define('ACTION_CREATE',  'CREATE');
+define('ACTION_UPDATE',  'UPDATE');
+define('ACTION_DELETE',  'DELETE');
+define('ACTION_RESTORE', 'RESTORE');
+
+// --- Data operations ---
+define('ACTION_EXPORT',  'EXPORT');
+define('ACTION_IMPORT',  'IMPORT');
+define('ACTION_VIEW',    'VIEW');      // use sparingly – only sensitive views
+
+// --- Module constants (WHERE) ---
+define('MODULE_EMPLOYEES',         'Employees');
+define('MODULE_COMPUTERS',         'Computers');
+define('MODULE_PRINTERS',          'Printers');
+define('MODULE_SOFTWARE',          'Software Licenses');
+define('MODULE_OTHER_EQUIPMENT',   'Other Equipment');
+define('MODULE_MAINTENANCE',       'Maintenance');
+define('MODULE_DIVISIONS',         'Divisions');
+define('MODULE_SECTIONS',          'Sections');
+define('MODULE_UNITS',             'Units');
+define('MODULE_ACCOUNTS',          'Accounts');
+define('MODULE_AUDIT_TRAIL',       'Audit Trail');
+define('MODULE_SETTINGS',          'Settings');
+define('MODULE_PROFILE',           'Profile');
+define('MODULE_AUTH',              'Authentication');
+define('MODULE_ORGANIZATION',      'Organization');
+define('MODULE_REPORTS',           'Reports');
+
 /**
- * Log Activity
+ * Log a standardised activity record.
+ *
+ * @param string      $action      One of the ACTION_* constants (e.g. ACTION_CREATE)
+ * @param string|null $module      One of the MODULE_* constants (e.g. MODULE_EMPLOYEES)
+ * @param string|null $description Plain-English sentence: "Added employee Juan Dela Cruz (ID 42)"
+ * @param bool        $success     Whether the operation succeeded (default true)
  */
-function logActivity($userId, $action, $details = null) {
+function logActivity(string $action, ?string $module = null, ?string $description = null, bool $success = true): void {
     try {
         $db = Database::getInstance()->getConnection();
-        
+
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        $userId = $_SESSION['user_id'] ?? null;
+        $email  = $_SESSION['email'] ?? ($_SESSION['user_email'] ?? 'system');
+
         $stmt = $db->prepare("
-            INSERT INTO tbl_activity_logs (user_id, action, details, ip_address, user_agent, created_at)
-            VALUES (?, ?, ?, ?, ?, NOW())
+            INSERT INTO activity_log
+                (user_id, email, action, module, description, ip_address, user_agent, success, timestamp)
+            VALUES
+                (:user_id, :email, :action, :module, :description, :ip, :ua, :success, NOW())
         ");
-        
+
         $stmt->execute([
-            $userId,
-            $action,
-            $details,
-            $_SERVER['REMOTE_ADDR'] ?? 'Unknown',
-            $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown'
+            ':user_id'     => $userId,
+            ':email'       => $email,
+            ':action'      => $action,
+            ':module'      => $module,
+            ':description' => $description,
+            ':ip'          => $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1',
+            ':ua'          => $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown',
+            ':success'     => $success ? 1 : 0,
         ]);
-        
+
     } catch (PDOException $e) {
         error_log("Activity Log Error: " . $e->getMessage());
     }

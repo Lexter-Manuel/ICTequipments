@@ -44,7 +44,7 @@ try {
     ]);
     
 } catch (PDOException $e) {
-    logActivity("Database error in get_section: " . $e->getMessage(), 'ERROR');
+    logActivity('DATABASE_ERROR', MODULE_ORGANIZATION, "Section fetch error: " . $e->getMessage(), false);
     echo json_encode([
         'success' => false,
         'message' => 'Database error occurred'

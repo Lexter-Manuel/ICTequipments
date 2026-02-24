@@ -54,7 +54,7 @@ try {
             ");
             $stmt->execute([$sectionName, $divisionId]);
             
-            logActivity("Section created: {$sectionName}", 'INFO');
+            logActivity(ACTION_CREATE, MODULE_ORGANIZATION, "Created section: {$sectionName}");
             
             echo json_encode([
                 'success' => true,
@@ -101,7 +101,7 @@ try {
             ");
             $stmt->execute([$sectionName, $divisionId, $sectionId]);
             
-            logActivity("Section updated: {$sectionName}", 'INFO');
+            logActivity(ACTION_UPDATE, MODULE_ORGANIZATION, "Updated section: {$sectionName}");
             
             echo json_encode([
                 'success' => true,
@@ -146,7 +146,7 @@ try {
             $stmt = $db->prepare("UPDATE location SET is_deleted = '1' WHERE location_id = ?");
             $stmt->execute([$sectionId]);
             
-            logActivity("Section deleted: " . ($section['location_name'] ?? $sectionId), 'INFO');
+            logActivity(ACTION_DELETE, MODULE_ORGANIZATION, "Deleted section: " . ($section['location_name'] ?? $sectionId));
             
             echo json_encode([
                 'success' => true,
@@ -159,7 +159,7 @@ try {
     }
     
 } catch (PDOException $e) {
-    logActivity("Database error in manage_section: " . $e->getMessage(), 'ERROR');
+    logActivity('DATABASE_ERROR', MODULE_ORGANIZATION, "Section error: " . $e->getMessage(), false);
     echo json_encode([
         'success' => false,
         'message' => 'Database error: ' . $e->getMessage()

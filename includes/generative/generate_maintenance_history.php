@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/../../vendor/TCPDF/tcpdf.php';
 require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../config/config.php';
 
 // ─── Inputs ──────────────────────────────────────────────────────
 $db         = getDB();
@@ -196,11 +197,6 @@ class NIAReportPDF extends TCPDF {
 
         $this->SetX(10);
         $this->Cell($textW, 3.5, 'Email: upriis@nia.gov.ph  •  Website: www.upriis.nia.gov.ph  •  TIN: 000916415024', 0, 1, 'L');
-
-        // $this->SetFont('helvetica', '', 5);
-        // $this->SetTextColor(0, 0, 0);
-        // $this->SetXY(10, $footerY + 14);
-        // $this->Cell($textW, 3, 'NIA-UPRIIS-HEAD OFFICE-ICT-MAINTENANCE-REPORT', 0, 0, 'L');
 
         $this->SetFont('helvetica', '', 6.5);
         $this->SetTextColor(0, 0, 0);
@@ -456,4 +452,5 @@ $pdf->Cell($lineW, 4, 'Division Manager, AdFin', 0, 1, 'C');
 //  OUTPUT PDF
 // =====================================================================
 $filename = 'Maintenance_History_Report_' . date('Y-m-d') . '.pdf';
+logActivity(ACTION_EXPORT, MODULE_REPORTS, "Exported maintenance history report PDF ({$rangeLabel})");
 $pdf->Output($filename, 'I');

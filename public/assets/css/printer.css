@@ -1,4 +1,3 @@
-
 /* Brand / Model cell */
 .brand-model {
     display: flex;
@@ -40,4 +39,21 @@
     background: var(--primary-xlight);
     color: var(--primary-green);
     border: 1px solid rgba(45, 122, 79, 0.18);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .printer-tag { padding: 2px 7px; font-size: 0.65rem; }
+    .brand-model strong { font-size: var(--text-sm); }
+    .assigned-employee { font-size: var(--text-xs); }
+}
+
+@media (max-width: 480px) {
+    .printer-tag { padding: 2px 6px; font-size: 0.6rem; }
+}
+/* ── Additional responsive improvements ── */
+@media (max-width: 640px) {
+    .year-acquired { font-size: var(--text-sm); }
+    .assigned-employee { font-size: var(--text-xs); }
+    .maintenance-info { font-size: var(--text-xs); }
 }

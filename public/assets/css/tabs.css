@@ -1,0 +1,118 @@
+/* ============================================================
+   tabs.css — Shared Tab / Toggle Button Styles
+   Unified pill-toggle components used across the system.
+   Previously duplicated in: maintenance.css, maintenance-schedule.css,
+   maintenance-history.css, equipment.css
+   ============================================================ */
+
+/* ── Primary Toggle (top-level view/category switches) ── */
+.toggle-nav {
+    display: flex;
+    background: var(--bg-page);
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 3px;
+    gap: 3px;
+}
+
+.toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 8px 16px;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--text-medium);
+    background: transparent;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    white-space: nowrap;
+}
+
+.toggle-btn:hover { color: var(--text-dark); background: var(--bg-white); }
+
+.toggle-btn.active {
+    background: var(--primary-green);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(45, 122, 79, 0.28);
+}
+
+/* ── Sub-toggle (secondary / smaller variant) ── */
+.subtoggle-nav {
+    display: flex;
+    background: var(--bg-page);
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 3px;
+    gap: 3px;
+}
+
+.subtoggle-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 7px 14px;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--text-medium);
+    background: transparent;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    white-space: nowrap;
+}
+
+.subtoggle-btn:hover { color: var(--text-dark); background: var(--bg-white); }
+
+.subtoggle-btn.active {
+    background: var(--primary-green);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(45, 122, 79, 0.28);
+}
+
+/* ── Tab content panels ── */
+.toggle-content {
+    display: none;
+}
+
+.toggle-content.active {
+    display: block;
+}
+
+.subtoggle-content {
+    display: none;
+}
+
+.subtoggle-content.active {
+    display: block;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .toggle-nav,
+    .subtoggle-nav {
+        width: 100%;
+    }
+
+    .toggle-btn { flex: 1; justify-content: center; padding: 8px 12px; }
+    .subtoggle-btn { flex: 1; justify-content: center; padding: 7px 10px; }
+}
+
+@media (max-width: 640px) {
+    .toggle-nav,
+    .subtoggle-nav {
+        flex-wrap: wrap;
+    }
+    .toggle-btn { padding: 7px 12px; font-size: 12px; }
+    .subtoggle-btn { padding: 6px 10px; font-size: 12px; }
+}
+
+@media (max-width: 420px) {
+    .toggle-btn { padding: 6px 8px; font-size: 11px; gap: 4px; }
+    .subtoggle-btn { padding: 6px 6px; font-size: 11px; gap: 4px; }
+}

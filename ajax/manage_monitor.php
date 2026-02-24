@@ -1,8 +1,11 @@
 <?php
 require_once '../config/database.php';
+require_once '../config/config.php';
 require_once '../includes/maintenanceHelper.php';
 
 header('Content-Type: application/json');
+
+if (session_status() === PHP_SESSION_NONE) { session_start(); }
 
 $db = getDB();
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
@@ -233,6 +236,10 @@ function createMonitor($db) {
 
     $newId = $db->lastInsertId();
 
+    logActivity(ACTION_CREATE, MODULE_COMPUTERS,
+        "Added Monitor — Brand: {$brand}, Serial: {$serial}, Size: {$size}, Year: {$year}."
+        . ($employeeId ? " Assigned to employee ID {$employeeId}." : ""));
+
     try {
         $maint = new MaintenanceHelper($db);
         $maint->initScheduleByType('Monitor', $newId);
@@ -243,7 +250,7 @@ function createMonitor($db) {
     echo json_encode([
         'success' => true,
         'message' => 'Monitor added successfully',
-        'monitorId' => $db->lastInsertId()
+        'monitorId' => $newId
     ]);
 }
 
@@ -296,12 +303,21 @@ function updateMonitor($db) {
         ':id' => $id
     ]);
     
+    logActivity(ACTION_UPDATE, MODULE_COMPUTERS,
+        "Updated Monitor (ID: {$id}) — Brand: {$brand}, Serial: {$serial}."
+        . ($employeeId ? " Assigned to employee ID {$employeeId}." : " Unassigned."));
+
     echo json_encode(['success' => true, 'message' => 'Monitor updated successfully']);
 }
 
 function deleteMonitor($db) {
     $id = $_POST['monitorId'] ?? null;
     if (!$id) throw new Exception('Monitor ID is required');
+
+    // Fetch details before deleting
+    $row = $db->prepare("SELECT monitorBrand, monitorSerial FROM tbl_monitor WHERE monitorId = :id");
+    $row->execute([':id' => $id]);
+    $item = $row->fetch();
     
     $stmt = $db->prepare("DELETE FROM tbl_monitor WHERE monitorId = :id");
     $stmt->execute([':id' => $id]);
@@ -309,6 +325,10 @@ function deleteMonitor($db) {
     if ($stmt->rowCount() == 0) {
         throw new Exception('Monitor not found or already deleted');
     }
+
+    logActivity(ACTION_DELETE, MODULE_COMPUTERS,
+        "Deleted Monitor (ID: {$id}) — Brand: " . ($item['monitorBrand'] ?? 'Unknown')
+        . ", Serial: " . ($item['monitorSerial'] ?? 'Unknown') . ".");
     
     echo json_encode(['success' => true, 'message' => 'Monitor deleted successfully']);
 }

@@ -140,21 +140,61 @@
 /* ============================================================
    RESPONSIVE — Computer-specific
    ============================================================ */
+
+/* Override the inline style: grid-template-columns: repeat(3,1fr) */
+.tab-content .stats-grid,
+.sub-tab-content .stats-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+}
+
+@media (max-width: 1024px) {
+    .tab-content .stats-grid,
+    .sub-tab-content .stats-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+}
+
 @media (max-width: 768px) {
     .tab-btn { padding: 13px 14px; font-size: var(--text-sm); }
 
     .filters-bar { flex-direction: column; align-items: stretch; }
     .filter-group { width: 100%; min-width: 100%; }
+    .filters-bar .btn { width: 100%; justify-content: center; }
+
+    .tab-content .stats-grid,
+    .sub-tab-content .stats-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
 }
 
 @media (max-width: 640px) {
-    .tab-navigation { flex-direction: column; border-radius: var(--radius-md) var(--radius-md) 0 0; }
-    .tab-btn { padding: 11px 14px; font-size: 12px; }
+    .tab-navigation { border-radius: var(--radius-md) var(--radius-md) 0 0; }
+    .tab-btn { padding: 11px 10px; font-size: 12px; gap: 5px; }
     .tab-btn:first-child { border-radius: var(--radius-md) 0 0 0; }
     .tab-btn:last-child  { border-radius: 0 var(--radius-md) 0 0; }
     .tab-content { padding: var(--space-3); border-radius: 0 0 var(--radius-md) var(--radius-md); }
 
+    .tab-content .stats-grid,
+    .sub-tab-content .stats-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: var(--space-2) !important;
+    }
+
     .stat-item .stat-value { font-size: 22px; }
+    .stat-item { padding: var(--space-3); }
+}
+
+@media (max-width: 480px) {
+    .tab-btn i { display: none; } /* icon-only labels get too cramped */
+    .tab-btn { padding: 10px 8px; font-size: 11px; }
+
+    .tab-content .stats-grid,
+    .sub-tab-content .stats-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+
+    .stat-item .stat-value { font-size: 18px; }
+    .stat-item .stat-label { font-size: 10px; }
 }
 
 @media print {

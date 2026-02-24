@@ -284,48 +284,7 @@
     flex-shrink: 0;
 }
 
-/* Sub-tabs */
-.dv-subtabs {
-    display: flex;
-    background: var(--bg-page);
-    border: 1.5px solid var(--border-color);
-    border-radius: var(--radius-md);
-    padding: 3px;
-    gap: 3px;
-}
-
-.dv-subtab-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
-    padding: 7px 14px;
-    border: none;
-    border-radius: var(--radius-sm);
-    font-family: var(--font-body);
-    font-size: var(--text-sm);
-    font-weight: 600;
-    color: var(--text-medium);
-    background: transparent;
-    cursor: pointer;
-    transition: all var(--transition-base);
-    white-space: nowrap;
-}
-
-.dv-subtab-btn:hover { color: var(--text-dark); background: var(--bg-white); }
-
-.dv-subtab-btn.active {
-    background: var(--primary-green);
-    color: #fff;
-    box-shadow: 0 2px 8px rgba(45, 122, 79, 0.28);
-}
-
-.dv-result-count {
-    margin-left: auto;
-    font-size: var(--text-sm);
-    color: var(--text-light);
-    font-weight: 500;
-    white-space: nowrap;
-}
+/* Sub-tabs: dv-subtabs / dv-subtab-btn / dv-result-count now in maintenance.css */
 
 /* ============================================================
    5. DIVISION VIEW — CONTENT AREA

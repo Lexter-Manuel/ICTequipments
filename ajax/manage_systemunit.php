@@ -1,8 +1,11 @@
 <?php
 require_once '../config/database.php';
+require_once '../config/config.php';
 require_once '../includes/maintenanceHelper.php';
 
 header('Content-Type: application/json');
+
+if (session_status() === PHP_SESSION_NONE) { session_start(); }
 
 $db = getDB();
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
@@ -269,12 +272,15 @@ function createSystemUnit($db) {
     ]);
     $newId = $db->lastInsertId();
 
+    logActivity(ACTION_CREATE, MODULE_COMPUTERS,
+        "Added System Unit — Brand: {$brand} ({$category}), Serial: {$serial}, CPU: {$processor}, RAM: {$memory}, Storage: {$storage}, Year: {$year}."
+        . ($employeeId ? " Assigned to employee ID {$employeeId}." : ""));
+
     try {
         $maint = new MaintenanceHelper($db);
         $maint->initScheduleByType('System Unit', $newId);
     } catch (Exception $e) {
          error_log("Failed to schedule maintenance for System Unit ID $newId: " . $e->getMessage());
-
     }
     echo json_encode([
         'success' => true,
@@ -344,12 +350,21 @@ function updateSystemUnit($db) {
         ':id' => $id
     ]);
     
+    logActivity(ACTION_UPDATE, MODULE_COMPUTERS,
+        "Updated System Unit (ID: {$id}) — Brand: {$brand}, Serial: {$serial}."
+        . ($employeeId ? " Assigned to employee ID {$employeeId}." : " Unassigned."));
+
     echo json_encode(['success' => true, 'message' => 'System unit updated successfully']);
 }
 
 function deleteSystemUnit($db) {
     $id = $_POST['systemunit_id'] ?? null;
     if (!$id) throw new Exception('System unit ID is required');
+
+    // Fetch details before deleting
+    $row = $db->prepare("SELECT systemUnitBrand, systemUnitSerial FROM tbl_systemunit WHERE systemunitId = :id");
+    $row->execute([':id' => $id]);
+    $item = $row->fetch();
     
     $stmt = $db->prepare("DELETE FROM tbl_systemunit WHERE systemunitId = :id");
     $stmt->execute([':id' => $id]);
@@ -357,6 +372,10 @@ function deleteSystemUnit($db) {
     if ($stmt->rowCount() == 0) {
         throw new Exception('System unit not found or already deleted');
     }
+
+    logActivity(ACTION_DELETE, MODULE_COMPUTERS,
+        "Deleted System Unit (ID: {$id}) — Brand: " . ($item['systemUnitBrand'] ?? 'Unknown')
+        . ", Serial: " . ($item['systemUnitSerial'] ?? 'Unknown') . ".");
     
     echo json_encode(['success' => true, 'message' => 'System unit deleted successfully']);
 }

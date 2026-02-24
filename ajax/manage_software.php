@@ -1,8 +1,11 @@
 <?php
 require_once '../config/database.php';
+require_once '../config/config.php';
 require_once '../includes/maintenanceHelper.php';
 
 header('Content-Type: application/json');
+
+if (session_status() === PHP_SESSION_NONE) { session_start(); }
 
 // Get database connection
 $db = getDB();
@@ -226,7 +229,12 @@ function createSoftware($db) {
     ]);
 
     $newId = $db->lastInsertId();
-        try {
+
+    logActivity(ACTION_CREATE, MODULE_SOFTWARE,
+        "Added license for '{$_POST['software_name']}' (Type: {$_POST['license_type']}, Expires: " . ($expiryDate ?: 'No expiry') . ")."
+        . ($employeeId ? " Assigned to employee ID {$employeeId}." : ""));
+
+    try {
             $maint = new MaintenanceHelper($db);
             $maint->initScheduleByType('Software License', $newId);
         } catch (Exception $e) {
@@ -280,6 +288,9 @@ function updateSoftware($db) {
         ':employeeId' => $employeeId,
         ':softwareId' => $softwareId
     ]);
+
+    logActivity(ACTION_UPDATE, MODULE_SOFTWARE,
+        "Updated license for '{$_POST['software_name']}' (ID: {$softwareId}, Type: {$_POST['license_type']}, Expires: " . ($expiryDate ?: 'No expiry') . ").");
     
     echo json_encode([
         'success' => true,
@@ -296,6 +307,11 @@ function deleteSoftware($db) {
     if (!$softwareId) {
         throw new Exception('Software ID is required');
     }
+
+    // Fetch details before deleting
+    $row = $db->prepare("SELECT licenseSoftware, licenseType FROM tbl_software WHERE softwareId = :id");
+    $row->execute([':id' => $softwareId]);
+    $item = $row->fetch();
     
     $stmt = $db->prepare("DELETE FROM tbl_software WHERE softwareId = :id");
     $stmt->execute([':id' => $softwareId]);
@@ -303,6 +319,9 @@ function deleteSoftware($db) {
     if ($stmt->rowCount() == 0) {
         throw new Exception('Software license not found or already deleted');
     }
+
+    logActivity(ACTION_DELETE, MODULE_SOFTWARE,
+        "Deleted license for '" . ($item['licenseSoftware'] ?? 'Unknown') . "' (ID: {$softwareId}, Type: " . ($item['licenseType'] ?? 'Unknown') . ").");
     
     echo json_encode([
         'success' => true,

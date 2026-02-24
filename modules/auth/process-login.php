@@ -89,6 +89,7 @@ try {
     // Log failed attempt if user not found
     if (!$user) {
         logLoginAttempt($ipAddress, $email, false);
+        logActivity(ACTION_LOGIN_FAILED, MODULE_AUTH, "Failed login attempt for unknown email: {$email}", false);
         
         jsonResponse([
             'success' => false,
@@ -107,6 +108,7 @@ try {
     // Verify password
     if (!verifyPassword($password, $user['password'])) {
         logLoginAttempt($ipAddress, $email, false);
+        logActivity(ACTION_LOGIN_FAILED, MODULE_AUTH, "Failed login attempt for: {$email} (wrong password)", false);
         
         jsonResponse([
             'success' => false,
@@ -133,15 +135,17 @@ try {
     
     // Log successful login
     logLoginAttempt($ipAddress, $email, true);
-    logActivity($user['id'], 'login', 'User logged in successfully');
+    logActivity(ACTION_LOGIN, MODULE_AUTH, "User logged in successfully");
     
     // Update last login time
     $stmt = $db->prepare("
         UPDATE tbl_accounts 
-        SET updated_at = NOW() 
+        SET last_login    = NOW(),
+            last_login_ip = ?,
+            updated_at    = NOW()
         WHERE id = ?
     ");
-    $stmt->execute([$user['id']]);
+    $stmt->execute([$ipAddress, $user['id']]);
     
     // Clear failed attempts for this IP
     $stmt = $db->prepare("

@@ -790,31 +790,63 @@ function applyTableState() {
             document.getElementById('rosterTableBody').appendChild(row);
         }
     });
-    document.getElementById('recordCount').textContent = `Showing ${Math.min(start+1, total)}–${end} of ${total}`;
+    document.getElementById('recordCount').innerHTML = 'Showing <strong>' + Math.min(start+1, total) + '&ndash;' + end + '</strong> of <strong>' + total + '</strong> employee(s)';
     renderPagination(total);
 }
 
 function renderPagination(total) {
-    var totalPages = Math.ceil(total / perPage);
+    var totalPages = Math.max(1, Math.ceil(total / perPage));
     var container = document.getElementById('paginationControls');
     container.innerHTML = '';
     if (totalPages <= 1) return;
-    
-    var prevBtn = document.createElement('button');
-    prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
-    prevBtn.disabled = currentPage === 1;
-    prevBtn.onclick = () => { currentPage--; applyTableState(); };
-    container.appendChild(prevBtn);
-    
-    var span = document.createElement('span');
-    span.textContent = ` Page ${currentPage} of ${totalPages} `;
-    container.appendChild(span);
-    
-    var nextBtn = document.createElement('button');
-    nextBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
-    nextBtn.disabled = currentPage === totalPages;
-    nextBtn.onclick = () => { currentPage++; applyTableState(); };
-    container.appendChild(nextBtn);
+
+    function makeBtn(html, page, disabled, active) {
+        var btn = document.createElement('button');
+        btn.innerHTML = html;
+        btn.className = active ? 'active' : '';
+        btn.disabled = !!disabled;
+        if (!disabled) {
+            btn.onclick = function() { currentPage = page; applyTableState(); };
+        }
+        return btn;
+    }
+
+    function makeEllipsis() {
+        var span = document.createElement('span');
+        span.textContent = '…';
+        span.style.cssText = 'padding: 0 4px; color: var(--text-medium); font-size: var(--text-sm); line-height: 32px;';
+        return span;
+    }
+
+    // Prev button
+    container.appendChild(makeBtn('<i class="fas fa-chevron-left"></i>', currentPage - 1, currentPage === 1, false));
+
+    // Page number buttons with smart ellipsis (matches equipment utils.js pattern)
+    var pages = [];
+    if (totalPages <= 7) {
+        for (var i = 1; i <= totalPages; i++) pages.push(i);
+        pages.forEach(function(p) {
+            container.appendChild(makeBtn(p, p, false, p === currentPage));
+        });
+    } else {
+        // Always show first, last, current, and neighbours
+        var shown = new Set([1, totalPages, currentPage]);
+        if (currentPage > 1) shown.add(currentPage - 1);
+        if (currentPage < totalPages) shown.add(currentPage + 1);
+
+        var sorted = Array.from(shown).sort(function(a, b) { return a - b; });
+        var prev = 0;
+        sorted.forEach(function(p) {
+            if (prev && p - prev > 1) {
+                container.appendChild(makeEllipsis());
+            }
+            container.appendChild(makeBtn(p, p, false, p === currentPage));
+            prev = p;
+        });
+    }
+
+    // Next button
+    container.appendChild(makeBtn('<i class="fas fa-chevron-right"></i>', currentPage + 1, currentPage === totalPages, false));
 }
 
 // ========================================

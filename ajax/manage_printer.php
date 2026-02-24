@@ -1,8 +1,11 @@
 <?php
 require_once '../config/database.php';
+require_once '../config/config.php';
 require_once '../includes/maintenanceHelper.php';
 
 header('Content-Type: application/json');
+
+if (session_status() === PHP_SESSION_NONE) { session_start(); }
 
 // Get database connection
 $db = getDB();
@@ -288,6 +291,10 @@ function createPrinter($db) {
 
     $newId = $db->lastInsertId();
 
+    logActivity(ACTION_CREATE, MODULE_PRINTERS,
+        "Added Printer — {$brand} {$model}, Serial: {$serial}, Year: {$year}."
+        . ($employeeId ? " Assigned to employee ID {$employeeId}." : ""));
+
     try {
         $maint = new MaintenanceHelper($db);
         $maint->initScheduleByType('Printer', $newId);
@@ -354,6 +361,10 @@ function updatePrinter($db) {
         ':printerId' => $printerId
     ]);
     
+    logActivity(ACTION_UPDATE, MODULE_PRINTERS,
+        "Updated Printer (ID: {$printerId}) — {$brand} {$model}, Serial: {$serial}."
+        . ($employeeId ? " Assigned to employee ID {$employeeId}." : " Unassigned."));
+
     echo json_encode([
         'success' => true,
         'message' => 'Printer updated successfully'
@@ -365,6 +376,11 @@ function updatePrinter($db) {
  */
 function deletePrinter($db) {
     $printerId = validatePrinterId($_POST['printer_id'] ?? null);
+
+    // Fetch details before deleting
+    $row = $db->prepare("SELECT printerBrand, printerModel, printerSerial FROM tbl_printer WHERE printerId = :id");
+    $row->execute([':id' => $printerId]);
+    $item = $row->fetch();
     
     $stmt = $db->prepare("DELETE FROM tbl_printer WHERE printerId = :id");
     $stmt->execute([':id' => $printerId]);
@@ -372,6 +388,11 @@ function deletePrinter($db) {
     if ($stmt->rowCount() == 0) {
         throw new Exception('Printer not found or already deleted');
     }
+
+    logActivity(ACTION_DELETE, MODULE_PRINTERS,
+        "Deleted Printer (ID: {$printerId}) — "
+        . ($item['printerBrand'] ?? '') . " " . ($item['printerModel'] ?? '')
+        . ", Serial: " . ($item['printerSerial'] ?? 'Unknown') . ".");
     
     echo json_encode([
         'success' => true,

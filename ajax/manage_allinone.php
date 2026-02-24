@@ -1,8 +1,11 @@
 <?php
 require_once '../config/database.php';
+require_once '../config/config.php';
 require_once '../includes/maintenanceHelper.php';
 
 header('Content-Type: application/json');
+
+if (session_status() === PHP_SESSION_NONE) { session_start(); }
 
 $db = getDB();
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
@@ -201,6 +204,10 @@ function createAllInOne($db) {
 
     $newId = $db->lastInsertId();
 
+    logActivity(ACTION_CREATE, MODULE_COMPUTERS,
+        "Added All-in-One — Brand: {$brand}, CPU: {$processor}, RAM: {$memory}, Storage: {$storage}."
+        . ($employeeId ? " Assigned to employee ID {$employeeId}." : ""));
+
     try {
         $maint = new MaintenanceHelper($db);
         $maint->initScheduleByType('All-in-One', $newId);
@@ -257,6 +264,10 @@ function updateAllInOne($db) {
         ':id' => $id
     ]);
     
+    logActivity(ACTION_UPDATE, MODULE_COMPUTERS,
+        "Updated All-in-One (ID: {$id}) — Brand: {$brand}."
+        . ($employeeId ? " Assigned to employee ID {$employeeId}." : " Unassigned."));
+
     echo json_encode(['success' => true, 'message' => 'All-in-One updated successfully']);
 }
 
@@ -264,12 +275,20 @@ function deleteAllInOne($db) {
     $id = $_POST['allinone_id'] ?? null;
     if (!$id) throw new Exception('All-in-One ID is required');
     
+    // Fetch details before deleting so we can log them
+    $row = $db->prepare("SELECT allinoneBrand FROM tbl_allinone WHERE allinoneId = :id");
+    $row->execute([':id' => $id]);
+    $item = $row->fetch();
+
     $stmt = $db->prepare("DELETE FROM tbl_allinone WHERE allinoneId = :id");
     $stmt->execute([':id' => $id]);
     
     if ($stmt->rowCount() == 0) {
         throw new Exception('All-in-One not found or already deleted');
     }
+
+    logActivity(ACTION_DELETE, MODULE_COMPUTERS,
+        "Deleted All-in-One (ID: {$id}) — Brand: " . ($item['allinoneBrand'] ?? 'Unknown') . ".");
     
     echo json_encode(['success' => true, 'message' => 'All-in-One deleted successfully']);
 }

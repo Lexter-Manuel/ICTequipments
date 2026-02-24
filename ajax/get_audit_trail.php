@@ -17,12 +17,13 @@ try {
     $offset  = ($page - 1) * $perPage;
     
     // Filters
-    $action  = $_GET['action'] ?? '';
-    $module  = $_GET['module'] ?? '';
-    $email   = $_GET['email'] ?? '';
+    $action   = $_GET['action']    ?? '';
+    $module   = $_GET['module']    ?? '';
+    $email    = $_GET['email']     ?? '';
     $dateFrom = $_GET['date_from'] ?? '';
-    $dateTo   = $_GET['date_to'] ?? '';
-    $search   = $_GET['search'] ?? '';
+    $dateTo   = $_GET['date_to']   ?? '';
+    $search   = $_GET['search']    ?? '';
+    $success  = $_GET['success']   ?? '';   // '1', '0', or '' for all
     
     // Build WHERE clause
     $where = [];
@@ -47,6 +48,10 @@ try {
     if ($dateTo) {
         $where[] = "DATE(al.timestamp) <= :date_to";
         $params[':date_to'] = $dateTo;
+    }
+    if ($success !== '') {
+        $where[] = "al.success = :success";
+        $params[':success'] = (int) $success;
     }
     if ($search) {
         $where[] = "(al.description LIKE :search OR al.action LIKE :search2 OR al.email LIKE :search3)";

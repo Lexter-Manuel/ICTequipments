@@ -5,97 +5,22 @@ require_once '../../config/database.php';
 try {
     $db = Database::getInstance()->getConnection();
 
-    // Active schedules
-    $activeSchedules = (int) $db->query("SELECT COUNT(*) FROM tbl_maintenance_schedule WHERE isActive = 1")->fetchColumn();
-    $totalSchedules  = (int) $db->query("SELECT COUNT(*) FROM tbl_maintenance_schedule")->fetchColumn();
+    // ---------- Filters ----------
+    $filterDivision = isset($_GET['division']) ? trim($_GET['division']) : '';
+    $filterEqType   = isset($_GET['eq_type'])  ? trim($_GET['eq_type'])  : '';
+    $filterDateFrom = isset($_GET['date_from']) ? trim($_GET['date_from']) : '';
+    $filterDateTo   = isset($_GET['date_to'])   ? trim($_GET['date_to'])   : '';
 
-    // Overdue / Due Soon from views
-    $overdue  = (int) $db->query("SELECT COUNT(*) FROM view_overdue_maintenance")->fetchColumn();
-    $dueSoon  = (int) $db->query("SELECT COUNT(*) FROM view_due_soon_maintenance")->fetchColumn();
+    // Load all queries from shared include
+    require_once __DIR__ . '/../../includes/queries/maintenance_summary_queries.php';
 
-    // Total maintenance performed (all time)
-    $totalRecords = (int) $db->query("SELECT COUNT(*) FROM tbl_maintenance_record")->fetchColumn();
-
-    // This month
-    $thisMonthRecords = (int) $db->query("SELECT COUNT(*) FROM tbl_maintenance_record WHERE MONTH(maintenanceDate) = MONTH(CURDATE()) AND YEAR(maintenanceDate) = YEAR(CURDATE())")->fetchColumn();
-
-    // Compliance rate
-    $dueThisMonth = (int) $db->query("SELECT COUNT(*) FROM tbl_maintenance_schedule WHERE isActive = 1 AND MONTH(nextDueDate) = MONTH(CURDATE()) AND YEAR(nextDueDate) = YEAR(CURDATE())")->fetchColumn();
-    $completedThisMonth = $db->query("
-    SELECT COUNT(DISTINCT ms.scheduleId) 
-    FROM tbl_maintenance_schedule ms 
-    INNER JOIN tbl_maintenance_record mr ON mr.scheduleId = ms.scheduleId 
-    WHERE MONTH(ms.nextDueDate) = MONTH(CURDATE())
-      AND YEAR(ms.nextDueDate) = YEAR(CURDATE())
-      AND MONTH(mr.maintenanceDate) = MONTH(CURDATE()) 
-      AND YEAR(mr.maintenanceDate) = YEAR(CURDATE())
-")->fetchColumn();
-    $compliance = ($dueThisMonth > 0) ? round(($completedThisMonth / $dueThisMonth) * 100) : ($activeSchedules > 0 ? 100 : 0);
-
-    // Monthly records – last 12 months
-    $monthly = $db->query("
-        SELECT DATE_FORMAT(maintenanceDate, '%Y-%m') as month_key,
-               DATE_FORMAT(maintenanceDate, '%b %Y') as label,
-               COUNT(*) as cnt
-        FROM tbl_maintenance_record
-        WHERE maintenanceDate >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
-        GROUP BY month_key ORDER BY month_key
-    ")->fetchAll(PDO::FETCH_ASSOC);
-
-    // Records by type
-    $byType = $db->query("
-        SELECT mt.templateName, COUNT(mr.recordId) as cnt
-        FROM tbl_maintenance_record mr
-        LEFT JOIN tbl_maintenance_template mt ON mt.templateId = mr.templateId
-        GROUP BY mt.templateId, mt.templateName ORDER BY cnt DESC
-    ")->fetchAll(PDO::FETCH_ASSOC);
-
-    // Latest condition summary
-    $conditionSummary = $db->query("
-        SELECT conditionRating, COUNT(*) as cnt
-        FROM (
-            SELECT mr.conditionRating,
-                   ROW_NUMBER() OVER (PARTITION BY mr.scheduleId ORDER BY mr.maintenanceDate DESC) as rn
-            FROM tbl_maintenance_record mr WHERE mr.conditionRating != ''
-        ) latest WHERE rn = 1 GROUP BY conditionRating ORDER BY FIELD(conditionRating, 'Excellent','Good','Fair','Poor')
-    ")->fetchAll(PDO::FETCH_ASSOC);
-
-    // Status summary
-    $statusSummary = $db->query("
-        SELECT overallStatus, COUNT(*) as cnt
-        FROM (
-            SELECT mr.overallStatus,
-                   ROW_NUMBER() OVER (PARTITION BY mr.scheduleId ORDER BY mr.maintenanceDate DESC) as rn
-            FROM tbl_maintenance_record mr WHERE mr.overallStatus != ''
-        ) latest WHERE rn = 1 GROUP BY overallStatus ORDER BY FIELD(overallStatus, 'Operational','For Replacement','Disposed')
-    ")->fetchAll(PDO::FETCH_ASSOC);
-
-    // Overdue list (top 20)
-    $overdueList = $db->query("
-        SELECT v.scheduleId, v.equipmentType as typeId, v.equipmentId, v.maintenanceFrequency,
-               v.nextDueDate, v.days_overdue,
-               etr.typeName as equipment_type,
-               CASE
-                   WHEN etr.tableName = 'tbl_systemunit' THEN (SELECT CONCAT(systemUnitBrand, ' ', systemUnitCategory) FROM tbl_systemunit WHERE systemunitId = v.equipmentId)
-                   WHEN etr.tableName = 'tbl_monitor' THEN (SELECT CONCAT(monitorBrand, ' ', monitorSize) FROM tbl_monitor WHERE monitorId = v.equipmentId)
-                   WHEN etr.tableName = 'tbl_printer' THEN (SELECT CONCAT(printerBrand, ' ', printerModel) FROM tbl_printer WHERE printerId = v.equipmentId)
-                   WHEN etr.tableName = 'tbl_allinone' THEN (SELECT CONCAT(allinoneBrand, ' AIO') FROM tbl_allinone WHERE allinoneId = v.equipmentId)
-                   WHEN etr.tableName = 'tbl_otherequipment' THEN (SELECT CONCAT(brand, ' ', model) FROM tbl_otherequipment WHERE otherEquipmentId = v.equipmentId)
-                   ELSE CONCAT('Equipment #', v.equipmentId)
-               END as equipment_name
-        FROM view_overdue_maintenance v
-        LEFT JOIN tbl_equipment_type_registry etr ON etr.typeId = v.equipmentType
-        ORDER BY v.days_overdue DESC LIMIT 20
-    ")->fetchAll(PDO::FETCH_ASSOC);
-
-    // Technicians leaderboard
-    $technicians = $db->query("
-        SELECT preparedBy, COUNT(*) as cnt,
-               ROUND(AVG(CASE WHEN conditionRating='Excellent' THEN 4 WHEN conditionRating='Good' THEN 3 WHEN conditionRating='Fair' THEN 2 WHEN conditionRating='Poor' THEN 1 ELSE 0 END),1) as avg_rating
-        FROM tbl_maintenance_record
-        WHERE preparedBy IS NOT NULL AND preparedBy != ''
-        GROUP BY preparedBy ORDER BY cnt DESC LIMIT 10
-    ")->fetchAll(PDO::FETCH_ASSOC);
+    // Build query string for print URL
+    $printParams = [];
+    if ($filterDivision !== '') $printParams['division'] = $filterDivision;
+    if ($filterEqType   !== '') $printParams['eq_type']  = $filterEqType;
+    if ($filterDateFrom !== '') $printParams['date_from'] = $filterDateFrom;
+    if ($filterDateTo   !== '') $printParams['date_to']   = $filterDateTo;
+    $printQuery = !empty($printParams) ? '?' . http_build_query($printParams) : '';
 
 } catch (PDOException $e) {
     error_log("Maintenance summary error: " . $e->getMessage());
@@ -107,7 +32,71 @@ try {
 <div class="report-container">
     <div class="report-header">
         <h2><i class="fas fa-tools"></i> Maintenance Summary Report</h2>
-        <button class="print-btn" onclick="window.print()"><i class="fas fa-print"></i> Print Report</button>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <button class="print-btn" id="toggleMsFilters" onclick="document.getElementById('msFilterPanel').classList.toggle('open')"><i class="fas fa-filter"></i> Filters</button>
+            <button class="print-btn" id="printMsBtn" onclick="window.open('../includes/generative/generate_maintenance_summary.php<?= $printQuery ?>', '_blank')"><i class="fas fa-print"></i> Print Report</button>
+        </div>
+    </div>
+
+    <!-- Filter Panel -->
+    <div class="summary-filter-panel" id="msFilterPanel">
+        <form id="msFilterForm" class="summary-filter-form" method="GET">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label><i class="fas fa-building"></i> Division</label>
+                    <select name="division" id="msDivision">
+                        <option value="">All Divisions</option>
+                        <?php foreach ($divisions as $div): ?>
+                        <option value="<?= $div['location_id'] ?>" <?= $filterDivision == $div['location_id'] ? 'selected' : '' ?>><?= htmlspecialchars($div['location_name']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label><i class="fas fa-desktop"></i> Equipment Type</label>
+                    <select name="eq_type" id="msEqType">
+                        <option value="">All Types</option>
+                        <?php foreach ($equipmentTypes as $et): ?>
+                        <option value="<?= $et['typeId'] ?>" <?= $filterEqType == $et['typeId'] ? 'selected' : '' ?>><?= htmlspecialchars($et['typeName']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label><i class="fas fa-calendar"></i> Date From</label>
+                    <input type="date" name="date_from" id="msDateFrom" value="<?= htmlspecialchars($filterDateFrom) ?>">
+                </div>
+                <div class="filter-group">
+                    <label><i class="fas fa-calendar"></i> Date To</label>
+                    <input type="date" name="date_to" id="msDateTo" value="<?= htmlspecialchars($filterDateTo) ?>">
+                </div>
+                <div class="filter-actions">
+                    <button type="button" class="filter-apply-btn" onclick="applyMsFilters()"><i class="fas fa-search"></i> Apply</button>
+                    <button type="button" class="filter-reset-btn" onclick="resetMsFilters()"><i class="fas fa-times"></i> Reset</button>
+                </div>
+            </div>
+            <?php if ($filterDivision !== '' || $filterEqType !== '' || $filterDateFrom !== '' || $filterDateTo !== ''): ?>
+            <div class="active-filters">
+                <span class="active-filters-label"><i class="fas fa-filter"></i> Active:</span>
+                <?php if ($filterDivision !== ''): 
+                    $divName = '';
+                    foreach ($divisions as $d) { if ($d['location_id'] == $filterDivision) { $divName = $d['location_name']; break; } }
+                ?>
+                <span class="filter-tag"><?= htmlspecialchars($divName) ?> <button onclick="clearMsFilter('division')">&times;</button></span>
+                <?php endif; ?>
+                <?php if ($filterEqType !== ''):
+                    $etName = '';
+                    foreach ($equipmentTypes as $et) { if ($et['typeId'] == $filterEqType) { $etName = $et['typeName']; break; } }
+                ?>
+                <span class="filter-tag"><?= htmlspecialchars($etName) ?> <button onclick="clearMsFilter('eq_type')">&times;</button></span>
+                <?php endif; ?>
+                <?php if ($filterDateFrom !== ''): ?>
+                <span class="filter-tag">From: <?= htmlspecialchars($filterDateFrom) ?> <button onclick="clearMsFilter('date_from')">&times;</button></span>
+                <?php endif; ?>
+                <?php if ($filterDateTo !== ''): ?>
+                <span class="filter-tag">To: <?= htmlspecialchars($filterDateTo) ?> <button onclick="clearMsFilter('date_to')">&times;</button></span>
+                <?php endif; ?>
+            </div>
+            <?php endif; ?>
+        </form>
     </div>
 
     <!-- Key Metrics -->
@@ -238,6 +227,7 @@ try {
             <span class="badge-sm bg-overdue"><?= $overdue ?> items</span>
         </div>
         <div class="ms-panel-body" style="padding: 0; max-height: 400px; overflow-y: auto;">
+            <div class="ms-table-scroll">
             <table class="ms-table">
                 <thead><tr><th>Equipment</th><th>Type</th><th>Maintenance</th><th>Due Date</th><th>Days Overdue</th></tr></thead>
                 <tbody>
@@ -257,15 +247,17 @@ try {
                     <?php endforeach; ?>
                 </tbody>
             </table>
+            </div>
         </div>
     </div>
     <?php endif; ?>
 
     <!-- Technicians Leaderboard -->
     <?php if (!empty($technicians)): ?>
-    <div class="ms-panel" style="margin-top: 1.5rem;">
+    <!-- <div class="ms-panel" style="margin-top: 1.5rem;">
         <div class="ms-panel-hdr"><h3><i class="fas fa-user-cog"></i> Maintenance Technicians</h3></div>
         <div class="ms-panel-body" style="padding: 0;">
+            <div class="ms-table-scroll">
             <table class="ms-table">
                 <thead><tr><th>#</th><th>Technician</th><th>Records</th><th>Avg Rating</th></tr></thead>
                 <tbody>
@@ -288,7 +280,46 @@ try {
                     <?php endforeach; ?>
                 </tbody>
             </table>
+            </div>
         </div>
-    </div>
+    </div> -->
     <?php endif; ?>
 </div>
+<script>
+function applyMsFilters() {
+    var params = new URLSearchParams();
+    var div = document.getElementById('msDivision').value;
+    var eq  = document.getElementById('msEqType').value;
+    var df  = document.getElementById('msDateFrom').value;
+    var dt  = document.getElementById('msDateTo').value;
+    if (div) params.set('division', div);
+    if (eq)  params.set('eq_type', eq);
+    if (df)  params.set('date_from', df);
+    if (dt)  params.set('date_to', dt);
+    var qs = params.toString();
+    var url = '../modules/reports/maintenance-summary.php' + (qs ? '?' + qs : '');
+    document.getElementById('contentArea').innerHTML = '<div class="loading-spinner" style="display:flex;"><div class="spinner"></div><p>Loading...</p></div>';
+    fetch(url).then(r => r.text()).then(html => { document.getElementById('contentArea').innerHTML = html; });
+}
+function resetMsFilters() {
+    document.getElementById('msDivision').value = '';
+    document.getElementById('msEqType').value = '';
+    document.getElementById('msDateFrom').value = '';
+    document.getElementById('msDateTo').value = '';
+    applyMsFilters();
+}
+function clearMsFilter(key) {
+    if (key === 'division') document.getElementById('msDivision').value = '';
+    if (key === 'eq_type')  document.getElementById('msEqType').value = '';
+    if (key === 'date_from') document.getElementById('msDateFrom').value = '';
+    if (key === 'date_to')  document.getElementById('msDateTo').value = '';
+    applyMsFilters();
+}
+<?php if ($filterDivision !== '' || $filterEqType !== '' || $filterDateFrom !== '' || $filterDateTo !== ''): ?>
+document.addEventListener('DOMContentLoaded', function() {
+    var panel = document.getElementById('msFilterPanel');
+    if (panel) panel.classList.add('open');
+});
+if (document.getElementById('msFilterPanel')) document.getElementById('msFilterPanel').classList.add('open');
+<?php endif; ?>
+</script>

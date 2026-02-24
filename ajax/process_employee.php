@@ -9,6 +9,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
 // Include database connection
 require_once '../config/database.php';
+require_once '../config/config.php';
 
 // Set JSON header for AJAX responses
 header('Content-Type: application/json');
@@ -153,6 +154,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Set success message in session
                 $_SESSION['employee_message'] = 'Employee added successfully!';
                 $_SESSION['employee_message_type'] = 'success';
+
+                logActivity(ACTION_CREATE, MODULE_EMPLOYEES,
+                    "Added employee {$firstName} {$lastName} (Employee ID: {$employeeId}, Position: {$position}, Status: {$employmentStatus}).");
                 
                 echo json_encode([
                     'success' => true,
@@ -264,6 +268,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 $_SESSION['employee_message'] = 'Employee updated successfully!';
                 $_SESSION['employee_message_type'] = 'success';
+
+                logActivity(ACTION_UPDATE, MODULE_EMPLOYEES,
+                    "Updated employee {$firstName} {$lastName} (Employee ID: {$employeeId}, Position: {$position}, Status: {$employmentStatus}).");
                 
                 echo json_encode([
                     'success' => true,
@@ -298,6 +305,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 $_SESSION['employee_message'] = 'Employee deleted successfully!';
                 $_SESSION['employee_message_type'] = 'success';
+
+                logActivity(ACTION_DELETE, MODULE_EMPLOYEES,
+                    "Deleted employee (ID: {$id}).");
                 
                 echo json_encode([
                     'success' => true,

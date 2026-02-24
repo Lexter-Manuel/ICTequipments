@@ -1,4 +1,3 @@
-
 /* Assigned employee cell */
 .assigned-employee {
     display: flex;
@@ -72,3 +71,38 @@
 
 .software-info strong { color: var(--text-dark); font-size: var(--text-base); display: block; }
 .software-info span   { color: var(--text-medium); font-size: var(--text-sm); }
+
+/* Responsive */
+@media (max-width: 768px) {
+    .software-icon { width: 28px; height: 28px; font-size: 13px; }
+    .software-name { gap: var(--space-2); }
+    .software-info strong { font-size: var(--text-sm); }
+    .software-info span { font-size: var(--text-xs); }
+    .expiry-pill { padding: 3px 8px; font-size: 0.65rem; }
+}
+
+@media (max-width: 480px) {
+    .software-icon { width: 24px; height: 24px; font-size: 11px; }
+    .assigned-employee { font-size: var(--text-xs); }
+}
+/* ============================================================
+   RESPONSIVE — Software-specific
+   ============================================================ */
+
+/* The stats-grid has 6 cards (inline style forces auto-fit minmax).
+   Override to keep it sensible at each breakpoint. */
+@media (max-width: 1280px) {
+    /* 3 columns on medium screens */
+    .stats-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 768px) {
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 480px) {
+    .stats-grid { grid-template-columns: 1fr; }
+    .software-icon { width: 24px; height: 24px; font-size: 11px; }
+    .assigned-employee { font-size: var(--text-xs); }
+    .expiry-pill { padding: 3px 8px; font-size: 0.62rem; }
+}

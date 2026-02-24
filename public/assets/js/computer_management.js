@@ -427,8 +427,4 @@ function refreshCurrentTab() {
     if (typeof filterSystemUnits === 'function') filterSystemUnits();
 }
 
-function escapeHtml(text) {
-    var div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
+// escapeHtml provided by shared utils.js

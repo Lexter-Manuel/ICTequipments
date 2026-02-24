@@ -50,18 +50,7 @@
     flex: 1;
 }
 
-@media (max-width: 1024px) {
-    .modal-dialog {
-        left: 50% !important;
-    }
-    .modal-backdrop {
-        left: 0 !important;
-        width: 100vw !important;
-    }
-    .modal-fullscreen .modal-dialog {
-        left: 0 !important;
-    }
-}
+/* Sidebar-aware modal positioning handled in RESPONSIVE section below */
 
 /* Template-specific styles */
 .template-card {
@@ -256,4 +245,71 @@
 .template-badge {
     top: 28px;
     right: 55px;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 1024px) {
+    .modal-dialog {
+        left: 50% !important;
+        width: 90vw;
+        max-width: calc(100vw - 40px) !important;
+    }
+    .modal-backdrop {
+        left: 0 !important;
+        width: 100vw !important;
+    }
+    .modal-fullscreen .modal-dialog {
+        left: 0 !important;
+        width: 100vw !important;
+        max-width: 100vw !important;
+    }
+    .builder-paper {
+        max-width: 100%;
+        padding: 24px;
+        min-height: auto;
+    }
+}
+
+@media (max-width: 768px) {
+    .modal-dialog {
+        width: 96vw;
+        max-width: calc(100vw - 16px) !important;
+    }
+    .builder-paper {
+        padding: 16px;
+        min-height: auto;
+    }
+    .paper-title { font-size: 16px; }
+    .paper-subtitle { font-size: 12px; }
+    .signatory-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    .checklist-row {
+        flex-wrap: wrap;
+        gap: 4px;
+        padding: 8px 10px;
+    }
+    .section-header {
+        font-size: 11px;
+        padding: 6px 10px;
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+    .template-stats {
+        flex-direction: column;
+        gap: var(--space-2);
+    }
+}
+
+@media (max-width: 480px) {
+    .builder-paper { padding: 12px; }
+    .paper-header { padding-bottom: 12px; margin-bottom: 16px; }
+    .paper-title { font-size: 14px; }
+    .paper-section { margin-bottom: 16px; }
+    .checklist-row { padding: 6px 8px; font-size: 12px; }
+    .sig-line { font-size: 12px; margin-top: 20px; }
+    .sig-role { font-size: 10px; }
 }

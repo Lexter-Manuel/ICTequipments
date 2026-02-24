@@ -170,29 +170,7 @@ function renderPagination(p) {
     var wrap = document.getElementById('schedPagination');
     if (!wrap) return;
     if (p.totalPages <= 1) { wrap.innerHTML = ''; return; }
-
-    var html = `<button class="page-btn" onclick="loadDetailedSchedule(${p.page - 1})" ${p.page === 1 ? 'disabled' : ''}>
-        <i class="fas fa-chevron-left"></i></button>`;
-
-    getSchedPaginationRange(p.page, p.totalPages).forEach(function(n) {
-        if (n === '...') {
-            html += `<span class="page-ellipsis">…</span>`;
-        } else {
-            html += `<button class="page-btn ${n === p.page ? 'active' : ''}" onclick="loadDetailedSchedule(${n})">${n}</button>`;
-        }
-    });
-
-    html += `<button class="page-btn" onclick="loadDetailedSchedule(${p.page + 1})" ${p.page === p.totalPages ? 'disabled' : ''}>
-        <i class="fas fa-chevron-right"></i></button>`;
-
-    wrap.innerHTML = html;
-}
-
-function getSchedPaginationRange(current, total) {
-    if (total <= 7) return Array.from({length: total}, function(_, i) { return i + 1; });
-    if (current <= 4) return [1, 2, 3, 4, 5, '...', total];
-    if (current >= total - 3) return [1, '...', total-4, total-3, total-2, total-1, total];
-    return [1, '...', current-1, current, current+1, '...', total];
+    renderPaginationControls('schedPagination', p.page, p.totalPages, 'loadDetailedSchedule');
 }
 
 function changeSchedPerPage() {

@@ -1,5 +1,6 @@
 <?php
 require_once '../config/database.php';
+require_once '../config/config.php';
 header('Content-Type: application/json');
 $db = getDB();
 
@@ -68,9 +69,13 @@ try {
     ");
     $stmtInsert->execute([$typeId, $equipmentId, $dateToUse]);
     
+    $newScheduleId = $db->lastInsertId();
+
+    logActivity(ACTION_CREATE, MODULE_MAINTENANCE, "Created maintenance schedule #{$newScheduleId} for equipment ID {$equipmentId} (type {$typeId}). {$syncMessage}");
+
     echo json_encode([
         'success' => true, 
-        'scheduleId' => $db->lastInsertId(), 
+        'scheduleId' => $newScheduleId, 
         'message' => 'Schedule created. ' . $syncMessage
     ]);
 

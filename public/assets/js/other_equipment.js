@@ -63,22 +63,7 @@ function applyTableState() {
         countEl.innerHTML = `Showing <strong>${total === 0 ? 0 : start + 1}–${end}</strong> of <strong>${total}</strong> records`;
     }
 
-    renderPagination(totalPages);
-}
-
-function renderPagination(totalPages) {
-    const container = document.getElementById('paginationControls');
-    if (!container) return;
-
-    let html = `<button class="page-btn" onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>
-        <i class="fas fa-chevron-left"></i></button>`;
-
-    html += `<span class="px-2">Page ${currentPage} of ${totalPages}</span>`;
-
-    html += `<button class="page-btn" onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>
-        <i class="fas fa-chevron-right"></i></button>`;
-
-    container.innerHTML = html;
+    renderPaginationControls('paginationControls', currentPage, totalPages, 'goToPage');
 }
 
 function goToPage(page) {
@@ -227,13 +212,7 @@ function deleteOtherEquipment(id) {
     });
 }
 
-// Helper
-function escapeHtml(text) {
-    if (text === null || text === undefined) return '';
-    var div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
+// escapeHtml provided by shared utils.js
 
 // ==========================================
 // VIEW EQUIPMENT DETAILS

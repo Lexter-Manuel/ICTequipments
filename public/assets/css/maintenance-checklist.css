@@ -169,11 +169,22 @@
     margin-bottom: var(--space-6);
 }
 
+/* Horizontal scroll for narrow screens */
+.mc-table-scroll {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+.mc-table-scroll::-webkit-scrollbar { height: 5px; }
+.mc-table-scroll::-webkit-scrollbar-track { background: var(--bg-light); }
+.mc-table-scroll::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
+
 .mc-table {
     width: 100%;
     border-collapse: collapse;
     font-family: var(--font-body);
     font-size: var(--text-base);
+    min-width: 600px;
 }
 
 /* Head */
@@ -531,12 +542,15 @@
 
     .mc-signatories-grid { grid-template-columns: 1fr; }
 
+    .mc-table { min-width: 540px; }
     .mc-table thead th { font-size: 10px; padding: 10px var(--space-3); }
     .mc-table tbody td { padding: 10px var(--space-3); font-size: var(--text-sm); }
 
     .mc-actions { justify-content: stretch; }
     .mc-btn-cancel,
     .mc-btn-submit { flex: 1; justify-content: center; }
+
+    #maintenanceModal .mc-card-body { padding: var(--space-4); }
 }
 
 @media (max-width: 480px) {

@@ -5,167 +5,94 @@ require_once '../../config/database.php';
 try {
     $db = Database::getInstance()->getConnection();
 
-    // Equipment counts
-    $suCount  = (int) $db->query("SELECT COUNT(*) FROM tbl_systemunit")->fetchColumn();
-    $moCount  = (int) $db->query("SELECT COUNT(*) FROM tbl_monitor")->fetchColumn();
-    $prCount  = (int) $db->query("SELECT COUNT(*) FROM tbl_printer")->fetchColumn();
-    $aioCount = (int) $db->query("SELECT COUNT(*) FROM tbl_allinone")->fetchColumn();
-    $othCount = (int) $db->query("SELECT COUNT(*) FROM tbl_otherequipment")->fetchColumn();
-    $total    = $suCount + $moCount + $prCount + $aioCount + $othCount;
+    // ---------- Filters ----------
+    $filterDivision = isset($_GET['division']) ? trim($_GET['division']) : '';
+    $filterEqType   = isset($_GET['eq_type'])  ? trim($_GET['eq_type'])  : '';
+    $filterYear     = isset($_GET['year'])      ? trim($_GET['year'])     : '';
 
-    // Assigned/unassigned
-    $assigned = (int) $db->query("SELECT (
-        (SELECT COUNT(*) FROM tbl_systemunit WHERE employeeId IS NOT NULL) +
-        (SELECT COUNT(*) FROM tbl_monitor WHERE employeeId IS NOT NULL) +
-        (SELECT COUNT(*) FROM tbl_printer WHERE employeeId IS NOT NULL) +
-        (SELECT COUNT(*) FROM tbl_allinone WHERE employeeId IS NOT NULL) +
-        (SELECT COUNT(*) FROM tbl_otherequipment WHERE employeeId IS NOT NULL)
-    )")->fetchColumn();
-    $unassigned = $total - $assigned;
+    // Load all queries from shared include
+    require_once __DIR__ . '/../../includes/queries/equipment_summary_queries.php';
 
-    // Equipment by division
-    $byDivision = $db->query("
-        SELECT l.location_name as division,
-               COUNT(DISTINCT su.systemunitId) as system_units,
-               COUNT(DISTINCT mo.monitorId) as monitors,
-               COUNT(DISTINCT pr.printerId) as printers,
-               COUNT(DISTINCT aio.allinoneId) as allinones
-        FROM location l
-        LEFT JOIN location sec ON sec.parent_location_id = l.location_id AND sec.is_deleted = '0'
-        LEFT JOIN location unit ON unit.parent_location_id = sec.location_id AND unit.is_deleted = '0'
-        LEFT JOIN tbl_employee e ON (e.location_id = l.location_id OR e.location_id = sec.location_id OR e.location_id = unit.location_id) AND e.is_active = 1
-        LEFT JOIN tbl_systemunit su ON su.employeeId = e.employeeId
-        LEFT JOIN tbl_monitor mo ON mo.employeeId = e.employeeId
-        LEFT JOIN tbl_printer pr ON pr.employeeId = e.employeeId
-        LEFT JOIN tbl_allinone aio ON aio.employeeId = e.employeeId
-        WHERE l.location_type_id = 1 AND l.is_deleted = '0'
-        GROUP BY l.location_id, l.location_name
-        ORDER BY l.location_name
-    ")->fetchAll(PDO::FETCH_ASSOC);
-
-    // Equipment by year acquired
-    $byYear = $db->query("
-        SELECT year_acquired, SUM(cnt) as total FROM (
-            SELECT yearAcquired as year_acquired, COUNT(*) as cnt FROM tbl_systemunit WHERE yearAcquired IS NOT NULL GROUP BY yearAcquired
-            UNION ALL
-            SELECT yearAcquired, COUNT(*) FROM tbl_monitor WHERE yearAcquired IS NOT NULL GROUP BY yearAcquired
-            UNION ALL
-            SELECT yearAcquired, COUNT(*) FROM tbl_printer WHERE yearAcquired IS NOT NULL GROUP BY yearAcquired
-            UNION ALL
-            SELECT yearAcquired, COUNT(*) FROM tbl_otherequipment WHERE yearAcquired IS NOT NULL GROUP BY yearAcquired
-        ) combined GROUP BY year_acquired ORDER BY year_acquired DESC
-    ")->fetchAll(PDO::FETCH_ASSOC);
-
-    // Latest condition from maintenance records
-    $conditionSummary = $db->query("
-        SELECT conditionRating, COUNT(*) as cnt 
-        FROM (
-            SELECT mr.conditionRating,
-                   ROW_NUMBER() OVER (PARTITION BY mr.scheduleId ORDER BY mr.maintenanceDate DESC) as rn
-            FROM tbl_maintenance_record mr WHERE mr.conditionRating != ''
-        ) latest WHERE rn = 1 GROUP BY conditionRating ORDER BY FIELD(conditionRating, 'Excellent','Good','Fair','Poor')
-    ")->fetchAll(PDO::FETCH_ASSOC);
-
-    // Status from maintenance records
-    $statusSummary = $db->query("
-        SELECT overallStatus, COUNT(*) as cnt 
-        FROM (
-            SELECT mr.overallStatus,
-                   ROW_NUMBER() OVER (PARTITION BY mr.scheduleId ORDER BY mr.maintenanceDate DESC) as rn
-            FROM tbl_maintenance_record mr WHERE mr.overallStatus != ''
-        ) latest WHERE rn = 1 GROUP BY overallStatus ORDER BY FIELD(overallStatus, 'Operational','For Replacement','Disposed')
-    ")->fetchAll(PDO::FETCH_ASSOC);
-
-    // Software license summary
-    $softTotal     = (int) $db->query("SELECT COUNT(*) FROM tbl_software")->fetchColumn();
-    $softExpired   = (int) $db->query("SELECT COUNT(*) FROM tbl_software WHERE expiryDate IS NOT NULL AND expiryDate < CURDATE()")->fetchColumn();
-    $softExpiring  = (int) $db->query("SELECT COUNT(*) FROM tbl_software WHERE expiryDate IS NOT NULL AND expiryDate BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 90 DAY)")->fetchColumn();
-    $softPerpetual = (int) $db->query("SELECT COUNT(*) FROM tbl_software WHERE licenseType = 'Perpetual'")->fetchColumn();
+    // Build query string for print URL
+    $printParams = [];
+    if ($filterDivision !== '') $printParams['division'] = $filterDivision;
+    if ($filterEqType   !== '') $printParams['eq_type']  = $filterEqType;
+    if ($filterYear     !== '') $printParams['year']     = $filterYear;
+    $printQuery = !empty($printParams) ? '?' . http_build_query($printParams) : '';
 
 } catch (PDOException $e) {
     error_log("Equipment summary error: " . $e->getMessage());
 }
 ?>
 
-<style>
-.report-container { animation: fadeInUp 0.4s ease-out; }
-.report-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; }
-.report-header h2 { font-size: 1.5rem; font-weight: 700; color: var(--text-dark); margin: 0; display: flex; align-items: center; gap: 0.5rem; }
-.report-header h2 i { color: var(--primary-green); }
-
-.report-grid { display: grid; gap: 1.25rem; margin-bottom: 1.5rem; }
-.report-grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
-.report-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
-.report-grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
-
-.rpt-stat {
-    background: #fff; border-radius: var(--radius-xl); padding: 1.25rem 1.5rem;
-    box-shadow: var(--shadow-md); border: 1px solid var(--border-color);
-    display: flex; align-items: center; gap: 1rem;
-}
-.rpt-stat .rpt-icon {
-    width: 44px; height: 44px; border-radius: var(--radius-md);
-    display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;
-}
-.rpt-stat .rpt-icon.green { background: rgba(34,197,94,0.1); color: #16a34a; }
-.rpt-stat .rpt-icon.blue { background: rgba(59,130,246,0.1); color: #2563eb; }
-.rpt-stat .rpt-icon.purple { background: rgba(139,92,246,0.1); color: #7c3aed; }
-.rpt-stat .rpt-icon.orange { background: rgba(249,115,22,0.1); color: #ea580c; }
-.rpt-stat .rpt-icon.red { background: rgba(239,68,68,0.1); color: #dc2626; }
-.rpt-stat .rpt-icon.teal { background: rgba(20,184,166,0.1); color: #0d9488; }
-.rpt-stat .rpt-val { font-size: 1.5rem; font-weight: 800; color: var(--text-dark); font-family: var(--font-mono); }
-.rpt-stat .rpt-lbl { font-size: 0.75rem; color: var(--text-medium); font-weight: 600; text-transform: uppercase; }
-
-.rpt-panel {
-    background: #fff; border-radius: var(--radius-xl); border: 1px solid var(--border-color);
-    box-shadow: var(--shadow-md); overflow: hidden;
-}
-.rpt-panel-header {
-    padding: 1rem 1.25rem; border-bottom: 1px solid var(--border-color);
-    display: flex; justify-content: space-between; align-items: center;
-}
-.rpt-panel-header h3 { font-size: 0.95rem; font-weight: 700; color: var(--text-dark); margin: 0; display: flex; align-items: center; gap: 0.5rem; }
-.rpt-panel-header h3 i { color: var(--primary-green); font-size: 0.9rem; }
-.rpt-panel-body { padding: 1rem 1.25rem; }
-
-.rpt-table { width: 100%; border-collapse: collapse; }
-.rpt-table thead th {
-    padding: 0.65rem 0.75rem; font-size: 0.7rem; text-transform: uppercase;
-    font-weight: 700; color: var(--text-medium); background: #f9fafb;
-    border-bottom: 2px solid var(--border-color); text-align: left;
-}
-.rpt-table tbody td { padding: 0.6rem 0.75rem; font-size: 0.825rem; border-bottom: 1px solid #f3f4f6; }
-.rpt-table tbody tr:last-child td { border-bottom: none; }
-.rpt-table tfoot td { padding: 0.65rem 0.75rem; font-weight: 700; border-top: 2px solid var(--border-color); background: #f9fafb; }
-
-.badge-sm { padding: 0.15rem 0.5rem; border-radius: 8px; font-size: 0.65rem; font-weight: 700; }
-.bg-excellent { background: #dcfce7; color: #166534; }
-.bg-good { background: #dbeafe; color: #1e40af; }
-.bg-fair { background: #fef3c7; color: #92400e; }
-.bg-poor { background: #fef2f2; color: #991b1b; }
-.bg-operational { background: #dcfce7; color: #166534; }
-.bg-replacement { background: #fef2f2; color: #991b1b; }
-.bg-disposed { background: #f3f4f6; color: #6b7280; }
-
-.print-btn {
-    padding: 0.5rem 1rem; border-radius: var(--radius-md); border: none;
-    background: var(--primary-green); color: #fff; font-weight: 600; font-size: 0.825rem;
-    cursor: pointer; display: flex; align-items: center; gap: 0.35rem;
-}
-.print-btn:hover { background: var(--primary-dark); }
-
-@media (max-width: 1200px) { .report-grid.cols-4 { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 768px) { .report-grid.cols-4, .report-grid.cols-3, .report-grid.cols-2 { grid-template-columns: 1fr; } }
-@media print {
-    .report-header button, .print-btn { display: none !important; }
-    .rpt-panel, .rpt-stat { box-shadow: none; border: 1px solid #ddd; }
-}
-</style>
+<link rel="stylesheet" href="assets/css/equipment-summary.css?v=<?php echo time(); ?>">
 
 <div class="report-container">
     <div class="report-header">
         <h2><i class="fas fa-boxes"></i> Equipment Summary Report</h2>
-        <button class="print-btn" onclick="window.print()"><i class="fas fa-print"></i> Print Report</button>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <button class="print-btn" id="toggleEqFilters" onclick="document.getElementById('eqFilterPanel').classList.toggle('open')"><i class="fas fa-filter"></i> Filters</button>
+            <button class="print-btn" onclick="window.open('../includes/generative/generate_equipment_summary.php<?= $printQuery ?>', '_blank')"><i class="fas fa-print"></i> Print Report</button>
+        </div>
+    </div>
+
+    <!-- Filter Panel -->
+    <div class="summary-filter-panel" id="eqFilterPanel">
+        <form id="eqFilterForm" class="summary-filter-form" method="GET">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label><i class="fas fa-building"></i> Division</label>
+                    <select name="division" id="eqDivision">
+                        <option value="">All Divisions</option>
+                        <?php foreach ($divisions as $div): ?>
+                        <option value="<?= $div['location_id'] ?>" <?= $filterDivision == $div['location_id'] ? 'selected' : '' ?>><?= htmlspecialchars($div['location_name']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label><i class="fas fa-desktop"></i> Equipment Type</label>
+                    <select name="eq_type" id="eqEqType">
+                        <option value="">All Types</option>
+                        <?php foreach ($equipmentTypes as $et): ?>
+                        <option value="<?= $et['typeId'] ?>" <?= $filterEqType == $et['typeId'] ? 'selected' : '' ?>><?= htmlspecialchars($et['typeName']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label><i class="fas fa-calendar"></i> Year Acquired</label>
+                    <select name="year" id="eqYear">
+                        <option value="">All Years</option>
+                        <?php foreach ($yearOptions as $yr): ?>
+                        <option value="<?= $yr ?>" <?= $filterYear == $yr ? 'selected' : '' ?>><?= $yr ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="filter-actions">
+                    <button type="button" class="filter-apply-btn" onclick="applyEqFilters()"><i class="fas fa-search"></i> Apply</button>
+                    <button type="button" class="filter-reset-btn" onclick="resetEqFilters()"><i class="fas fa-times"></i> Reset</button>
+                </div>
+            </div>
+            <?php if ($filterDivision !== '' || $filterEqType !== '' || $filterYear !== ''): ?>
+            <div class="active-filters">
+                <span class="active-filters-label"><i class="fas fa-filter"></i> Active:</span>
+                <?php if ($filterDivision !== ''): 
+                    $divName = '';
+                    foreach ($divisions as $d) { if ($d['location_id'] == $filterDivision) { $divName = $d['location_name']; break; } }
+                ?>
+                <span class="filter-tag"><?= htmlspecialchars($divName) ?> <button onclick="clearEqFilter('division')">&times;</button></span>
+                <?php endif; ?>
+                <?php if ($filterEqType !== ''):
+                    $etName = '';
+                    foreach ($equipmentTypes as $et) { if ($et['typeId'] == $filterEqType) { $etName = $et['typeName']; break; } }
+                ?>
+                <span class="filter-tag"><?= htmlspecialchars($etName) ?> <button onclick="clearEqFilter('eq_type')">&times;</button></span>
+                <?php endif; ?>
+                <?php if ($filterYear !== ''): ?>
+                <span class="filter-tag">Year: <?= htmlspecialchars($filterYear) ?> <button onclick="clearEqFilter('year')">&times;</button></span>
+                <?php endif; ?>
+            </div>
+            <?php endif; ?>
+        </form>
     </div>
 
     <!-- Totals -->
@@ -302,3 +229,37 @@ try {
         </div>
     </div>
 </div>
+<script>
+function applyEqFilters() {
+    var params = new URLSearchParams();
+    var div = document.getElementById('eqDivision').value;
+    var eq  = document.getElementById('eqEqType').value;
+    var yr  = document.getElementById('eqYear').value;
+    if (div) params.set('division', div);
+    if (eq)  params.set('eq_type', eq);
+    if (yr)  params.set('year', yr);
+    var qs = params.toString();
+    var url = '../modules/reports/equipment-summary.php' + (qs ? '?' + qs : '');
+    document.getElementById('contentArea').innerHTML = '<div class="loading-spinner" style="display:flex;"><div class="spinner"></div><p>Loading...</p></div>';
+    fetch(url).then(r => r.text()).then(html => { document.getElementById('contentArea').innerHTML = html; });
+}
+function resetEqFilters() {
+    document.getElementById('eqDivision').value = '';
+    document.getElementById('eqEqType').value = '';
+    document.getElementById('eqYear').value = '';
+    applyEqFilters();
+}
+function clearEqFilter(key) {
+    if (key === 'division') document.getElementById('eqDivision').value = '';
+    if (key === 'eq_type')  document.getElementById('eqEqType').value = '';
+    if (key === 'year')     document.getElementById('eqYear').value = '';
+    applyEqFilters();
+}
+<?php if ($filterDivision !== '' || $filterEqType !== '' || $filterYear !== ''): ?>
+document.addEventListener('DOMContentLoaded', function() {
+    var panel = document.getElementById('eqFilterPanel');
+    if (panel) panel.classList.add('open');
+});
+if (document.getElementById('eqFilterPanel')) document.getElementById('eqFilterPanel').classList.add('open');
+<?php endif; ?>
+</script>

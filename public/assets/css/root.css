@@ -117,6 +117,70 @@
 }
 
 /* ============================================================
+   DARK MODE TOKENS
+   Applied when <html data-theme="dark">
+   ============================================================ */
+[data-theme="dark"] {
+    /* — Brand Colors — */
+    --primary-green:       #3d9b6b;
+    --primary-dark:        #2d7a4f;
+    --primary-light:       #4db87e;
+    --primary-xlight:      rgba(61, 155, 107, 0.15);
+
+    /* — Neutral Palette — */
+    --bg-page:             #0f1419;
+    --bg-light:            #161b22;
+    --bg-white:            #1c2128;
+
+    /* — Text — */
+    --text-dark:           #e6edf3;
+    --text-medium:         #9eaab6;
+    --text-light:          #6b7b8d;
+
+    /* — Borders & Dividers — */
+    --border-color:        #2d3640;
+    --border-focus:        var(--primary-green);
+
+    /* — Shadows (darker for dark mode) — */
+    --shadow-soft:         0 2px 8px rgba(0, 0, 0, 0.25);
+    --shadow-card:         0 4px 16px rgba(0, 0, 0, 0.30);
+    --shadow-hover:        0 8px 24px rgba(0, 0, 0, 0.40);
+    --shadow-sidebar:      4px 0 24px rgba(0, 0, 0, 0.50);
+    --shadow-md:           0 4px 16px rgba(0, 0, 0, 0.30);
+    --shadow-xl:           0 8px 32px rgba(0, 0, 0, 0.45);
+    --shadow-medium:       rgba(0, 0, 0, 0.35);
+
+    /* — Semantic colours (brighter for dark bg) — */
+    --color-success:       #3fb950;
+    --color-success-bg:    rgba(63, 185, 80, 0.12);
+    --color-warning:       #d29922;
+    --color-warning-bg:    rgba(210, 153, 34, 0.12);
+    --color-danger:        #f85149;
+    --color-danger-bg:     rgba(248, 81, 73, 0.12);
+    --color-info:          #58a6ff;
+    --color-info-bg:       rgba(88, 166, 255, 0.12);
+
+    /* — Legacy aliases — */
+    --accent-green:        #4db87e;
+    --success-600:         #3fb950;
+    --danger-600:          #f85149;
+    --neutral-100:         #1c2128;
+    --neutral-300:         #2d3640;
+
+    /* — Status aliases — */
+    --status-success:      #3fb950;
+    --status-warning:      #d29922;
+    --status-danger:       #f85149;
+    --status-info:         #58a6ff;
+}
+
+/* Dark-mode scrollbar */
+[data-theme="dark"] ::-webkit-scrollbar { width: 8px; height: 8px; }
+[data-theme="dark"] ::-webkit-scrollbar-track { background: var(--bg-light); }
+[data-theme="dark"] ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover { background: #3d4a56; }
+
+/* ============================================================
    2. BASE RESET & BODY
    ============================================================ */
 *, *::before, *::after {
@@ -972,22 +1036,35 @@ textarea.form-control {
     :root { --content-padding: var(--space-5) var(--space-4); }
 
     .page-header { flex-direction: column; align-items: stretch; }
+    .header-actions { flex-direction: column; align-items: stretch; }
+    .header-actions .btn { width: 100%; justify-content: center; }
 
     .table-header { flex-direction: column; align-items: stretch; }
-    .table-controls { flex-direction: column; }
-    .filter-group select, .btn { width: 100%; }
+    .table-controls { flex-direction: column; align-items: stretch; }
+    .table-controls .filter-group,
+    .table-controls .search-box { width: 100%; min-width: 0; }
+    .table-controls .filter-group select { width: 100%; }
+    .table-controls .btn { width: 100%; justify-content: center; }
+
+    /* Table footer: stack on mobile */
+    .table-footer { flex-direction: column; align-items: flex-start; gap: var(--space-2); }
+    .pagination-controls { width: 100%; justify-content: center; display: flex; flex-wrap: wrap; }
 
     .stats-grid { gap: var(--space-4); }
 
     .modal-dialog { margin: 0.5rem; max-width: calc(100% - 1rem); }
     .modal-body   { padding: var(--space-4); }
+
+    /* Bootstrap-like col-md-* columns go full-width */
+    .col-md-4, .col-md-6, .col-md-8 { width: 100% !important; }
+    .row { display: flex !important; flex-wrap: wrap !important; }
 }
 
 /* Mobile Portrait */
 @media (max-width: 640px) {
     :root { --content-padding: var(--space-4); }
 
-    .stats-grid { grid-template-columns: 1fr; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
 
     .stat-card   { padding: var(--space-4); }
     .stat-value  { font-size: 26px; }
@@ -1004,11 +1081,16 @@ textarea.form-control {
     .modal-dialog.modal-lg { max-width: 100%; margin: 0; }
     .modal-content { border-radius: 0; }
     .modal-title { font-size: var(--text-md); }
+
+    .modal-footer { flex-wrap: wrap; gap: var(--space-2); }
+    .modal-footer .btn { flex: 1; min-width: 110px; justify-content: center; }
 }
 
 /* Extra Small */
 @media (max-width: 480px) {
+    .stats-grid { grid-template-columns: 1fr; }
     .stat-value { font-size: 22px; }
+    .page-btn { min-width: 30px; height: 30px; font-size: 12px; }
 }
 
 /* ============================================================
@@ -1028,4 +1110,87 @@ textarea.form-control {
     .data-table table { min-width: 100%; }
     .data-table thead { background: #e8e8e8 !important; }
     .data-table th { color: #000 !important; }
+}
+
+/* ============================================================
+   20. DARK MODE — Component Overrides (root.css)
+   ============================================================ */
+
+/* Focus rings */
+[data-theme="dark"] .form-control:focus,
+[data-theme="dark"] .form-select:focus,
+[data-theme="dark"] .form-group input:focus,
+[data-theme="dark"] .form-group textarea:focus,
+[data-theme="dark"] .search-box input:focus {
+    box-shadow: 0 0 0 3px rgba(61, 155, 107, 0.25);
+}
+
+/* Data table header */
+[data-theme="dark"] .data-table thead {
+    background: #1a2633;
+}
+
+/* Stat card accent bar */
+[data-theme="dark"] .stat-card::after {
+    background: linear-gradient(90deg, var(--primary-green), var(--primary-light));
+}
+
+/* Serial number badge */
+[data-theme="dark"] .serial-number {
+    background: rgba(61, 155, 107, 0.15);
+}
+
+/* Active badges */
+[data-theme="dark"] .active-badge-yes {
+    background: rgba(63, 185, 80, 0.15);
+}
+[data-theme="dark"] .active-badge-no {
+    background: rgba(248, 81, 73, 0.12);
+}
+
+/* Buttons — adjust hover/gradient tones */
+[data-theme="dark"] .btn-secondary {
+    background: var(--bg-light);
+    border-color: var(--border-color);
+    color: var(--text-medium);
+}
+[data-theme="dark"] .btn-secondary:hover:not(:disabled) {
+    background: var(--bg-white);
+    border-color: var(--primary-green);
+    color: var(--primary-green);
+}
+
+[data-theme="dark"] .btn-icon,
+[data-theme="dark"] .btn-action {
+    background: var(--bg-light);
+    border-color: var(--border-color);
+    color: var(--text-medium);
+}
+
+/* Modal */
+[data-theme="dark"] .modal-content {
+    background: var(--bg-white);
+    border-color: var(--border-color);
+    color: var(--text-dark);
+}
+[data-theme="dark"] .modal-header {
+    border-color: var(--border-color);
+}
+[data-theme="dark"] .modal-footer {
+    border-color: var(--border-color);
+}
+[data-theme="dark"] .modal-backdrop {
+    background: rgba(0, 0, 0, 0.65);
+}
+[data-theme="dark"] .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+/* image/code elements */
+[data-theme="dark"] code {
+    background: var(--bg-light);
+    color: var(--text-dark);
+}
+[data-theme="dark"] img {
+    opacity: 0.92;
 }

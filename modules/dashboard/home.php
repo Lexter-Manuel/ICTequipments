@@ -250,7 +250,7 @@ try {
         <div class="stat-icon-sm teal"><i class="fas fa-laptop"></i></div>
         <div class="stat-info">
             <div class="stat-val"><?= number_format($allinoneCount + $otherCount) ?></div>
-            <div class="stat-lbl">AIO &amp; Other</div>
+            <div class="stat-lbl">All-in-One &amp; Other</div>
         </div>
     </div>
 </div>
@@ -424,6 +424,7 @@ try {
                     <p>No maintenance records yet</p>
                 </div>
             <?php else: ?>
+            <div class="mini-table-wrap">
             <table class="mini-table">
                 <thead>
                     <tr>
@@ -461,6 +462,7 @@ try {
                     <?php endforeach; ?>
                 </tbody>
             </table>
+            </div>
             <?php endif; ?>
         </div>
     </div>

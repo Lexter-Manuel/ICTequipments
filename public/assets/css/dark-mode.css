@@ -1,0 +1,391 @@
+/* ============================================================
+   dark-mode.css — Page-Level Dark Mode Overrides
+   Handles hardcoded colours in page CSS files that don't use
+   the root.css custom properties.
+   Loaded AFTER all other stylesheets.
+   ============================================================ */
+
+/* ============================================================
+   HOME.CSS  (Dashboard Home)
+   ============================================================ */
+
+/* Stat cards / panels */
+[data-theme="dark"] .stat-card-mini,
+[data-theme="dark"] .dash-panel {
+    background: var(--bg-white);
+    border-color: var(--border-color);
+}
+
+/* Alert banners */
+[data-theme="dark"] .alert-banner.danger {
+    background: rgba(248, 81, 73, 0.10);
+    border-color: rgba(248, 81, 73, 0.25);
+    color: #f85149;
+}
+[data-theme="dark"] .alert-banner.warning {
+    background: rgba(210, 153, 34, 0.10);
+    border-color: rgba(210, 153, 34, 0.25);
+    color: #d29922;
+}
+
+/* Alert items */
+[data-theme="dark"] .alert-item.overdue {
+    background: rgba(248, 81, 73, 0.08);
+    border-left-color: #f85149;
+}
+[data-theme="dark"] .alert-item.due-soon {
+    background: rgba(210, 153, 34, 0.08);
+    border-left-color: #d29922;
+}
+[data-theme="dark"] .alert-item.problem {
+    background: rgba(248, 81, 73, 0.08);
+    border-left-color: #f85149;
+}
+[data-theme="dark"] .alert-item.license-warn {
+    background: rgba(210, 153, 34, 0.08);
+    border-left-color: #d29922;
+}
+[data-theme="dark"] .alert-item.license-expired {
+    background: rgba(248, 81, 73, 0.08);
+    border-left-color: #f85149;
+}
+
+/* Bar tracks / table borders */
+[data-theme="dark"] .equip-bar-track,
+[data-theme="dark"] .chart-bar-track {
+    background: var(--bg-light);
+}
+[data-theme="dark"] .mini-table td,
+[data-theme="dark"] .activity-item {
+    border-bottom-color: var(--border-color);
+}
+
+/* Stat icon colours — slightly brighter for dark */
+[data-theme="dark"] .stat-icon-sm.green  { background: rgba(63, 185, 80, 0.14);  color: #3fb950; }
+[data-theme="dark"] .stat-icon-sm.blue   { background: rgba(88, 166, 255, 0.14); color: #58a6ff; }
+[data-theme="dark"] .stat-icon-sm.purple { background: rgba(188, 140, 255, 0.14); color: #bc8cff; }
+[data-theme="dark"] .stat-icon-sm.orange { background: rgba(210, 153, 34, 0.14);  color: #d29922; }
+[data-theme="dark"] .stat-icon-sm.red    { background: rgba(248, 81, 73, 0.14);   color: #f85149; }
+[data-theme="dark"] .stat-icon-sm.teal   { background: rgba(63, 185, 171, 0.14);  color: #3fb9ab; }
+
+/* Dashboard home badge colours */
+[data-theme="dark"] .badge-operational,
+[data-theme="dark"] .badge-excellent,
+[data-theme="dark"] .bg-operational,
+[data-theme="dark"] .bg-excellent {
+    background: rgba(63, 185, 80, 0.15);
+    color: #3fb950;
+}
+[data-theme="dark"] .badge-good,
+[data-theme="dark"] .bg-good {
+    background: rgba(88, 166, 255, 0.15);
+    color: #58a6ff;
+}
+[data-theme="dark"] .badge-fair,
+[data-theme="dark"] .bg-fair {
+    background: rgba(210, 153, 34, 0.15);
+    color: #d29922;
+}
+[data-theme="dark"] .badge-poor,
+[data-theme="dark"] .badge-replacement,
+[data-theme="dark"] .bg-poor,
+[data-theme="dark"] .bg-replacement,
+[data-theme="dark"] .bg-overdue {
+    background: rgba(248, 81, 73, 0.15);
+    color: #f85149;
+}
+[data-theme="dark"] .badge-disposed,
+[data-theme="dark"] .bg-disposed {
+    background: rgba(107, 123, 141, 0.15);
+    color: #9eaab6;
+}
+
+/* ============================================================
+   MAINTENANCE_SUMMARY.CSS + EQUIPMENT-SUMMARY.CSS (Reports)
+   ============================================================ */
+
+/* Filter panel + stat cards */
+[data-theme="dark"] .summary-filter-panel,
+[data-theme="dark"] .ms-stat,
+[data-theme="dark"] .ms-panel,
+[data-theme="dark"] .rpt-stat,
+[data-theme="dark"] .rpt-panel {
+    background: var(--bg-white);
+    border-color: var(--border-color);
+}
+
+/* Filter form inputs */
+[data-theme="dark"] .summary-filter-form select,
+[data-theme="dark"] .summary-filter-form input {
+    background: var(--bg-light);
+    color: var(--text-dark);
+    border-color: var(--border-color);
+}
+
+/* Reset button */
+[data-theme="dark"] .filter-reset-btn {
+    background: var(--bg-light);
+    color: var(--text-medium);
+}
+[data-theme="dark"] .filter-reset-btn:hover {
+    background: var(--border-color);
+}
+
+/* Table headers */
+[data-theme="dark"] .ms-table thead th,
+[data-theme="dark"] .rpt-table thead th,
+[data-theme="dark"] .rpt-table tfoot td {
+    background: var(--bg-light);
+    color: var(--text-medium);
+    border-color: var(--border-color);
+}
+
+/* Table cell borders */
+[data-theme="dark"] .ms-table tbody td,
+[data-theme="dark"] .rpt-table tbody td {
+    border-bottom-color: var(--border-color);
+}
+
+/* Active filter bar */
+[data-theme="dark"] .active-filters {
+    border-top-color: var(--border-color);
+}
+
+/* Filter tags */
+[data-theme="dark"] .filter-tag {
+    background: rgba(61, 155, 107, 0.15);
+    color: #3fb950;
+}
+[data-theme="dark"] .filter-tag button {
+    color: #3fb950;
+}
+
+/* Summary stat icons */
+[data-theme="dark"] .ms-icon.green,
+[data-theme="dark"] .rpt-icon.green  { background: rgba(63, 185, 80, 0.14);  color: #3fb950; }
+[data-theme="dark"] .ms-icon.blue,
+[data-theme="dark"] .rpt-icon.blue   { background: rgba(88, 166, 255, 0.14); color: #58a6ff; }
+[data-theme="dark"] .ms-icon.purple,
+[data-theme="dark"] .rpt-icon.purple { background: rgba(188, 140, 255, 0.14); color: #bc8cff; }
+[data-theme="dark"] .ms-icon.orange,
+[data-theme="dark"] .rpt-icon.orange { background: rgba(210, 153, 34, 0.14);  color: #d29922; }
+[data-theme="dark"] .ms-icon.red,
+[data-theme="dark"] .rpt-icon.red    { background: rgba(248, 81, 73, 0.14);   color: #f85149; }
+[data-theme="dark"] .ms-icon.teal,
+[data-theme="dark"] .rpt-icon.teal   { background: rgba(63, 185, 171, 0.14);  color: #3fb9ab; }
+
+/* ============================================================
+   ACCOUNTS.CSS
+   ============================================================ */
+
+/* Info box */
+[data-theme="dark"] .info-box {
+    background: rgba(88, 166, 255, 0.10);
+    border-color: rgba(88, 166, 255, 0.25);
+    color: #58a6ff;
+}
+
+/* Account status badges */
+[data-theme="dark"] .status-active {
+    background: rgba(63, 185, 80, 0.15);
+    color: #3fb950;
+}
+[data-theme="dark"] .status-inactive {
+    background: rgba(107, 123, 141, 0.15);
+    color: #9eaab6;
+}
+[data-theme="dark"] .status-locked {
+    background: rgba(248, 81, 73, 0.12);
+    color: #f85149;
+}
+
+/* Action buttons */
+[data-theme="dark"] .accounts-page .btn-edit,
+[data-theme="dark"] .account-actions .btn-edit {
+    background: rgba(88, 166, 255, 0.12);
+    color: #58a6ff;
+}
+[data-theme="dark"] .accounts-page .btn-unlock,
+[data-theme="dark"] .account-actions .btn-unlock {
+    background: rgba(210, 153, 34, 0.12);
+    color: #d29922;
+}
+[data-theme="dark"] .accounts-page .btn-toggle-status,
+[data-theme="dark"] .account-actions .btn-toggle-status {
+    background: rgba(63, 185, 80, 0.10);
+}
+[data-theme="dark"] .accounts-page .btn-delete,
+[data-theme="dark"] .account-actions .btn-delete {
+    background: rgba(248, 81, 73, 0.10);
+    color: #f85149;
+}
+[data-theme="dark"] .btn-cancel {
+    background: #3d4a56;
+    color: #e6edf3;
+}
+
+/* ============================================================
+   MAINTENANCE-TEMPLATES.CSS
+   ============================================================ */
+
+/* Template builder paper */
+[data-theme="dark"] .builder-paper {
+    background: var(--bg-white);
+    border-color: var(--border-color);
+}
+
+/* Contenteditable highlight */
+[data-theme="dark"] [contenteditable="true"]:hover {
+    background-color: rgba(61, 155, 107, 0.08);
+}
+[data-theme="dark"] [contenteditable="true"]:focus {
+    background-color: rgba(61, 155, 107, 0.15);
+}
+
+/* ============================================================
+   ROSTER.CSS — FAB Panel
+   ============================================================ */
+
+[data-theme="dark"] .fab-equipment-panel {
+    background: var(--bg-white);
+    border-color: var(--border-color);
+}
+[data-theme="dark"] .fab-eq-item:hover {
+    background: var(--bg-light);
+}
+[data-theme="dark"] .fab-panel-footer {
+    border-top-color: var(--border-color);
+    background: var(--bg-light);
+}
+
+/* ============================================================
+   MAINTENANCE-HISTORY.CSS + MAINTENANCE.CSS
+   ============================================================ */
+
+[data-theme="dark"] .mnt-hist-stat.excellent::after {
+    background: #3fb950;
+}
+[data-theme="dark"] .mnt-hist-stat.excellent .mnt-hist-stat-icon {
+    background: rgba(63, 185, 80, 0.14);
+    color: #3fb950;
+}
+[data-theme="dark"] .mnt-badge-excellent {
+    background: rgba(63, 185, 80, 0.14);
+    color: #3fb950;
+}
+
+/* ============================================================
+   BOOTSTRAP OVERRIDES (dark mode)
+   ============================================================ */
+
+/* Bootstrap modal */
+[data-theme="dark"] .modal-content {
+    background-color: var(--bg-white);
+    border-color: var(--border-color);
+    color: var(--text-dark);
+}
+
+/* Bootstrap form controls not using our classes */
+[data-theme="dark"] .form-control,
+[data-theme="dark"] .form-select {
+    background-color: var(--bg-light);
+    border-color: var(--border-color);
+    color: var(--text-dark);
+}
+[data-theme="dark"] .form-control:focus,
+[data-theme="dark"] .form-select:focus {
+    background-color: var(--bg-light);
+    border-color: var(--primary-green);
+    box-shadow: 0 0 0 3px rgba(61, 155, 107, 0.25);
+    color: var(--text-dark);
+}
+[data-theme="dark"] .form-control::placeholder {
+    color: var(--text-light);
+}
+[data-theme="dark"] .form-control:disabled,
+[data-theme="dark"] .form-select:disabled {
+    background-color: var(--bg-page);
+    color: var(--text-light);
+}
+
+/* Bootstrap accordion / list-group if used */
+[data-theme="dark"] .list-group-item {
+    background-color: var(--bg-white);
+    border-color: var(--border-color);
+    color: var(--text-dark);
+}
+
+/* Bootstrap dropdowns (non-profile) */
+[data-theme="dark"] .dropdown-menu {
+    background-color: var(--bg-white);
+    border-color: var(--border-color);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.55);
+}
+[data-theme="dark"] .dropdown-item {
+    color: var(--text-dark);
+}
+[data-theme="dark"] .dropdown-item:hover,
+[data-theme="dark"] .dropdown-item:focus {
+    background-color: var(--bg-light);
+    color: var(--text-dark);
+}
+[data-theme="dark"] .dropdown-divider {
+    border-color: var(--border-color);
+}
+
+/* Bootstrap card */
+[data-theme="dark"] .card {
+    background-color: var(--bg-white);
+    border-color: var(--border-color);
+    color: var(--text-dark);
+}
+
+/* Bootstrap table */
+[data-theme="dark"] .table {
+    color: var(--text-dark);
+    border-color: var(--border-color);
+}
+[data-theme="dark"] .table > :not(caption) > * > * {
+    background-color: transparent;
+    border-bottom-color: var(--border-color);
+    color: var(--text-dark);
+}
+[data-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) > * {
+    background-color: rgba(255, 255, 255, 0.02);
+}
+[data-theme="dark"] .table-hover > tbody > tr:hover > * {
+    background-color: rgba(255, 255, 255, 0.04);
+}
+
+/* Bootstrap tooltips */
+[data-theme="dark"] .tooltip-inner {
+    background-color: #e6edf3;
+    color: #0f1419;
+}
+
+/* SweetAlert2 if used */
+[data-theme="dark"] .swal2-popup {
+    background: var(--bg-white);
+    color: var(--text-dark);
+}
+[data-theme="dark"] .swal2-title {
+    color: var(--text-dark);
+}
+[data-theme="dark"] .swal2-html-container {
+    color: var(--text-medium);
+}
+[data-theme="dark"] .swal2-input {
+    background: var(--bg-light);
+    border-color: var(--border-color);
+    color: var(--text-dark);
+}
+
+/* ============================================================
+   TRANSITION (smooth colour adjustments)
+   ============================================================ */
+html[data-theme="dark"] body,
+html[data-theme="dark"] .sidebar,
+html[data-theme="dark"] .header,
+html[data-theme="dark"] .main-content {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}

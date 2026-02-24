@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../../vendor/TCPDF/tcpdf.php';
 require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../config/config.php';
 
 // ─── Input ────────────────────────────────────────────────────────────────────
 $db       = getDB();
@@ -351,7 +352,7 @@ $thH   = 6.5;
 $rowH  = 6.0;
 
 $drawHeader = function () use ($pdf, $lm, $wProc, $wDesc, $wYes, $wNo, $wNA, $thH): void {
-    $pdf->SetFillColor(210, 210, 210);
+    $pdf->SetFillColor(255, 255, 255);
     $pdf->SetTextColor(0, 0, 0);
     $pdf->SetFont('helvetica', 'B', 7.5);
     $pdf->SetDrawColor(0, 0, 0);
@@ -392,7 +393,7 @@ foreach ($checklistSections as $section) {
     $pdf->SetFont('helvetica', 'B', 7);
     $pdf->SetDrawColor(0, 0, 0);
     $pdf->SetLineWidth(0.25);
-    $pdf->MultiCell($wProc, $blockH, $catName, 1, 'C', false, 0);
+    $pdf->MultiCell($wProc, $blockH, '  ' . $catName, 1, 'L', false, 0);
 
     // Item rows — positioned to the right of the category cell
     $pdf->SetFont('helvetica', '', 7.5);
@@ -427,20 +428,9 @@ $remarksH = 16;
 $checkPageBreak($remarksH + 2);
 $pdf->SetX($lm);
 $pdf->SetFont('helvetica', 'B', 7.5);
-$pdf->Cell($wProc, $remarksH, "Remarks/\nRecommendations", 1, 0, 'C', false);
+$pdf->Cell($wProc, $remarksH, "Remarks/\nRecommendations", 'LRB', 0, 'C', false);
 $pdf->SetFont('helvetica', '', 7.5);
-$pdf->MultiCell($contentW - $wProc, $remarksH, '  ' . ($rec['remarks'] ?? ''), 1, 'L', false, 1);
-
-// ─── Overall status / condition ───────────────────────────────────────────────
-$pdf->Ln(5);
-$pdf->SetFont('helvetica', 'B', 8);   $pdf->SetX($lm);
-$pdf->Cell(38, 5.5, 'Overall Status:', 0, 0, 'L');
-$pdf->SetFont('helvetica', '', 8.5);
-$pdf->Cell(55, 5.5, $rec['overallStatus'] ?? '', 0, 0, 'L');
-$pdf->SetFont('helvetica', 'B', 8);
-$pdf->Cell(38, 5.5, 'Condition Rating:', 0, 0, 'L');
-$pdf->SetFont('helvetica', '', 8.5);
-$pdf->Cell(0, 5.5, $rec['conditionRating'] ?? '', 0, 1, 'L');
+$pdf->MultiCell($contentW - $wProc, $remarksH, '  ' . ($rec['remarks'] ?? ''), 'LRB', 'L', false, 1);
 
 // ─── Signature block ──────────────────────────────────────────────────────────
 if ($pdf->GetY() + 48 > $pdf->getPageHeight() - 55) {
@@ -506,4 +496,5 @@ $pdf->Cell($lineW, 4, $notedTitle, 0, 1, 'C');
 
 // ─── Output ───────────────────────────────────────────────────────────────────
 $filename = 'Checklist_Report_Record_' . $recordId . '_' . date('Y-m-d') . '.pdf';
+logActivity(ACTION_EXPORT, MODULE_REPORTS, "Exported checklist report PDF for record #{$recordId}");
 $pdf->Output($filename, 'I');

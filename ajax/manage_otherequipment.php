@@ -1,9 +1,11 @@
 <?php
-
 require_once '../config/database.php';
+require_once '../config/config.php';
 require_once '../includes/maintenanceHelper.php';
 
 header('Content-Type: application/json');
+
+if (session_status() === PHP_SESSION_NONE) { session_start(); }
 
 $db = getDB();
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
@@ -146,13 +148,15 @@ function createEquipment($db) {
 
     $newId = $db->lastInsertId();
 
+    logActivity(ACTION_CREATE, MODULE_OTHER_EQUIPMENT,
+        "Added {$type} — {$brand} {$model}, Serial: {$serial}, Status: {$status}, Year: {$year}."
+        . ($employeeId ? " Assigned to employee ID {$employeeId}." : ""));
+
     // 3. MAINTENANCE HOOK (Dynamic Type Lookup)
     try {
         $maint = new MaintenanceHelper($db);
-        // Look up the Type ID from registry based on the text user entered (e.g., "Projector")
         $maint->initScheduleByType($type, $newId); 
     } catch (Exception $e) {
-        // Silently fail or log error so we don't break the creation process
         error_log("Maintenance Schedule Error: " . $e->getMessage());
     }
 
@@ -191,13 +195,29 @@ function updateEquipment($db) {
         ':id' => $id
     ]);
 
+    logActivity(ACTION_UPDATE, MODULE_OTHER_EQUIPMENT,
+        "Updated {$type} (ID: {$id}) — {$brand} {$model}, Serial: {$serial}, Status: {$status}."
+        . ($employeeId ? " Assigned to employee ID {$employeeId}." : " Unassigned."));
+
     echo json_encode(['success' => true, 'message' => 'Equipment updated successfully']);
 }
 
 function deleteEquipment($db) {
     $id = $_POST['id'] ?? null;
+
+    // Fetch details before deleting
+    $row = $db->prepare("SELECT equipmentType, brand, model, serialNumber FROM tbl_otherequipment WHERE otherEquipmentId = :id");
+    $row->execute([':id' => $id]);
+    $item = $row->fetch();
+
     $stmt = $db->prepare("DELETE FROM tbl_otherequipment WHERE otherEquipmentId = :id");
     $stmt->execute([':id' => $id]);
+
+    logActivity(ACTION_DELETE, MODULE_OTHER_EQUIPMENT,
+        "Deleted " . ($item['equipmentType'] ?? 'Equipment') . " (ID: {$id}) — "
+        . ($item['brand'] ?? '') . " " . ($item['model'] ?? '')
+        . ", Serial: " . ($item['serialNumber'] ?? 'Unknown') . ".");
+
     echo json_encode(['success' => true, 'message' => 'Equipment deleted successfully']);
 }
 ?>

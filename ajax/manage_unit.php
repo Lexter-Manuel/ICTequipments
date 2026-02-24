@@ -59,7 +59,7 @@ try {
             ");
             $stmt->execute([$unitName, $parentId]);
             
-            logActivity("Unit created: {$unitName}", 'INFO');
+            logActivity(ACTION_CREATE, MODULE_ORGANIZATION, "Created unit: {$unitName}");
             
             echo json_encode([
                 'success' => true,
@@ -106,7 +106,7 @@ try {
             ");
             $stmt->execute([$unitName, $parentId, $unitId]);
             
-            logActivity("Unit updated: {$unitName}", 'INFO');
+            logActivity(ACTION_UPDATE, MODULE_ORGANIZATION, "Updated unit: {$unitName}");
             
             echo json_encode([
                 'success' => true,
@@ -138,7 +138,7 @@ try {
             $stmt = $db->prepare("UPDATE location SET is_deleted = '1' WHERE location_id = ?");
             $stmt->execute([$unitId]);
             
-            logActivity("Unit deleted: " . ($unit['location_name'] ?? $unitId), 'INFO');
+            logActivity(ACTION_DELETE, MODULE_ORGANIZATION, "Deleted unit: " . ($unit['location_name'] ?? $unitId));
             
             echo json_encode([
                 'success' => true,
@@ -151,7 +151,7 @@ try {
     }
     
 } catch (PDOException $e) {
-    logActivity("Database error in manage_unit: " . $e->getMessage(), 'ERROR');
+    logActivity('DATABASE_ERROR', MODULE_ORGANIZATION, "Unit error: " . $e->getMessage(), false);
     echo json_encode([
         'success' => false,
         'message' => 'Database error: ' . $e->getMessage()

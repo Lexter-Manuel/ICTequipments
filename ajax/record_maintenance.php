@@ -3,6 +3,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 require_once '../config/database.php';
+require_once '../config/config.php';
 header('Content-Type: application/json');
 
 // Require a logged-in user
@@ -125,6 +126,10 @@ try {
         $stmtUpdate->execute([$daysToAdd, $input['scheduleId']]);
 
         $db->commit();
+
+        logActivity(ACTION_CREATE, MODULE_MAINTENANCE,
+            "Recorded maintenance for schedule ID {$input['scheduleId']} (Equipment ID: {$realEquipmentId}, Type ID: {$realTypeId}). Status: " . ($input['overallStatus'] ?? 'Operational') . ". Prepared by: " . ($input['signatories']['preparedBy'] ?? 'Unknown') . ".");
+
         echo json_encode(['success' => true, 'message' => 'Maintenance recorded successfully']);
 
     } catch (Exception $e) {

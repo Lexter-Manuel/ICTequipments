@@ -52,7 +52,7 @@ try {
     ]);
     
 } catch (PDOException $e) {
-    logActivity("Database error in get_unit: " . $e->getMessage(), 'ERROR');
+    logActivity('DATABASE_ERROR', MODULE_ORGANIZATION, "Unit fetch error: " . $e->getMessage(), false);
     echo json_encode([
         'success' => false,
         'message' => 'Database error occurred'

@@ -20,6 +20,7 @@ class DashboardApp {
     init() {
         this.setupNavigation();
         this.setupMobileMenu();
+        this.setupProfileDropdown();
         this.loadInitialPage();
         this.setupAnimations();
     }
@@ -30,6 +31,7 @@ class DashboardApp {
     setupNavigation() {
         var navItems = document.querySelectorAll('.nav-item[data-page]');
         var breadcrumbLinks = document.querySelectorAll('.breadcrumb a[data-page]');
+        var dropdownLinks = document.querySelectorAll('.dropdown-menu-item[data-page]');
         
         navItems.forEach(item => {
             item.addEventListener('click', (e) => {
@@ -55,6 +57,23 @@ class DashboardApp {
                 this.loadPage(page);
             });
         });
+
+        // Dropdown menu item navigation
+        dropdownLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                var page = link.dataset.page;
+                this.loadPage(page);
+
+                // Update sidebar active state
+                navItems.forEach(nav => nav.classList.remove('active'));
+                var matchingSidebarItem = document.querySelector('.nav-item[data-page="' + page + '"]');
+                if (matchingSidebarItem) matchingSidebarItem.classList.add('active');
+
+                // Close dropdown
+                this.closeProfileDropdown();
+            });
+        });
     }
     
     /**
@@ -78,10 +97,11 @@ class DashboardApp {
                 'home': '../modules/dashboard/home.php',
                 'roster': '../modules/dashboard/roster.php',
                 'employees': '../modules/inventory/employees.php',
-                'computer': '../modules/inventory/computer.php',
-                'printer': '../modules/inventory/printer.php',
+                'equipment': '../modules/inventory/equipment.php',
+                'computer': '../modules/inventory/equipment.php',
+                'printer': '../modules/inventory/equipment.php',
                 'software': '../modules/inventory/software.php',
-                'otherequipment': '../modules/inventory/other_equipment.php',
+                'otherequipment': '../modules/inventory/equipment.php',
                 'organization': '../modules/organization/organization.php',
                 'divisions': '../modules/organization/organization.php',
                 'sections': '../modules/organization/organization.php',
@@ -99,6 +119,7 @@ class DashboardApp {
                 'maintenance-summary': '../modules/reports/maintenance-summary.php',
                 'audit-trail': '../modules/reports/audit-trail.php',
                 'accounts': '../modules/users/accounts.php',
+                'profile': '../modules/users/profile.php',
                 'settings': '../modules/settings/settings.php'
             };
             
@@ -179,11 +200,12 @@ class DashboardApp {
             'home': 'Dashboard',
             'roster': 'Roster',
             'employees': 'Employees',
-            'computer': 'Computers',
-            'printer': 'Printers',
+            'equipment': 'Equipment Inventory',
+            'computer': 'Equipment Inventory',
+            'printer': 'Equipment Inventory',
             'allinone': 'All-in-One PCs',
             'software': 'Software Licenses',
-            'otherequipment': 'Other ICT Equipment',
+            'otherequipment': 'Equipment Inventory',
             'organization': 'Organization',
             'divisions': 'Organization',
             'sections': 'Organization',
@@ -199,6 +221,7 @@ class DashboardApp {
             'maintenance-summary': 'Maintenance Summary',
             'audit-trail': 'Audit Trail',
             'accounts': 'Accounts',
+            'profile': 'My Profile',
             'settings': 'System Settings'
         };
         
@@ -291,6 +314,36 @@ class DashboardApp {
         toggleIcon.classList.add('fa-bars');
         toggleIcon.classList.remove('fa-times');
     }
+
+    /**
+     * Setup profile dropdown toggle & outside-click dismiss
+     */
+    setupProfileDropdown() {
+        var dropdown = document.getElementById('userProfileDropdown');
+        var toggle = document.getElementById('profileToggle');
+        if (!dropdown || !toggle) return;
+
+        // Toggle on click
+        toggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            var isOpen = dropdown.classList.toggle('open');
+            toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        });
+
+        // Close when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!dropdown.contains(e.target)) {
+                this.closeProfileDropdown();
+            }
+        });
+    }
+
+    closeProfileDropdown() {
+        var dropdown = document.getElementById('userProfileDropdown');
+        var toggle = document.getElementById('profileToggle');
+        if (dropdown) dropdown.classList.remove('open');
+        if (toggle) toggle.setAttribute('aria-expanded', 'false');
+    }
     
     /**
      * Perform global search
@@ -340,13 +393,8 @@ class DashboardApp {
      * @param {string} pageName - Page name
      */
     logPageView(pageName) {
-        // Send to analytics endpoint
-        if (navigator.sendBeacon) {
-            var data = new FormData();
-            data.append('page', pageName);
-            data.append('timestamp', new Date().toISOString());
-            navigator.sendBeacon('../ajax/log_activity.php', data);
-        }
+        // Page navigation is no longer logged to activity_log
+        // Only meaningful user actions (create, update, delete, login, etc.) are logged server-side
     }
     
     /**
@@ -382,6 +430,18 @@ function navigateToPage(pageName) {
         window.dashboardApp.loadPage(pageName);
     }
 }
+
+// Keyboard shortcut: Escape closes dropdown
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        var dropdown = document.getElementById('userProfileDropdown');
+        if (dropdown && dropdown.classList.contains('open')) {
+            dropdown.classList.remove('open');
+            var toggle = document.getElementById('profileToggle');
+            if (toggle) toggle.setAttribute('aria-expanded', 'false');
+        }
+    }
+});
 
         // Update date and time
         function updateDateTime() {

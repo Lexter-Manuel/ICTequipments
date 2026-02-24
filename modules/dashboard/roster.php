@@ -188,6 +188,7 @@ $jobOrderCount = count(array_filter($employees, fn($e) => $e['employmentStatus']
             <div class="per-page-control">
                 <label>Rows:
                     <select id="perPageSelect" onchange="changePerPage()">
+                        <option value="10">10</option>
                         <option value="25" selected>25</option>
                         <option value="50">50</option>
                         <option value="100">100</option>

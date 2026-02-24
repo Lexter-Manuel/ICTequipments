@@ -110,3 +110,21 @@
     background: var(--primary-xlight);
     color: var(--primary-dark);
 }
+
+/* Responsive */
+@media (max-width: 768px) {
+    .detail-grid { grid-template-columns: 1fr; gap: var(--space-3); }
+    .detail-item { padding: var(--space-3); }
+    .detail-value { font-size: 14px; }
+    .location-badge { font-size: var(--text-xs); padding: 4px 8px; }
+    .brand-model strong { font-size: var(--text-sm); }
+    .equipment-type { font-size: var(--text-sm); }
+}
+
+@media (max-width: 480px) {
+    .detail-grid { gap: var(--space-2); }
+    .detail-item { padding: var(--space-2); }
+    .detail-label { font-size: 0.65rem; }
+    .detail-value { font-size: 13px; }
+    .assigned-employee { font-size: var(--text-xs); }
+}

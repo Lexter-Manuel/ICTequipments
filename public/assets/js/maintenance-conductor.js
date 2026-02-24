@@ -454,6 +454,7 @@ function renderMaintenanceForm(template, container) {
 
                 <!-- Checklist Table -->
                 <div class="mc-table-wrapper">
+                    <div class="mc-table-scroll">
                     <table class="mc-table">
                         <thead>
                             <tr>
@@ -478,6 +479,7 @@ function renderMaintenanceForm(template, container) {
                             </tr>
                         </tbody>
                     </table>
+                    </div>
                 </div>
 
                 <div class="mc-section-divider"></div>
