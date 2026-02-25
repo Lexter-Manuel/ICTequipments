@@ -36,9 +36,8 @@ require_once '../config/session-check.php';
 
     <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
-        <!-- Toggler stays inside sidebar so it moves with it -->
-        <label for="sidebar-mobile-input" class="sidebar-mobile-toggler" aria-label="Toggle navigation">
-            <span class="sidebar-mobile-burger"></span>
+        <label for="sidebar-mobile-input" class="sidebar-mobile-close" aria-label="Close navigation">
+            <i class="fas fa-times"></i>
         </label>
         <div class="sidebar-header">
             <div class="logo-container">
@@ -133,6 +132,9 @@ require_once '../config/session-check.php';
         <!-- Header -->
         <header class="header">
             <div class="header-top">
+                <label for="sidebar-mobile-input" class="sidebar-mobile-toggler" aria-label="Toggle navigation">
+                    <span class="sidebar-mobile-burger"></span>
+                </label>
                 <div class="header-title">
                     <h1 class="header-title">Inventory of ICT Equipment and Preventive Maintenance Scheduling</h1>
                     <p class="header-subtitle">NIA UPRIIS</p>

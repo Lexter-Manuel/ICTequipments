@@ -1,7 +1,7 @@
 <?php
 // modules/dashboard/home.php
 require_once '../../config/database.php';
-
+session_start();
 try {
     $db = Database::getInstance()->getConnection();
     
@@ -364,9 +364,12 @@ try {
     <div class="dash-panel">
         <div class="dash-panel-header">
             <h3><i class="fas fa-chart-bar"></i> Equipment Distribution</h3>
-            <span class="refresh-indicator" id="equipRefresh">
-                <i class="fas fa-sync-alt"></i> Live
-            </span>
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <span class="refresh-indicator" id="equipRefresh">
+                    <i class="fas fa-sync-alt"></i> Live
+                </span>
+                <a href="#" onclick="navigateToPage('equipment'); return false;" style="font-size: 0.75rem; color: var(--primary-green); font-weight: 600; text-decoration: none;">View All →</a>
+            </div>
         </div>
         <div class="dash-panel-body">
             <?php
@@ -519,6 +522,7 @@ try {
 
 <!-- ═══ Recent Activity + Software Licenses ═══ -->
 <div class="dash-grid cols-2" style="animation: fadeInUp 0.8s ease-out;">
+    <?php if ($_SESSION['role'] === 'Super Admin'): ?>
     <div class="dash-panel">
         <div class="dash-panel-header">
             <h3><i class="fas fa-history"></i> Recent Activity</h3>
@@ -551,12 +555,13 @@ try {
             <?php endif; ?>
         </div>
     </div>
+    <?php endif; ?>
 
     <!-- Software Licenses -->
     <div class="dash-panel">
         <div class="dash-panel-header">
             <h3><i class="fas fa-key"></i> Software Licenses</h3>
-            <a href="#" onclick="navigateToPage('software'); return false;" style="font-size: 0.75rem; color: var(--primary-green); font-weight: 600; text-decoration: none;">Manage →</a>
+            <a href="#" onclick="navigateToPage('software'); return false;" style="font-size: 0.75rem; color: var(--primary-green); font-weight: 600; text-decoration: none;">View All →</a>
         </div>
         <div class="dash-panel-body">
             <div style="display: flex; justify-content: space-around; text-align: center; margin-bottom: 1rem;">

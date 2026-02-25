@@ -27,7 +27,7 @@
                     <i class="fas fa-th-large"></i> Per Section
                 </button>
             </div>
-            <button class="mnt-btn-export"><i class="fas fa-file-export"></i> Export</button>
+            <!-- <button class="mnt-btn-export"><i class="fas fa-file-export"></i> Export</button> -->
         </div>
     </div>
 
@@ -82,7 +82,7 @@
         </div>
         <div class="mnt-filter-actions">
             <button class="btn btn-primary" onclick="applySchedFilters()"><i class="fas fa-filter"></i> Apply</button>
-            <button class="mnt-btn-export"><i class="fas fa-file-export"></i> Export</button>
+            <!-- <button class="mnt-btn-export"><i class="fas fa-file-export"></i> Export</button> -->
         </div>
     </div>
 
@@ -220,4 +220,5 @@
 </div><!-- /.page-content -->
 
 <?php include __DIR__ . '/../../includes/components/maintenance_modal.php'; ?>
+<?php include __DIR__ . '/../../includes/components/detail_view_modal.php'; ?>
 <script src="assets/js/maintenance-schedule.js?v=<?php echo time(); ?>"></script>

@@ -484,6 +484,32 @@ function renderMaintenanceForm(template, container) {
 
                 <div class="mc-section-divider"></div>
 
+                <!-- Overall Status Selection -->
+                <div class="mc-section-title">
+                    <i class="fas fa-heartbeat"></i> Overall Equipment Status
+                </div>
+                <div class="mc-info-grid mc-info-grid-2" style="margin-bottom: var(--space-6);">
+                    <div class="mc-field-group">
+                        <label class="mc-field-label" for="overallStatusSelect">Overall Status</label>
+                        <select class="form-select" id="overallStatusSelect" name="overallStatus" required>
+                            <option value="Operational" selected>Operational</option>
+                            <option value="For Replacement">For Replacement</option>
+                            <option value="Disposed">Disposed</option>
+                        </select>
+                    </div>
+                    <div class="mc-field-group">
+                        <label class="mc-field-label" for="conditionRatingSelect">Condition Rating</label>
+                        <select class="form-select" id="conditionRatingSelect" name="conditionRating" required>
+                            <option value="Excellent">Excellent</option>
+                            <option value="Good" selected>Good</option>
+                            <option value="Fair">Fair</option>
+                            <option value="Poor">Poor</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mc-section-divider"></div>
+
                 <!-- Signatories -->
                 <div class="mc-section-title">
                     <i class="fas fa-signature"></i> Signatories
@@ -565,7 +591,8 @@ function saveMaintenanceRecord() {
     }
 
     const checklistData = Object.values(rawTasks);
-    const overallStatus = checklistData.some(t => t.status === 'No') ? 'For Replacement' : 'Operational';
+    const overallStatus  = formData.get('overallStatus')  || 'Operational';
+    const conditionRating = formData.get('conditionRating') || 'Good';
 
     const payload = {
         scheduleId:    conductorScheduleId,
@@ -575,6 +602,7 @@ function saveMaintenanceRecord() {
         checklistData: checklistData,
         remarks:       formData.get('remarks'),
         overallStatus: overallStatus,
+        conditionRating: conditionRating,
         signatories: {
             preparedBy: (typeof CURRENT_USER !== 'undefined' && CURRENT_USER.name) || 'Current User',
             checkedBy:  currentTemplateSignatories.verifiedByName || '',

@@ -173,7 +173,7 @@
                             <th>Location</th>
                             <th>Technician</th>
                             <th>Condition</th>
-                            <th>Report</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody id="histDetailedBody">
@@ -290,7 +290,7 @@
                                             <th>Maintenance Date</th>
                                             <th>Time</th>
                                             <th>Condition</th>
-                                            <th>Report</th>
+                                            <th>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody id="dvHistAllBody"></tbody>
@@ -483,4 +483,5 @@ function getHistDateParams() {
 })();
 </script>
 
+<?php include __DIR__ . '/../../includes/components/detail_view_modal.php'; ?>
 <script src="assets/js/maintenance-history.js?v=<?php echo time(); ?>"></script>

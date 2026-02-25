@@ -478,6 +478,30 @@
 
 .mnt-btn-report i { color: var(--color-danger); }
 
+/* View Details button */
+.mnt-btn-view {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-1);
+    padding: 7px 12px;
+    background: var(--bg-white);
+    color: var(--primary-green);
+    border: 1.5px solid rgba(45, 122, 79, 0.3);
+    border-radius: var(--radius-md);
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    white-space: nowrap;
+}
+.mnt-btn-view:hover {
+    border-color: var(--primary-green);
+    color: #fff;
+    background: var(--primary-green);
+}
+
 /* Export button */
 .mnt-btn-export {
     display: inline-flex;

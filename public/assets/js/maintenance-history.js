@@ -137,7 +137,12 @@ async function loadDetailedHistory(page = 1) {
                     <div class="mnt-tech-name">${escHtml(r.technician || '—')}</div>
                 </td>
                 <td><span class="mnt-badge ${getCondClass(cond)}"><i class="fas fa-circle"></i> ${escHtml(cond)}</span></td>
-                <td><button class="mnt-btn-report" onclick="viewReport(${r.recordId})"><i class="fas fa-file-pdf"></i> View</button></td>
+                <td>
+                    <div class="d-flex gap-1">
+                        <button class="mnt-btn-view" onclick="viewRecordDetail(${r.recordId})" title="View Details"><i class="fas fa-eye"></i></button>
+                        <button class="mnt-btn-report" onclick="viewReport(${r.recordId})"><i class="fas fa-file-pdf"></i> Report</button>
+                    </div>
+                </td>
             </tr>`;
         });
 
@@ -459,7 +464,7 @@ function renderHistGrouped(assets) {
                             <th>Time</th>
                             <th>Technician</th>
                             <th>Condition</th>
-                            <th>Report</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>`;
@@ -484,7 +489,12 @@ function renderHistGrouped(assets) {
                                 <div class="mnt-tech-name">${escHtml(a.technician || '—')}</div>
                             </td>
                             <td><span class="mnt-badge ${getCondClass(cond)}"><i class="fas fa-circle"></i> ${escHtml(cond)}</span></td>
-                            <td><button class="mnt-btn-report" onclick="viewReport(${a.recordId})"><i class="fas fa-file-pdf"></i> View</button></td>
+                            <td>
+                                <div class="d-flex gap-1">
+                                    <button class="mnt-btn-view" onclick="viewRecordDetail(${a.recordId})" title="View Details"><i class="fas fa-eye"></i></button>
+                                    <button class="mnt-btn-report" onclick="viewReport(${a.recordId})"><i class="fas fa-file-pdf"></i> Report</button>
+                                </div>
+                            </td>
                         </tr>`;
         });
 
@@ -528,7 +538,12 @@ function renderHistAll(assets) {
                 <td><div class="mnt-date-primary completed">${escHtml(formatDate(a.maintenanceDate))}</div></td>
                 <td><div class="mnt-date-sub" style="color:var(--text-dark); font-size:var(--text-sm);">${escHtml(formatTime(a.maintenanceDate))}</div></td>
                 <td><span class="mnt-badge ${getCondClass(cond)}"><i class="fas fa-circle"></i> ${escHtml(cond)}</span></td>
-                <td><button class="mnt-btn-report" onclick="viewReport(${a.recordId})"><i class="fas fa-file-pdf"></i> View</button></td>
+                <td>
+                    <div class="d-flex gap-1">
+                        <button class="mnt-btn-view" onclick="viewRecordDetail(${a.recordId})" title="View Details"><i class="fas fa-eye"></i></button>
+                        <button class="mnt-btn-report" onclick="viewReport(${a.recordId})"><i class="fas fa-file-pdf"></i> Report</button>
+                    </div>
+                </td>
             </tr>`;
     });
 
@@ -678,6 +693,167 @@ function exportReport() {
 function viewReport(recordId) {
     var params = new URLSearchParams({ recordId: recordId });
     window.open(BASE_URL + 'includes/generative/generate_checklist_report.php?' + params.toString(), '_blank');
+}
+
+/* =========================================================
+   VIEW RECORD DETAIL — opens detail modal with checklist
+   ========================================================= */
+async function viewRecordDetail(recordId) {
+    var modalEl = document.getElementById('maintenanceDetailModal');
+    if (!modalEl) return;
+    var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+    modal.show();
+
+    document.getElementById('detailModalTitleText').textContent = 'Maintenance Record Details';
+    document.getElementById('detail-modal-loader').style.display = 'block';
+    document.getElementById('detail-modal-content').innerHTML = '';
+
+    // Show "View Report" action button
+    var actionBtn = document.getElementById('detailModalActionBtn');
+    actionBtn.style.display = 'inline-flex';
+    actionBtn.onclick = function() { viewReport(recordId); };
+
+    try {
+        var r = await fetch(`${BASE_URL}ajax/get_maintenance_detail.php?type=record&recordId=${recordId}`);
+        var j = await r.json();
+        document.getElementById('detail-modal-loader').style.display = 'none';
+
+        if (!j.success) {
+            document.getElementById('detail-modal-content').innerHTML =
+                `<div class="detail-empty"><i class="fas fa-exclamation-triangle"></i> ${escHtml(j.message)}</div>`;
+            return;
+        }
+
+        var d = j.data;
+
+        // Status badges
+        var statusCls = d.overallStatus === 'Operational' ? 'badge-operational' : d.overallStatus === 'For Replacement' ? 'badge-replacement' : 'badge-disposed';
+        var condCls   = 'cond-' + (d.conditionRating || 'good').toLowerCase();
+        var dateLabel = formatDate(d.maintenanceDate);
+        var timeLabel = formatTime(d.maintenanceDate);
+
+        var html = `
+            <div class="detail-section">
+                <div class="detail-section-title"><i class="fas fa-desktop"></i> Equipment Information</div>
+                <div class="detail-info-grid cols-3">
+                    <div class="detail-field">
+                        <span class="detail-field-label">Equipment</span>
+                        <span class="detail-field-value">${escHtml(d.brand || '—')}</span>
+                    </div>
+                    <div class="detail-field">
+                        <span class="detail-field-label">Type</span>
+                        <span class="detail-field-value">${escHtml(d.type_name || '—')}</span>
+                    </div>
+                    <div class="detail-field">
+                        <span class="detail-field-label">Serial Number</span>
+                        <span class="detail-field-value" style="font-family:monospace;">${escHtml(d.serial || 'N/A')}</span>
+                    </div>
+                    <div class="detail-field">
+                        <span class="detail-field-label">Owner</span>
+                        <span class="detail-field-value">${escHtml(d.owner_name || 'Unassigned')}</span>
+                    </div>
+                    <div class="detail-field">
+                        <span class="detail-field-label">Location</span>
+                        <span class="detail-field-value">${escHtml(d.location_name || '—')}</span>
+                    </div>
+                    <div class="detail-field">
+                        <span class="detail-field-label">Template</span>
+                        <span class="detail-field-value">${escHtml(d.templateName || 'N/A')}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <div class="detail-section-title"><i class="fas fa-calendar-check"></i> Maintenance Summary</div>
+                <div class="detail-info-grid">
+                    <div class="detail-field">
+                        <span class="detail-field-label">Date & Time</span>
+                        <span class="detail-field-value">${escHtml(dateLabel)} at ${escHtml(timeLabel)}</span>
+                    </div>
+                    <div class="detail-field">
+                        <span class="detail-field-label">Technician</span>
+                        <span class="detail-field-value">${escHtml(d.preparedBy || '—')}</span>
+                    </div>
+                    <div class="detail-field">
+                        <span class="detail-field-label">Overall Status</span>
+                        <span class="detail-status-badge ${statusCls}">${escHtml(d.overallStatus)}</span>
+                    </div>
+                    <div class="detail-field">
+                        <span class="detail-field-label">Condition Rating</span>
+                        <span class="detail-cond-badge ${condCls}"><i class="fas fa-circle"></i> ${escHtml(d.conditionRating)}</span>
+                    </div>
+                </div>
+            </div>`;
+
+        // Checklist responses
+        var responses = d.responses || [];
+        if (responses.length > 0) {
+            html += `<div class="detail-section">
+                <div class="detail-section-title"><i class="fas fa-tasks"></i> Checklist Responses</div>
+                <div style="overflow-x:auto;">
+                <table class="detail-checklist-table">
+                    <thead><tr><th style="width:50px;">#</th><th>Task</th><th style="width:100px;">Response</th></tr></thead>
+                    <tbody>`;
+
+            var lastCat = '';
+            var num = 0;
+            responses.forEach(resp => {
+                if (resp.categoryName && resp.categoryName !== lastCat) {
+                    lastCat = resp.categoryName;
+                    html += `<tr class="cat-row"><td colspan="3"><i class="fas fa-folder-open"></i> ${escHtml(lastCat)}</td></tr>`;
+                }
+                num++;
+                var respVal  = (resp.response || 'N/A').trim();
+                var respLower = respVal.toLowerCase();
+                var respCls = 'resp-na';
+                if (['yes', 'ok', 'done', 'pass'].includes(respLower))       respCls = 'resp-yes';
+                else if (['no', 'fail', 'failed'].includes(respLower))        respCls = 'resp-no';
+                else if (['n/a', 'na'].includes(respLower))                   respCls = 'resp-na';
+                else if (['warning'].includes(respLower))                      respCls = 'resp-warning';
+                else if (respLower.includes('minor'))                          respCls = 'resp-minor';
+
+                html += `<tr>
+                    <td style="color:var(--text-light);">${num}</td>
+                    <td>${escHtml(resp.taskDescription)}</td>
+                    <td><span class="detail-response ${respCls}">${escHtml(respVal)}</span></td>
+                </tr>`;
+            });
+
+            html += `</tbody></table></div></div>`;
+        }
+
+        // Remarks
+        html += `<div class="detail-section">
+            <div class="detail-section-title"><i class="fas fa-comment-alt"></i> Remarks</div>
+            <div class="detail-remarks ${d.remarks ? '' : 'empty'}">${d.remarks ? escHtml(d.remarks) : 'No remarks provided.'}</div>
+        </div>`;
+
+        // Signatories
+        html += `<div class="detail-section">
+            <div class="detail-section-title"><i class="fas fa-signature"></i> Signatories</div>
+            <div class="detail-signatories">
+                <div class="detail-signatory">
+                    <div class="detail-signatory-label">Prepared / Conducted by</div>
+                    <div class="detail-signatory-name">${escHtml(d.preparedBy || '—')}</div>
+                </div>
+                <div class="detail-signatory">
+                    <div class="detail-signatory-label">Checked by</div>
+                    <div class="detail-signatory-name">${escHtml(d.checkedBy || '—')}</div>
+                </div>
+                <div class="detail-signatory">
+                    <div class="detail-signatory-label">Noted by</div>
+                    <div class="detail-signatory-name">${escHtml(d.notedBy || '—')}</div>
+                </div>
+            </div>
+        </div>`;
+
+        document.getElementById('detail-modal-content').innerHTML = html;
+
+    } catch (e) {
+        document.getElementById('detail-modal-loader').style.display = 'none';
+        document.getElementById('detail-modal-content').innerHTML =
+            `<div class="detail-empty"><i class="fas fa-exclamation-triangle"></i> Failed to load: ${escHtml(e.message)}</div>`;
+    }
 }
 
 async function goToEmployeeProfile(employeeId) {

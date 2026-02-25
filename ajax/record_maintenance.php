@@ -51,9 +51,9 @@ try {
         // tbl_maintenance_response is the primary normalised storage.
         $stmtRecord = $db->prepare("
             INSERT INTO tbl_maintenance_record 
-            (scheduleId, templateId, equipmentTypeId, equipmentId, accountId, maintenanceDate, checklistJson, remarks, overallStatus, preparedBy, checkedBy, notedBy) 
+            (scheduleId, templateId, equipmentTypeId, equipmentId, accountId, maintenanceDate, checklistJson, remarks, overallStatus, conditionRating, preparedBy, checkedBy, notedBy) 
             VALUES 
-            (:sid, :tmpl, :tid, :eid, :uid, NOW(), :json, :remarks, :status, :prep, :check, :note)
+            (:sid, :tmpl, :tid, :eid, :uid, NOW(), :json, :remarks, :status, :rating, :prep, :check, :note)
         ");
 
         $stmtRecord->execute([
@@ -65,6 +65,7 @@ try {
             ':json'   => json_encode($input['checklistData']),
             ':remarks'=> $input['remarks'],
             ':status' => $input['overallStatus'] ?? 'Operational',
+            ':rating' => $input['conditionRating'] ?? 'Good',
             ':prep'   => !empty($input['signatories']['preparedBy']) ? $input['signatories']['preparedBy'] : ($_SESSION['user_name'] ?? 'Unknown'),
             ':check'  => $input['signatories']['checkedBy'],
             ':note'   => $input['signatories']['notedBy']

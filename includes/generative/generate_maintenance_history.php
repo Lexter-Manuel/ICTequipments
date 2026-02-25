@@ -220,7 +220,7 @@ $pdf->SetCreator('NIA UPRIIS ICT System');
 $pdf->SetAuthor('NIA UPRIIS');
 $pdf->SetTitle('PREVENTIVE MAINTENANCE REPORT');
 $pdf->SetMargins(20, 32, 20);
-$pdf->SetAutoPageBreak(true, 40);
+$pdf->SetAutoPageBreak(true, 43);
 $pdf->SetFont('helvetica', '', 10);
 $pdf->AddPage();
 
