@@ -186,6 +186,7 @@ $employees = $stmtEmployees->fetchAll();
                         <td><span class="status-badge status-<?php echo $s['statusClass']; ?>"><?php echo htmlspecialchars($s['status']); ?></span></td>
                         <td>
                             <div class="action-buttons">
+                                <button class="btn-action btn-view" title="View Details" onclick="viewSoftware(<?php echo $s['softwareId']; ?>)"><i class="fas fa-eye"></i></button>
                                 <button class="btn-action btn-edit" title="Edit" onclick="editSoftware(<?php echo $s['softwareId']; ?>)"><i class="fas fa-edit"></i></button>
                                 <button class="btn-action btn-delete" title="Delete" onclick="deleteSoftware(<?php echo $s['softwareId']; ?>)"><i class="fas fa-trash"></i></button>
                             </div>
@@ -213,6 +214,27 @@ $employees = $stmtEmployees->fetchAll();
 
 <!-- Add/Edit Modal -->
 <div class="modal fade" id="softwareModal" tabindex="-1" aria-hidden="true">
+
+<!-- Software Detail View Modal -->
+<div class="modal fade" id="softwareDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, var(--primary-green), var(--primary-green-dark, #1a6b3c)); color: #fff; border-bottom: none;">
+                <h5 class="modal-title" id="softwareDetailModalTitle">
+                    <i class="fas fa-key"></i> Software License Details
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="softwareDetailContent">
+                <div class="text-center py-4"><i class="fas fa-spinner fa-spin fa-2x"></i></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="fas fa-times"></i> Close</button>
+                <button type="button" class="btn btn-primary" id="softwareDetailEditBtn" style="display:none;"><i class="fas fa-edit"></i> Edit</button>
+            </div>
+        </div>
+    </div>
+</div>
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">

@@ -168,6 +168,81 @@ function deleteSoftware(id) {
     .catch(error => alert('Error deleting software license: ' + error));
 }
 
+// ============================================================
+// VIEW SOFTWARE LICENSE DETAILS
+// ============================================================
+function viewSoftware(id) {
+    var modalBody = document.getElementById('softwareDetailContent');
+    modalBody.innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin fa-2x"></i></div>';
+
+    var modal = new bootstrap.Modal(document.getElementById('softwareDetailModal'));
+    modal.show();
+
+    fetch('../ajax/manage_software.php?action=get&software_id=' + id)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.success) {
+                var item = data.data;
+
+                // Status badge
+                var statusCls = 'success';
+                if (item.status === 'Expired') statusCls = 'danger';
+                else if (item.status === 'Expiring Soon') statusCls = 'warning';
+
+                // Type badge
+                var typeCls = item.license_type === 'Subscription' ? 'info' : 'primary';
+
+                // Expiry info
+                var expiryHtml = '<span class="text-muted"><i class="fas fa-infinity"></i> No Expiry (Perpetual)</span>';
+                if (item.expiry_date) {
+                    var expDate = new Date(item.expiry_date);
+                    var formattedDate = expDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+                    expiryHtml = '<div>' + formattedDate + '</div>';
+                    if (item.days_until_expiry !== null) {
+                        if (item.days_until_expiry > 0) {
+                            var daysColor = item.days_until_expiry <= 30 ? '#b45309' : 'var(--text-light)';
+                            expiryHtml += '<div style="font-size:12px;color:' + daysColor + ';margin-top:2px"><i class="fas fa-clock"></i> ' + item.days_until_expiry + ' days remaining</div>';
+                        } else if (item.days_until_expiry < 0) {
+                            expiryHtml += '<div style="font-size:12px;color:#dc2626;margin-top:2px"><i class="fas fa-exclamation-circle"></i> Expired ' + Math.abs(item.days_until_expiry) + ' days ago</div>';
+                        } else {
+                            expiryHtml += '<div style="font-size:12px;color:#dc2626;margin-top:2px"><i class="fas fa-exclamation-circle"></i> Expires today</div>';
+                        }
+                    }
+                }
+
+                var html =
+                    '<div class="row mb-3">' +
+                        '<div class="col-md-8">' +
+                            '<h6 class="text-muted text-uppercase mb-1" style="font-size:11px">Software Name</h6>' +
+                            '<p class="fw-bold mb-0" style="font-size:16px"><i class="fas fa-compact-disc text-primary me-2"></i>' + escapeHtml(item.software_name) + '</p>' +
+                        '</div>' +
+                        '<div class="col-md-4 text-end">' +
+                            '<span class="badge bg-' + statusCls + '" style="font-size:13px">' + escapeHtml(item.status) + '</span>' +
+                        '</div>' +
+                    '</div>' +
+                    '<hr class="my-2">' +
+                    '<div class="row g-3">' +
+                        '<div class="col-md-12"><label class="small text-muted">License Details</label><div class="p-2 border rounded bg-white" style="font-family:monospace;font-size:14px">' + escapeHtml(item.license_details) + '</div></div>' +
+                        '<div class="col-md-6"><label class="small text-muted">License Type</label><div><span class="badge bg-' + typeCls + '">' + escapeHtml(item.license_type || 'N/A') + '</span></div></div>' +
+                        '<div class="col-md-6"><label class="small text-muted">Expiry Date</label><div>' + expiryHtml + '</div></div>' +
+                        '<div class="col-md-6"><label class="small text-muted">Email</label><div>' + (item.email ? escapeHtml(item.email) : '<span class="text-muted fst-italic">Not provided</span>') + '</div></div>' +
+                        '<div class="col-md-6"><label class="small text-muted">Password</label><div>' + (item.password ? '<span class="password-masked" onclick="this.textContent=\'' + escapeHtml(item.password).replace(/'/g, "\\'") + '\'" style="cursor:pointer" title="Click to reveal">••••••••</span>' : '<span class="text-muted fst-italic">Not provided</span>') + '</div></div>' +
+                        '<div class="col-md-12"><label class="small text-muted">Assigned To</label><div class="p-2 bg-light border rounded">' +
+                            (item.employee_name ? '<i class="fas fa-user text-primary me-1"></i><strong>' + escapeHtml(item.employee_name) + '</strong>' : '<span class="text-muted fst-italic">Unassigned</span>') +
+                        '</div></div>' +
+                    '</div>';
+                modalBody.innerHTML = html;
+
+                var editBtn = document.getElementById('softwareDetailEditBtn');
+                editBtn.style.display = '';
+                editBtn.setAttribute('onclick', 'editSoftware(' + item.software_id + '); bootstrap.Modal.getInstance(document.getElementById("softwareDetailModal")).hide();');
+            } else {
+                modalBody.innerHTML = '<div class="alert alert-danger">' + data.message + '</div>';
+            }
+        })
+        .catch(function(err) { modalBody.innerHTML = '<div class="alert alert-danger">Error: ' + err + '</div>'; });
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     applyTableState();
 });

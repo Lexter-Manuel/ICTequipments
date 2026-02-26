@@ -355,6 +355,10 @@ employeeForm.addEventListener('submit', function(e) {
     
     // Send form data via AJAX
     var formData = new FormData(this);
+
+    // Append equipment section data as JSON
+    var eqData = collectEquipmentData();
+    formData.append('equipmentData', JSON.stringify(eqData));
     
     fetch('../ajax/process_employee.php', {
         method: 'POST',
@@ -436,6 +440,11 @@ document.querySelector('.btn-cancel').addEventListener('click', function() {
     unitSelect.disabled = true;
     locationIdInput.value = '';
     
+    // Clear all equipment sections
+    var container = document.getElementById('equipmentSectionsContainer');
+    if (container) container.innerHTML = '';
+    equipmentCounters = {};
+
     // Re-enable submit button
     var submitBtn = document.querySelector('.btn-submit');
     submitBtn.disabled = false;
@@ -470,3 +479,157 @@ if (urlParams.get('success') === '1') {
     window.history.replaceState({}, document.title, window.location.pathname);
 }
 
+
+// ============================================================
+//  EQUIPMENT ASSIGNMENT — Dynamic section builder
+// ============================================================
+
+if (typeof equipmentCounters === 'undefined') { var equipmentCounters = {}; }
+
+var EQUIPMENT_CONFIG = {
+    computer: {
+        label: 'System Unit', icon: 'fa-desktop', color: '#4f46e5',
+        fields: [
+            { name: 'brand',     label: 'Brand',         type: 'text',   required: true,  placeholder: 'e.g. Dell, HP, Lenovo' },
+            { name: 'serial',    label: 'Serial Number', type: 'text',   required: true,  placeholder: 'e.g. SU-2024-001' },
+            { name: 'category',  label: 'Category',      type: 'select', required: false, options: ['Pre-Built', 'Custom Built'] },
+            { name: 'processor', label: 'Processor',     type: 'text',   required: false, placeholder: 'e.g. Intel Core i5' },
+            { name: 'memory',    label: 'Memory (RAM)',  type: 'text',   required: false, placeholder: 'e.g. 8GB DDR4' },
+            { name: 'storage',   label: 'Storage',       type: 'text',   required: false, placeholder: 'e.g. 256GB SSD' },
+            { name: 'gpu',       label: 'GPU',           type: 'text',   required: false, placeholder: 'e.g. Intel UHD 630' },
+            { name: 'year',      label: 'Year Acquired', type: 'number', required: false, placeholder: 'YYYY', extraAttrs: 'min="1990" max="' + (new Date().getFullYear() + 1) + '"' },
+        ]
+    },
+    allinone: {
+        label: 'All-in-One PC', icon: 'fa-computer', color: '#0891b2',
+        fields: [
+            { name: 'brand',     label: 'Brand',         type: 'text',   required: true,  placeholder: 'e.g. HP, Dell' },
+            { name: 'processor', label: 'Processor',     type: 'text',   required: false, placeholder: 'e.g. Ryzen 7' },
+            { name: 'memory',    label: 'Memory (RAM)',  type: 'text',   required: false, placeholder: 'e.g. 16GB' },
+            { name: 'storage',   label: 'Storage',       type: 'text',   required: false, placeholder: 'e.g. 512GB SSD' },
+            { name: 'gpu',       label: 'GPU',           type: 'text',   required: false, placeholder: 'e.g. Intel Integrated' },
+            { name: 'year',      label: 'Year Acquired', type: 'number', required: false, placeholder: 'YYYY', extraAttrs: 'min="1990" max="' + (new Date().getFullYear() + 1) + '"' },
+        ]
+    },
+    monitor: {
+        label: 'Monitor', icon: 'fa-tv', color: '#059669',
+        fields: [
+            { name: 'brand',  label: 'Brand',         type: 'text',   required: true,  placeholder: 'e.g. Dell, LG, Samsung' },
+            { name: 'serial', label: 'Serial Number', type: 'text',   required: true,  placeholder: 'e.g. MO-2024-001' },
+            { name: 'size',   label: 'Screen Size',   type: 'text',   required: false, placeholder: 'e.g. 24 inches' },
+            { name: 'year',   label: 'Year Acquired', type: 'number', required: false, placeholder: 'YYYY', extraAttrs: 'min="1990" max="' + (new Date().getFullYear() + 1) + '"' },
+        ]
+    },
+    printer: {
+        label: 'Printer', icon: 'fa-print', color: '#d97706',
+        fields: [
+            { name: 'brand',  label: 'Brand',         type: 'text', required: true,  placeholder: 'e.g. HP, Canon, Epson' },
+            { name: 'model',  label: 'Model',         type: 'text', required: true,  placeholder: 'e.g. LaserJet Pro' },
+            { name: 'serial', label: 'Serial Number', type: 'text', required: true,  placeholder: 'e.g. PR-2024-001' },
+            { name: 'year',   label: 'Year Acquired', type: 'number', required: false, placeholder: 'YYYY', extraAttrs: 'min="1990" max="' + (new Date().getFullYear() + 1) + '"' },
+        ]
+    },
+    laptop: {
+        label: 'Laptop', icon: 'fa-laptop', color: '#7c3aed',
+        fields: [
+            { name: 'brand',  label: 'Brand',         type: 'text', required: true,  placeholder: 'e.g. Lenovo, Asus' },
+            { name: 'model',  label: 'Model',         type: 'text', required: false, placeholder: 'e.g. ThinkPad X1' },
+            { name: 'serial', label: 'Serial Number', type: 'text', required: false, placeholder: 'e.g. LT-2024-001' },
+            { name: 'year',   label: 'Year Acquired', type: 'number', required: false, placeholder: 'YYYY', extraAttrs: 'min="1990" max="' + (new Date().getFullYear() + 1) + '"' },
+        ]
+    },
+    software: {
+        label: 'Software License', icon: 'fa-key', color: '#be185d',
+        fields: [
+            { name: 'name',    label: 'Software Name',   type: 'text',  required: true,  placeholder: 'e.g. Microsoft Office' },
+            { name: 'details', label: 'License Details', type: 'text',  required: false, placeholder: 'e.g. Office 365 E3' },
+            { name: 'type',    label: 'License Type',    type: 'select', required: false, options: ['Perpetual', 'Subscription'] },
+            { name: 'expiry',  label: 'Expiry Date',     type: 'date',  required: false },
+            { name: 'email',   label: 'License Email',   type: 'email', required: false, placeholder: 'account@example.com' },
+        ]
+    },
+    other: {
+        label: 'Other Equipment', icon: 'fa-server', color: '#475569',
+        fields: [
+            { name: 'eq_type', label: 'Equipment Type', type: 'text',   required: true,  placeholder: 'e.g. Projector, Scanner' },
+            { name: 'brand',   label: 'Brand',          type: 'text',   required: false, placeholder: 'e.g. Epson' },
+            { name: 'model',   label: 'Model',          type: 'text',   required: false, placeholder: 'e.g. EB-2247U' },
+            { name: 'serial',  label: 'Serial Number',  type: 'text',   required: false, placeholder: 'e.g. OE-2024-001' },
+            { name: 'year',    label: 'Year Acquired',  type: 'number', required: false, placeholder: 'YYYY', extraAttrs: 'min="1990" max="' + (new Date().getFullYear() + 1) + '"' },
+        ]
+    }
+};
+
+function addEquipmentSection(type) {
+    if (!equipmentCounters[type]) equipmentCounters[type] = 0;
+    equipmentCounters[type]++;
+    var idx = equipmentCounters[type];
+    var cfg = EQUIPMENT_CONFIG[type];
+    var uid = type + '_' + idx;
+
+    var container = document.getElementById('equipmentSectionsContainer');
+    var card = document.createElement('div');
+    card.className    = 'eq-section-card';
+    card.id           = 'eq_card_' + uid;
+    card.dataset.type = type;
+
+    var fieldsHtml = '';
+    cfg.fields.forEach(function(f) {
+        var fieldName = 'eq[' + uid + '][' + f.name + ']';
+        var inputHtml = '';
+        if (f.type === 'select') {
+            var opts = (f.options || []).map(function(o) {
+                return '<option value="' + o + '">' + o + '</option>';
+            }).join('');
+            inputHtml = '<select class="form-select form-select-sm" name="' + fieldName + '">'
+                + '<option value="">Select…</option>' + opts + '</select>';
+        } else {
+            inputHtml = '<input type="' + f.type + '" class="form-control form-control-sm"'
+                + ' name="' + fieldName + '"'
+                + (f.placeholder ? ' placeholder="' + f.placeholder + '"' : '')
+                + (f.required    ? ' required' : '')
+                + (f.extraAttrs  ? ' ' + f.extraAttrs : '')
+                + '>';
+        }
+        fieldsHtml += '<div class="eq-field">'
+            + '<label class="eq-field-label">' + f.label
+            + (f.required ? ' <span class="text-danger">*</span>' : '') + '</label>'
+            + inputHtml + '</div>';
+    });
+
+    card.innerHTML = ''
+        + '<div class="eq-card-header" style="--eq-color:' + cfg.color + '">'
+        +   '<div class="eq-card-title">'
+        +     '<i class="fas ' + cfg.icon + '"></i>'
+        +     '<span>' + cfg.label + ' #' + idx + '</span>'
+        +   '</div>'
+        +   '<button type="button" class="eq-card-remove" onclick="removeEquipmentSection(\'' + uid + '\')">'
+        +     '<i class="fas fa-times"></i>'
+        +   '</button>'
+        + '</div>'
+        + '<input type="hidden" name="eq[' + uid + '][_type]" value="' + type + '">'
+        + '<div class="eq-card-fields">' + fieldsHtml + '</div>';
+
+    container.appendChild(card);
+    requestAnimationFrame(function() { card.classList.add('eq-visible'); });
+}
+
+function removeEquipmentSection(uid) {
+    var card = document.getElementById('eq_card_' + uid);
+    if (!card) return;
+    card.classList.add('eq-removing');
+    setTimeout(function() { if (card.parentNode) card.remove(); }, 350);
+}
+
+function collectEquipmentData() {
+    var result = {};
+    var inputs = document.querySelectorAll('#equipmentSectionsContainer [name^="eq["]');
+    inputs.forEach(function(input) {
+        var match = input.name.match(/^eq\[([^\]]+)\]\[([^\]]+)\]$/);
+        if (!match) return;
+        var uid = match[1], field = match[2];
+        if (!result[uid]) result[uid] = {};
+        result[uid][field] = input.value;
+    });
+    return result;
+}

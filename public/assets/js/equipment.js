@@ -289,7 +289,7 @@ function renderAllInOnes(units) {
     var tbody = document.getElementById('allinoneTableBody');
     tbody.innerHTML = '';
     if (units.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-medium);padding:20px">No all-in-one PCs found</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-medium);padding:20px">No all-in-one PCs found</td></tr>';
         return;
     }
     units.forEach(function(a) {
@@ -298,6 +298,7 @@ function renderAllInOnes(units) {
         tr.innerHTML =
             '<td><div style="font-weight:600">' + escapeHtml(a.allinoneBrand) + '</div></td>' +
             '<td><div class="spec-item"><i class="fas fa-microchip"></i><span class="spec-value">' + escapeHtml(a.specificationProcessor) + '</span></div><div class="spec-item"><i class="fas fa-memory"></i><span class="spec-value">' + escapeHtml(a.specificationMemory) + '</span></div><div class="spec-item"><i class="fas fa-hdd"></i><span class="spec-value">' + escapeHtml(a.specificationStorage) + '</span></div></td>' +
+            '<td>' + escapeHtml(a.yearAcquired || 'N/A') + '</td>' +
             '<td>' + (a.employeeName ? '<div style="font-weight:600">' + escapeHtml(a.employeeName) + '</div><div style="font-size:12px;color:var(--text-light)">ID: ' + escapeHtml(a.employeeId) + '</div>' : '<span style="color:var(--text-light);font-style:italic">Unassigned</span>') + '</td>' +
             '<td>' + (a.lastMaintenanceDate ? '<div class="maintenance-info"><i class="fas fa-tools"></i>' + escapeHtml(a.lastMaintenanceDate) + '</div>' : '<span class="text-muted"><i class="fas fa-clock"></i> No record</span>') + '</td>' +
             '<td><span class="status-badge status-' + cls + '">' + escapeHtml(a.status) + '</span></td>' +
@@ -326,6 +327,7 @@ function editAllInOne(id) {
                 document.getElementById('aioMemory').value = a.specificationMemory;
                 document.getElementById('aioGPU').value = a.specificationGPU;
                 document.getElementById('aioStorage').value = a.specificationStorage;
+                document.getElementById('aioYear').value = a.yearAcquired || '';
                 document.getElementById('aioEmployee').value = a.employeeId || '';
                 new bootstrap.Modal(document.getElementById('allinoneModal')).show();
             } else { alert('Error: ' + data.message); }
@@ -342,6 +344,7 @@ function saveAllInOne() {
     formData.append('memory', document.getElementById('aioMemory').value);
     formData.append('gpu', document.getElementById('aioGPU').value);
     formData.append('storage', document.getElementById('aioStorage').value);
+    formData.append('year_acquired', document.getElementById('aioYear').value);
     formData.append('employee_id', document.getElementById('aioEmployee').value);
 
     fetch('../ajax/manage_allinone.php', { method: 'POST', body: formData })

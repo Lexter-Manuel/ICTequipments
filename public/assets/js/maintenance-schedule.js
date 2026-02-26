@@ -1,4 +1,4 @@
-var SCHED_API = '../ajax/get_maintenance_schedule.php';
+var SCHED_API = `${BASE_URL}ajax/get_maintenance_schedule.php`;
 
 /* ── state ── */
 var schedCurrentPage = 1;
@@ -704,8 +704,8 @@ function performMaintenance(scheduleId) {
    HELPERS
    ========================================================= */
 function formatDate(dateStr) {
-    if (!dateStr) return '';
-    var d = new Date(dateStr + 'T00:00:00');
+    if (!dateStr) return '—';
+    var d = new Date(dateStr);
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 

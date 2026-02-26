@@ -130,9 +130,7 @@ function listAllInOnes($db) {
             'specificationMemory' => $a['specificationMemory'],
             'specificationGPU' => $a['specificationGPU'],
             'specificationStorage' => $a['specificationStorage'],
-            'serial' => 'AIO-' . str_pad($a['allinoneId'], 6, '0', STR_PAD_LEFT),
-            'screenSize' => '24 inches',
-            'yearAcquired' => '2024',
+            'yearAcquired' => $a['yearAcquired'] ?? null,
             'employeeId' => $a['employeeId'],
             'employeeName' => $a['employeeName'],
             'status' => $a['employeeId'] ? 'Active' : 'Available'
@@ -164,9 +162,7 @@ function getAllInOne($db) {
         'specificationMemory' => $unit['specificationMemory'],
         'specificationGPU' => $unit['specificationGPU'],
         'specificationStorage' => $unit['specificationStorage'],
-        'serial' => 'AIO-' . str_pad($unit['allinoneId'], 6, '0', STR_PAD_LEFT),
-        'screenSize' => '24 inches',
-        'yearAcquired' => '2024',
+        'yearAcquired' => $unit['yearAcquired'] ?? null,
         'employeeId' => $unit['employeeId'],
         'employeeName' => $unit['employeeName'],
         'status' => $unit['employeeId'] ? 'Active' : 'Available'
@@ -176,30 +172,40 @@ function getAllInOne($db) {
 }
 
 function createAllInOne($db) {
-    // Validate and sanitize all inputs
     $brand = validateBrand($_POST['brand'] ?? '');
     $processor = validateSpecification($_POST['processor'] ?? '', 'Processor');
     $memory = validateSpecification($_POST['memory'] ?? '', 'Memory');
     $gpu = validateSpecification($_POST['gpu'] ?? '', 'GPU');
     $storage = validateSpecification($_POST['storage'] ?? '', 'Storage');
     $employeeId = validateEmployeeId($db, $_POST['employee_id'] ?? null);
+
+    $yearAcquired = null;
+    if (!empty($_POST['year_acquired'])) {
+        $yr = filter_var($_POST['year_acquired'], FILTER_VALIDATE_INT);
+        $currentYear = (int)date('Y');
+        if ($yr === false || $yr < 1990 || $yr > $currentYear + 1) {
+            throw new Exception("Invalid year. Must be between 1990 and " . ($currentYear + 1));
+        }
+        $yearAcquired = $yr;
+    }
     
     $stmt = $db->prepare("
         INSERT INTO tbl_allinone (
             allinoneBrand, specificationProcessor, specificationMemory,
-            specificationGPU, specificationStorage, employeeId
+            specificationGPU, specificationStorage, yearAcquired, employeeId
         ) VALUES (
-            :brand, :processor, :memory, :gpu, :storage, :employeeId
+            :brand, :processor, :memory, :gpu, :storage, :yearAcquired, :employeeId
         )
     ");
     
     $stmt->execute([
-        ':brand' => $brand,
-        ':processor' => $processor,
-        ':memory' => $memory,
-        ':gpu' => $gpu,
-        ':storage' => $storage,
-        ':employeeId' => $employeeId
+        ':brand'        => $brand,
+        ':processor'    => $processor,
+        ':memory'       => $memory,
+        ':gpu'          => $gpu,
+        ':storage'      => $storage,
+        ':yearAcquired' => $yearAcquired,
+        ':employeeId'   => $employeeId
     ]);
 
     $newId = $db->lastInsertId();
@@ -235,13 +241,22 @@ function updateAllInOne($db) {
         throw new Exception('All-in-One not found');
     }
     
-    // Validate and sanitize all inputs
     $brand = validateBrand($_POST['brand'] ?? '');
     $processor = validateSpecification($_POST['processor'] ?? '', 'Processor');
     $memory = validateSpecification($_POST['memory'] ?? '', 'Memory');
     $gpu = validateSpecification($_POST['gpu'] ?? '', 'GPU');
     $storage = validateSpecification($_POST['storage'] ?? '', 'Storage');
     $employeeId = validateEmployeeId($db, $_POST['employee_id'] ?? null);
+
+    $yearAcquired = null;
+    if (!empty($_POST['year_acquired'])) {
+        $yr = filter_var($_POST['year_acquired'], FILTER_VALIDATE_INT);
+        $currentYear = (int)date('Y');
+        if ($yr === false || $yr < 1990 || $yr > $currentYear + 1) {
+            throw new Exception("Invalid year. Must be between 1990 and " . ($currentYear + 1));
+        }
+        $yearAcquired = $yr;
+    }
     
     $stmt = $db->prepare("
         UPDATE tbl_allinone SET
@@ -250,18 +265,20 @@ function updateAllInOne($db) {
             specificationMemory = :memory,
             specificationGPU = :gpu,
             specificationStorage = :storage,
+            yearAcquired = :yearAcquired,
             employeeId = :employeeId
         WHERE allinoneId = :id
     ");
     
     $stmt->execute([
-        ':brand' => $brand,
-        ':processor' => $processor,
-        ':memory' => $memory,
-        ':gpu' => $gpu,
-        ':storage' => $storage,
-        ':employeeId' => $employeeId,
-        ':id' => $id
+        ':brand'        => $brand,
+        ':processor'    => $processor,
+        ':memory'       => $memory,
+        ':gpu'          => $gpu,
+        ':storage'      => $storage,
+        ':yearAcquired' => $yearAcquired,
+        ':employeeId'   => $employeeId,
+        ':id'           => $id
     ]);
     
     logActivity(ACTION_UPDATE, MODULE_COMPUTERS,

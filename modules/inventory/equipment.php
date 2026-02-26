@@ -361,6 +361,7 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                     <tr>
                         <th>Brand &amp; Model</th>
                         <th>Specifications</th>
+                        <th>Year</th>
                         <th>Assigned To</th>
                         <th>Last Maintenance</th>
                         <th>Status</th>
@@ -380,6 +381,7 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                             <div class="spec-item"><i class="fas fa-memory"></i><span class="spec-value"><?php echo htmlspecialchars($a['specificationMemory']); ?></span></div>
                             <div class="spec-item"><i class="fas fa-hdd"></i><span class="spec-value"><?php echo htmlspecialchars($a['specificationStorage']); ?></span></div>
                         </td>
+                        <td><?php echo htmlspecialchars($a['yearAcquired'] ?? 'N/A'); ?></td>
                         <td>
                             <?php if ($a['employeeName']): ?>
                                 <div style="font-weight:600;color:var(--text-dark)"><?php echo htmlspecialchars($a['employeeName']); ?></div>
@@ -831,9 +833,13 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                     <div class="form-section">
                         <h6 class="form-section-title"><i class="fas fa-info-circle"></i> Device Information</h6>
                         <div class="row mb-3">
-                            <div class="col-md-12">
+                            <div class="col-md-8">
                                 <label for="aioBrand" class="form-label">Brand &amp; Model *</label>
                                 <input type="text" class="form-control" id="aioBrand" required placeholder="e.g., HP All-in-One 24-df1033">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="aioYear" class="form-label">Year Acquired</label>
+                                <input type="number" class="form-control" id="aioYear" min="1990" max="<?php echo date('Y') + 1; ?>" placeholder="YYYY">
                             </div>
                         </div>
                         <div class="row mb-3">

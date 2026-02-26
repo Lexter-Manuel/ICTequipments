@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3310
--- Generation Time: Feb 24, 2026 at 01:24 AM
+-- Generation Time: Feb 25, 2026 at 02:35 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -31,9 +31,9 @@ CREATE TABLE `activity_log` (
   `id` int(11) NOT NULL,
   `user_id` int(11) DEFAULT NULL,
   `email` varchar(255) NOT NULL,
-  `action` varchar(50) NOT NULL,
-  `module` varchar(50) DEFAULT NULL,
-  `description` text DEFAULT NULL,
+  `action` varchar(50) NOT NULL COMMENT 'e.g., CREATE, UPDATE, DELETE, LOGIN, LOGOUT, ERROR',
+  `module` varchar(50) DEFAULT NULL COMMENT 'e.g., Divisions, Sections, Units, Computers, Settings, Profile, Auth',
+  `description` text DEFAULT NULL COMMENT 'Human-readable summary of the change',
   `ip_address` varchar(45) NOT NULL,
   `user_agent` text DEFAULT NULL,
   `success` tinyint(1) DEFAULT 1,
@@ -45,303 +45,71 @@ CREATE TABLE `activity_log` (
 --
 
 INSERT INTO `activity_log` (`id`, `user_id`, `email`, `action`, `module`, `description`, `ip_address`, `user_agent`, `success`, `timestamp`) VALUES
-(1, 3, 'inventory@upriis.local', 'home', NULL, '2026-02-23T07:22:34.496Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:22:34'),
-(2, 3, 'inventory@upriis.local', 'home', NULL, '2026-02-23T07:23:37.733Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:23:37'),
-(3, 3, 'inventory@upriis.local', 'roster', NULL, '2026-02-23T07:23:39.743Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:23:39'),
-(4, 3, 'inventory@upriis.local', 'home', NULL, '2026-02-23T07:23:40.086Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:23:40'),
-(5, 3, 'inventory@upriis.local', 'home', NULL, '2026-02-23T07:24:33.657Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:24:33'),
-(6, 3, 'inventory@upriis.local', 'home', NULL, '2026-02-23T07:24:56.088Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:24:56'),
-(7, 3, 'inventory@upriis.local', 'home', NULL, '2026-02-23T07:25:15.528Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:25:15'),
-(8, 3, 'inventory@upriis.local', 'home', NULL, '2026-02-23T07:25:28.947Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:25:28'),
-(9, 3, 'inventory@upriis.local', 'maintenance-schedule', NULL, '2026-02-23T07:25:45.617Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:25:45'),
-(10, 3, 'inventory@upriis.local', 'home', NULL, '2026-02-23T07:25:51.729Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:25:51'),
-(11, 3, 'inventory@upriis.local', 'perform-maintenance', NULL, '2026-02-23T07:25:54.725Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:25:54'),
-(12, 3, 'inventory@upriis.local', 'home', NULL, '2026-02-23T07:25:58.166Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:25:58'),
-(13, 3, 'inventory@upriis.local', 'organization', NULL, '2026-02-23T07:27:00.914Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:27:00'),
-(14, 3, 'inventory@upriis.local', 'accounts', NULL, '2026-02-23T07:27:01.342Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:27:01'),
-(15, 3, 'inventory@upriis.local', 'maintenance-history', NULL, '2026-02-23T07:27:03.158Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:27:03'),
-(16, 3, 'inventory@upriis.local', 'perform-maintenance', NULL, '2026-02-23T07:27:03.577Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:27:03'),
-(17, 3, 'inventory@upriis.local', 'maintenance-templates', NULL, '2026-02-23T07:27:04.724Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:27:04'),
-(18, 3, 'inventory@upriis.local', 'maintenance-schedule', NULL, '2026-02-23T07:27:05.037Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:27:05'),
-(19, 3, 'inventory@upriis.local', 'otherequipment', NULL, '2026-02-23T07:27:06.031Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:27:06'),
-(20, 3, 'inventory@upriis.local', 'software', NULL, '2026-02-23T07:27:06.481Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:27:06'),
-(21, 3, 'inventory@upriis.local', 'printer', NULL, '2026-02-23T07:27:06.864Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:27:06'),
-(22, 3, 'inventory@upriis.local', 'computer', NULL, '2026-02-23T07:27:07.427Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:27:07'),
-(23, 3, 'inventory@upriis.local', 'roster', NULL, '2026-02-23T07:27:08.746Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:27:08'),
-(24, 3, 'inventory@upriis.local', 'home', NULL, '2026-02-23T07:27:34.177Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:27:34'),
-(25, 3, 'inventory@upriis.local', 'roster', NULL, '2026-02-23T07:27:34.911Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:27:34'),
-(26, 3, 'inventory@upriis.local', 'home', NULL, '2026-02-23T07:27:35.546Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:27:35'),
-(27, 3, 'inventory@upriis.local', 'maintenance-schedule', NULL, '2026-02-23T07:27:36.359Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:27:36'),
-(28, 3, 'inventory@upriis.local', 'home', NULL, '2026-02-23T07:27:37.610Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:27:37'),
-(29, 3, 'inventory@upriis.local', 'perform-maintenance', NULL, '2026-02-23T07:27:38.875Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:27:38'),
-(30, 3, 'inventory@upriis.local', 'home', NULL, '2026-02-23T07:27:40.380Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:27:40'),
-(31, 3, 'inventory@upriis.local', 'maintenance-history', NULL, '2026-02-23T07:28:09.509Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:28:09'),
-(32, 3, 'inventory@upriis.local', 'home', NULL, '2026-02-23T07:28:13.157Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:28:13'),
-(33, 3, 'inventory@upriis.local', 'maintenance-schedule', NULL, '2026-02-23T07:29:18.068Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:29:18'),
-(34, 3, 'inventory@upriis.local', 'roster', NULL, '2026-02-23T07:30:07.135Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:30:07'),
-(35, 3, 'inventory@upriis.local', 'roster', NULL, '2026-02-23T07:30:09.448Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:30:09'),
-(36, 3, 'inventory@upriis.local', 'roster', NULL, '2026-02-23T07:30:09.965Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:30:09'),
-(37, 3, 'inventory@upriis.local', 'roster', NULL, '2026-02-23T07:30:10.512Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:30:10'),
-(38, 3, 'inventory@upriis.local', 'home', NULL, '2026-02-23T07:30:10.776Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:30:10'),
-(39, 3, 'inventory@upriis.local', 'audit-trail', NULL, '2026-02-23T07:30:25.060Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:30:25'),
-(40, 3, 'inventory@upriis.local', 'audit-trail', NULL, '2026-02-23T07:30:30.560Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:30:30'),
-(41, 3, 'inventory@upriis.local', 'equipment-summary', NULL, '2026-02-23T07:30:31.271Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:30:31'),
-(42, 3, 'inventory@upriis.local', 'maintenance-summary', NULL, '2026-02-23T07:30:32.184Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:30:32'),
-(43, 3, 'inventory@upriis.local', 'audit-trail', NULL, '2026-02-23T07:30:34.816Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:30:34'),
-(44, 3, 'inventory@upriis.local', 'maintenance-summary', NULL, '2026-02-23T07:30:35.298Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:30:35'),
-(45, 3, 'inventory@upriis.local', 'audit-trail', NULL, '2026-02-23T07:30:36.634Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:30:36'),
-(46, 3, 'inventory@upriis.local', 'maintenance-schedule', NULL, '2026-02-23T07:31:28.224Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:31:28'),
-(47, 3, 'inventory@upriis.local', 'maintenance-templates', NULL, '2026-02-23T07:31:28.577Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:31:28'),
-(48, 3, 'inventory@upriis.local', 'perform-maintenance', NULL, '2026-02-23T07:31:28.865Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:31:28'),
-(49, 3, 'inventory@upriis.local', 'maintenance-history', NULL, '2026-02-23T07:31:29.113Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:31:29'),
-(50, 3, 'inventory@upriis.local', 'equipment-summary', NULL, '2026-02-23T07:31:29.785Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:31:29'),
-(51, 3, 'inventory@upriis.local', 'maintenance-summary', NULL, '2026-02-23T07:31:30.068Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:31:30'),
-(52, 3, 'inventory@upriis.local', 'audit-trail', NULL, '2026-02-23T07:31:30.316Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:31:30'),
-(53, 3, 'inventory@upriis.local', 'maintenance-summary', NULL, '2026-02-23T07:31:53.336Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:31:53'),
-(54, 3, 'inventory@upriis.local', 'home', NULL, '2026-02-23T07:32:49.826Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:32:49'),
-(55, 3, 'inventory@upriis.local', 'maintenance-summary', NULL, '2026-02-23T07:32:50.283Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:32:50'),
-(56, 3, 'inventory@upriis.local', 'equipment-summary', NULL, '2026-02-23T07:32:51.235Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:32:51'),
-(57, 3, 'inventory@upriis.local', 'home', NULL, '2026-02-23T07:32:55.918Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:32:55'),
-(58, 3, 'inventory@upriis.local', 'maintenance-schedule', NULL, '2026-02-23T07:33:00.525Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:33:00'),
-(59, 3, 'inventory@upriis.local', 'home', NULL, '2026-02-23T07:33:02.349Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:33:02'),
-(60, 3, 'inventory@upriis.local', 'perform-maintenance', NULL, '2026-02-23T07:33:03.178Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:33:03'),
-(61, 3, 'inventory@upriis.local', 'home', NULL, '2026-02-23T07:33:04.592Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:33:04'),
-(62, 3, 'inventory@upriis.local', 'home', NULL, '2026-02-23T07:33:12.335Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:33:12'),
-(63, 3, 'inventory@upriis.local', 'home', NULL, '2026-02-23T07:33:20.286Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:33:20'),
-(64, 3, 'inventory@upriis.local', 'software', NULL, '2026-02-23T07:33:38.422Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:33:38'),
-(65, 3, 'inventory@upriis.local', 'home', NULL, '2026-02-23T07:33:40.179Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:33:40'),
-(66, 3, 'inventory@upriis.local', 'audit-trail', NULL, '2026-02-23T07:33:47.343Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:33:47'),
-(67, 3, 'inventory@upriis.local', 'maintenance-history', NULL, '2026-02-23T07:34:14.546Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:34:14'),
-(68, 3, 'inventory@upriis.local', 'perform-maintenance', NULL, '2026-02-23T07:34:14.858Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:34:14'),
-(69, 3, 'inventory@upriis.local', 'maintenance-schedule', NULL, '2026-02-23T07:34:15.060Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:34:15'),
-(70, 3, 'inventory@upriis.local', 'home', NULL, '2026-02-23T07:34:16.089Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:34:16'),
-(71, 3, 'inventory@upriis.local', 'maintenance-summary', NULL, '2026-02-23T07:34:16.880Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:34:16'),
-(72, 3, 'inventory@upriis.local', 'equipment-summary', NULL, '2026-02-23T07:34:17.491Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:34:17'),
-(73, 3, 'inventory@upriis.local', 'audit-trail', NULL, '2026-02-23T07:34:17.820Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:34:17'),
-(74, 3, 'inventory@upriis.local', 'organization', NULL, '2026-02-23T07:34:37.581Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:34:37'),
-(75, 3, 'inventory@upriis.local', 'accounts', NULL, '2026-02-23T07:34:37.924Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:34:37'),
-(76, 3, 'inventory@upriis.local', 'maintenance-summary', NULL, '2026-02-23T07:34:39.790Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:34:39'),
-(77, 3, 'inventory@upriis.local', 'equipment-summary', NULL, '2026-02-23T07:34:40.396Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:34:40'),
-(78, 3, 'inventory@upriis.local', 'perform-maintenance', NULL, '2026-02-23T07:34:40.807Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:34:40'),
-(79, 3, 'inventory@upriis.local', 'maintenance-schedule', NULL, '2026-02-23T07:34:41.128Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:34:41'),
-(80, 3, 'inventory@upriis.local', 'otherequipment', NULL, '2026-02-23T07:34:41.483Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:34:41'),
-(81, 3, 'inventory@upriis.local', 'software', NULL, '2026-02-23T07:34:41.868Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:34:41'),
-(82, 3, 'inventory@upriis.local', 'printer', NULL, '2026-02-23T07:34:42.291Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:34:42'),
-(83, 3, 'inventory@upriis.local', 'printer', NULL, '2026-02-23T07:34:42.765Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:34:42'),
-(84, 3, 'inventory@upriis.local', 'software', NULL, '2026-02-23T07:34:43.836Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:34:43'),
-(85, 3, 'inventory@upriis.local', 'otherequipment', NULL, '2026-02-23T07:34:49.270Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:34:49'),
-(86, 3, 'inventory@upriis.local', 'roster', NULL, '2026-02-23T07:34:50.692Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:34:50'),
-(87, 3, 'inventory@upriis.local', 'home', NULL, '2026-02-23T07:50:40.989Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:50:40'),
-(88, 3, 'inventory@upriis.local', 'audit-trail', NULL, '2026-02-23T07:50:50.596Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:50:50'),
-(89, 3, 'inventory@upriis.local', 'home', NULL, '2026-02-23T07:50:52.248Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:50:52'),
-(90, 3, 'inventory@upriis.local', 'audit-trail', NULL, '2026-02-23T07:50:56.976Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:50:56'),
-(91, 3, 'inventory@upriis.local', 'maintenance-summary', NULL, '2026-02-23T07:51:22.200Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:51:22'),
-(92, 3, 'inventory@upriis.local', 'equipment-summary', NULL, '2026-02-23T07:51:40.517Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:51:40'),
-(93, 3, 'inventory@upriis.local', 'maintenance-summary', NULL, '2026-02-23T07:51:42.273Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:51:42'),
-(94, 3, 'inventory@upriis.local', 'home', NULL, '2026-02-23T07:52:02.043Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:52:02'),
-(95, 3, 'inventory@upriis.local', 'home', NULL, '2026-02-23T07:52:36.211Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:52:36'),
-(96, 3, 'inventory@upriis.local', 'maintenance-history', NULL, '2026-02-23T07:52:40.009Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:52:40'),
-(97, 3, 'inventory@upriis.local', 'home', NULL, '2026-02-23T07:52:47.456Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:52:47'),
-(98, 3, 'inventory@upriis.local', 'software', NULL, '2026-02-23T07:52:49.495Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:52:49'),
-(99, 3, 'inventory@upriis.local', 'home', NULL, '2026-02-23T07:52:52.790Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:52:52'),
-(100, 3, 'inventory@upriis.local', 'maintenance-schedule', NULL, '2026-02-23T07:53:27.740Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:53:27'),
-(101, 3, 'inventory@upriis.local', 'computer', NULL, '2026-02-23T07:53:43.649Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:53:43'),
-(102, 3, 'inventory@upriis.local', 'printer', NULL, '2026-02-23T07:53:43.863Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:53:43'),
-(103, 3, 'inventory@upriis.local', 'maintenance-schedule', NULL, '2026-02-23T07:53:53.470Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:53:53'),
-(104, 3, 'inventory@upriis.local', 'computer', NULL, '2026-02-23T07:54:00.746Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:54:00'),
-(105, 3, 'inventory@upriis.local', 'employees', NULL, '2026-02-23T07:54:14.113Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:54:14'),
-(106, 3, 'inventory@upriis.local', 'computer', NULL, '2026-02-23T07:54:14.653Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:54:14'),
-(107, 3, 'inventory@upriis.local', 'home', NULL, '2026-02-23T07:54:19.701Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:54:19'),
-(108, 3, 'inventory@upriis.local', 'roster', NULL, '2026-02-23T07:54:22.346Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:54:22'),
-(109, 3, 'inventory@upriis.local', 'home', NULL, '2026-02-23T07:54:37.174Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:54:37'),
-(110, 3, 'inventory@upriis.local', 'maintenance-schedule', NULL, '2026-02-23T07:54:39.110Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:54:39'),
-(111, 3, 'inventory@upriis.local', 'maintenance-schedule', NULL, '2026-02-23T07:54:39.596Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:54:39'),
-(112, 3, 'inventory@upriis.local', 'maintenance-templates', NULL, '2026-02-23T07:54:40.844Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:54:40'),
-(113, 3, 'inventory@upriis.local', 'maintenance-schedule', NULL, '2026-02-23T07:54:42.051Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:54:42'),
-(114, 3, 'inventory@upriis.local', 'home', NULL, '2026-02-23T07:58:48.405Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:58:48'),
-(115, 3, 'inventory@upriis.local', 'equipment-summary', NULL, '2026-02-23T07:58:49.818Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:58:49'),
-(116, 3, 'inventory@upriis.local', 'maintenance-summary', NULL, '2026-02-23T07:58:50.082Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 07:58:50'),
-(117, 3, 'inventory@upriis.local', 'home', NULL, '2026-02-23T08:02:08.601Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 08:02:08'),
-(118, 3, 'inventory@upriis.local', 'maintenance-summary', NULL, '2026-02-23T08:02:09.299Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 08:02:09'),
-(119, 3, 'inventory@upriis.local', 'home', NULL, '2026-02-23T08:02:20.477Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 08:02:20'),
-(120, 3, 'inventory@upriis.local', 'maintenance-summary', NULL, '2026-02-23T08:02:21.327Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 08:02:21'),
-(121, 3, 'inventory@upriis.local', 'home', NULL, '2026-02-23T08:02:36.444Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 08:02:36'),
-(122, 3, 'inventory@upriis.local', 'maintenance-summary', NULL, '2026-02-23T08:02:37.799Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 08:02:37'),
-(123, 3, 'inventory@upriis.local', 'home', NULL, '2026-02-23T08:02:53.444Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 08:02:53'),
-(124, 3, 'inventory@upriis.local', 'maintenance-summary', NULL, '2026-02-23T08:02:54.072Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 08:02:54'),
-(125, 3, 'inventory@upriis.local', 'home', NULL, '2026-02-23T08:03:24.958Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 08:03:24'),
-(126, 3, 'inventory@upriis.local', 'maintenance-summary', NULL, '2026-02-23T08:03:25.452Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 08:03:25'),
-(127, 3, 'inventory@upriis.local', 'home', NULL, '2026-02-23T08:06:37.332Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 08:06:37'),
-(128, 3, 'inventory@upriis.local', 'maintenance-summary', NULL, '2026-02-23T08:06:37.982Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 08:06:37'),
-(129, 3, 'inventory@upriis.local', 'home', NULL, '2026-02-23T08:11:26.340Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 08:11:26'),
-(130, 3, 'inventory@upriis.local', 'maintenance-history', NULL, '2026-02-23T08:11:46.957Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 08:11:46'),
-(131, 3, 'inventory@upriis.local', 'home', NULL, '2026-02-23T08:11:49.146Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 08:11:49'),
-(132, 3, 'inventory@upriis.local', 'software', NULL, '2026-02-23T08:11:50.740Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 08:11:50'),
-(133, 3, 'inventory@upriis.local', 'home', NULL, '2026-02-23T08:12:02.732Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 08:12:02'),
-(134, 3, 'inventory@upriis.local', 'home', NULL, '2026-02-23T08:12:04.141Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 08:12:04'),
-(135, 3, 'inventory@upriis.local', 'software', NULL, '2026-02-23T08:12:08.890Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 08:12:08'),
-(136, 3, 'inventory@upriis.local', 'home', NULL, '2026-02-23T08:12:11.518Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 08:12:11'),
-(137, 3, 'inventory@upriis.local', 'software', NULL, '2026-02-23T08:15:31.851Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 08:15:31'),
-(138, 3, 'inventory@upriis.local', 'home', NULL, '2026-02-23T08:15:33.600Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 08:15:33'),
-(139, 3, 'inventory@upriis.local', 'roster', NULL, '2026-02-23T08:38:12.060Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 08:38:12'),
-(140, 3, 'inventory@upriis.local', 'maintenance-templates', NULL, '2026-02-23T08:38:13.716Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 08:38:13'),
-(141, 3, 'inventory@upriis.local', 'equipment-summary', NULL, '2026-02-23T08:38:14.685Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 08:38:14'),
-(142, 3, 'inventory@upriis.local', 'maintenance-summary', NULL, '2026-02-23T08:38:15.958Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 08:38:15'),
-(143, 3, 'inventory@upriis.local', 'audit-trail', NULL, '2026-02-23T08:38:16.728Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 08:38:16'),
-(144, 3, 'inventory@upriis.local', 'maintenance-summary', NULL, '2026-02-23T08:38:17.876Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 08:38:17'),
-(145, 3, 'inventory@upriis.local', 'maintenance-history', NULL, '2026-02-23T08:38:19.554Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 08:38:19'),
-(146, 3, 'inventory@upriis.local', 'roster', NULL, '2026-02-23T08:38:28.204Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-23 08:38:28'),
-(147, 3, 'inventory@upriis.local', 'home', NULL, '2026-02-24T00:03:37.391Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:03:37'),
-(148, 3, 'inventory@upriis.local', 'home', NULL, '2026-02-24T00:04:26.227Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:04:26'),
-(149, 3, 'inventory@upriis.local', 'maintenance-schedule', NULL, '2026-02-24T00:04:53.910Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:04:53'),
-(150, 3, 'inventory@upriis.local', 'maintenance-templates', NULL, '2026-02-24T00:04:55.257Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:04:55'),
-(151, 3, 'inventory@upriis.local', 'perform-maintenance', NULL, '2026-02-24T00:04:56.554Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:04:56'),
-(152, 3, 'inventory@upriis.local', 'maintenance-history', NULL, '2026-02-24T00:04:58.553Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:04:58'),
-(153, 3, 'inventory@upriis.local', 'maintenance-templates', NULL, '2026-02-24T00:05:01.474Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:05:01'),
-(154, 3, 'inventory@upriis.local', 'maintenance-schedule', NULL, '2026-02-24T00:05:07.911Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:05:07'),
-(155, 3, 'inventory@upriis.local', 'maintenance-templates', NULL, '2026-02-24T00:05:08.288Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:05:08'),
-(156, 3, 'inventory@upriis.local', 'maintenance-history', NULL, '2026-02-24T00:05:08.967Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:05:08'),
-(157, 3, 'inventory@upriis.local', 'perform-maintenance', NULL, '2026-02-24T00:05:09.275Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:05:09'),
-(158, 3, 'inventory@upriis.local', 'maintenance-schedule', NULL, '2026-02-24T00:05:09.610Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:05:09'),
-(159, 3, 'inventory@upriis.local', 'maintenance-templates', NULL, '2026-02-24T00:05:10.019Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:05:10'),
-(160, 3, 'inventory@upriis.local', 'perform-maintenance', NULL, '2026-02-24T00:05:10.463Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:05:10'),
-(161, 3, 'inventory@upriis.local', 'maintenance-history', NULL, '2026-02-24T00:05:10.804Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:05:10'),
-(162, 3, 'inventory@upriis.local', 'maintenance-schedule', NULL, '2026-02-24T00:05:11.547Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:05:11'),
-(163, 3, 'inventory@upriis.local', 'perform-maintenance', NULL, '2026-02-24T00:05:11.926Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:05:11'),
-(164, 3, 'inventory@upriis.local', 'maintenance-history', NULL, '2026-02-24T00:05:12.348Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:05:12'),
-(165, 3, 'inventory@upriis.local', 'maintenance-schedule', NULL, '2026-02-24T00:05:12.765Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:05:12'),
-(166, 3, 'inventory@upriis.local', 'maintenance-schedule', NULL, '2026-02-24T00:05:12.807Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:05:12'),
-(167, 3, 'inventory@upriis.local', 'maintenance-history', NULL, '2026-02-24T00:05:13.634Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:05:13'),
-(168, 3, 'inventory@upriis.local', 'maintenance-schedule', NULL, '2026-02-24T00:05:14.245Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:05:14'),
-(169, 3, 'inventory@upriis.local', 'maintenance-history', NULL, '2026-02-24T00:05:15.190Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:05:15'),
-(170, 3, 'inventory@upriis.local', 'maintenance-schedule', NULL, '2026-02-24T00:05:15.993Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:05:16'),
-(171, 3, 'inventory@upriis.local', 'maintenance-history', NULL, '2026-02-24T00:05:16.534Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:05:16'),
-(172, 3, 'inventory@upriis.local', 'maintenance-templates', NULL, '2026-02-24T00:05:17.341Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:05:17'),
-(173, 3, 'inventory@upriis.local', 'perform-maintenance', NULL, '2026-02-24T00:05:17.949Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:05:17'),
-(174, 3, 'inventory@upriis.local', 'maintenance-templates', NULL, '2026-02-24T00:05:18.612Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:05:18'),
-(175, 3, 'inventory@upriis.local', 'perform-maintenance', NULL, '2026-02-24T00:05:19.049Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:05:19'),
-(176, 3, 'inventory@upriis.local', 'maintenance-templates', NULL, '2026-02-24T00:05:20.054Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:05:20'),
-(177, 3, 'inventory@upriis.local', 'maintenance-schedule', NULL, '2026-02-24T00:05:20.715Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:05:20'),
-(178, 3, 'inventory@upriis.local', 'equipment-summary', NULL, '2026-02-24T00:05:25.883Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:05:25'),
-(179, 3, 'inventory@upriis.local', 'maintenance-summary', NULL, '2026-02-24T00:05:30.667Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:05:30'),
-(180, 3, 'inventory@upriis.local', 'audit-trail', NULL, '2026-02-24T00:05:31.707Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:05:31'),
-(181, 3, 'inventory@upriis.local', 'employees', NULL, '2026-02-24T00:05:33.877Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:05:33'),
-(182, 3, 'inventory@upriis.local', 'equipment-summary', NULL, '2026-02-24T00:05:58.327Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:05:58'),
-(183, 3, 'inventory@upriis.local', 'maintenance-summary', NULL, '2026-02-24T00:05:58.672Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:05:58'),
-(184, 3, 'inventory@upriis.local', 'equipment-summary', NULL, '2026-02-24T00:05:59.101Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:05:59'),
-(185, 3, 'inventory@upriis.local', 'maintenance-summary', NULL, '2026-02-24T00:05:59.425Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:05:59'),
-(186, 3, 'inventory@upriis.local', 'equipment-summary', NULL, '2026-02-24T00:05:59.772Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:05:59'),
-(187, 3, 'inventory@upriis.local', 'maintenance-summary', NULL, '2026-02-24T00:06:00.096Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:06:00'),
-(188, 3, 'inventory@upriis.local', 'equipment-summary', NULL, '2026-02-24T00:06:00.572Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:06:00'),
-(189, 3, 'inventory@upriis.local', 'maintenance-summary', NULL, '2026-02-24T00:06:00.844Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:06:00'),
-(190, 3, 'inventory@upriis.local', 'equipment-summary', NULL, '2026-02-24T00:06:01.400Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:06:01'),
-(191, 3, 'inventory@upriis.local', 'maintenance-summary', NULL, '2026-02-24T00:06:01.698Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:06:01'),
-(192, 3, 'inventory@upriis.local', 'maintenance-summary', NULL, '2026-02-24T00:06:02.563Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:06:02'),
-(193, 3, 'inventory@upriis.local', 'equipment-summary', NULL, '2026-02-24T00:06:03.022Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:06:03'),
-(194, 3, 'inventory@upriis.local', 'audit-trail', NULL, '2026-02-24T00:06:03.382Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:06:03'),
-(195, 3, 'inventory@upriis.local', 'maintenance-summary', NULL, '2026-02-24T00:06:05.283Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:06:05'),
-(196, 3, 'inventory@upriis.local', 'equipment-summary', NULL, '2026-02-24T00:06:05.630Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:06:05'),
-(197, 3, 'inventory@upriis.local', 'audit-trail', NULL, '2026-02-24T00:06:05.930Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:06:05'),
-(198, 3, 'inventory@upriis.local', 'maintenance-summary', NULL, '2026-02-24T00:06:06.471Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:06:06'),
-(199, 3, 'inventory@upriis.local', 'equipment-summary', NULL, '2026-02-24T00:06:06.858Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:06:06'),
-(200, 3, 'inventory@upriis.local', 'maintenance-summary', NULL, '2026-02-24T00:06:07.154Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:06:07'),
-(201, 3, 'inventory@upriis.local', 'maintenance-summary', NULL, '2026-02-24T00:06:07.582Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:06:07'),
-(202, 3, 'inventory@upriis.local', 'audit-trail', NULL, '2026-02-24T00:06:07.846Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:06:07'),
-(203, 3, 'inventory@upriis.local', 'home', NULL, '2026-02-24T00:13:53.247Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:13:53'),
-(204, 3, 'inventory@upriis.local', 'organization', NULL, '2026-02-24T00:13:59.968Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:14:00'),
-(205, 3, 'inventory@upriis.local', 'employees', NULL, '2026-02-24T00:14:11.769Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:14:11'),
-(206, 3, 'inventory@upriis.local', 'computer', NULL, '2026-02-24T00:14:18.688Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:14:18'),
-(207, 3, 'inventory@upriis.local', 'employees', NULL, '2026-02-24T00:14:35.423Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:14:35'),
-(208, 3, 'inventory@upriis.local', 'computer', NULL, '2026-02-24T00:14:36.544Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:14:36'),
-(209, 3, 'inventory@upriis.local', 'computer', NULL, '2026-02-24T00:14:36.895Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:14:36'),
-(210, 3, 'inventory@upriis.local', 'printer', NULL, '2026-02-24T00:14:37.590Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:14:37'),
-(211, 3, 'inventory@upriis.local', 'software', NULL, '2026-02-24T00:14:43.815Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:14:44'),
-(212, 3, 'inventory@upriis.local', 'otherequipment', NULL, '2026-02-24T00:14:54.208Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:14:54'),
-(213, 3, 'inventory@upriis.local', 'maintenance-schedule', NULL, '2026-02-24T00:14:54.876Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:14:54'),
-(214, 3, 'inventory@upriis.local', 'maintenance-templates', NULL, '2026-02-24T00:15:20.680Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:15:20');
-INSERT INTO `activity_log` (`id`, `user_id`, `email`, `action`, `module`, `description`, `ip_address`, `user_agent`, `success`, `timestamp`) VALUES
-(215, 3, 'inventory@upriis.local', 'perform-maintenance', NULL, '2026-02-24T00:15:36.082Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:15:36'),
-(216, 3, 'inventory@upriis.local', 'perform-maintenance', NULL, '2026-02-24T00:15:37.808Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:15:37'),
-(217, 3, 'inventory@upriis.local', 'maintenance-templates', NULL, '2026-02-24T00:15:38.216Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:15:38'),
-(218, 3, 'inventory@upriis.local', 'perform-maintenance', NULL, '2026-02-24T00:15:38.592Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:15:38'),
-(219, 3, 'inventory@upriis.local', 'maintenance-templates', NULL, '2026-02-24T00:15:39.525Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:15:39'),
-(220, 3, 'inventory@upriis.local', 'perform-maintenance', NULL, '2026-02-24T00:15:39.797Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:15:39'),
-(221, 3, 'inventory@upriis.local', 'maintenance-history', NULL, '2026-02-24T00:15:53.958Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:15:54'),
-(222, 3, 'inventory@upriis.local', 'maintenance-schedule', NULL, '2026-02-24T00:15:56.837Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:15:56'),
-(223, 3, 'inventory@upriis.local', 'equipment-summary', NULL, '2026-02-24T00:15:58.122Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:15:58'),
-(224, 3, 'inventory@upriis.local', 'maintenance-summary', NULL, '2026-02-24T00:15:58.590Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:15:58'),
-(225, 3, 'inventory@upriis.local', 'audit-trail', NULL, '2026-02-24T00:15:58.990Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:15:58'),
-(226, 3, 'inventory@upriis.local', 'maintenance-summary', NULL, '2026-02-24T00:15:59.530Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:15:59'),
-(227, 3, 'inventory@upriis.local', 'equipment-summary', NULL, '2026-02-24T00:16:00.306Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:16:00'),
-(228, 3, 'inventory@upriis.local', 'equipment-summary', NULL, '2026-02-24T00:16:53.252Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:16:53'),
-(229, 3, 'inventory@upriis.local', 'roster', NULL, '2026-02-24T00:17:01.295Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:17:01'),
-(230, 3, 'inventory@upriis.local', 'equipment-summary', NULL, '2026-02-24T00:17:33.989Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:17:34'),
-(231, 3, 'inventory@upriis.local', 'maintenance-summary', NULL, '2026-02-24T00:17:37.974Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:17:38'),
-(232, 3, 'inventory@upriis.local', 'maintenance-summary', NULL, '2026-02-24T00:17:38.720Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:17:38'),
-(233, 3, 'inventory@upriis.local', 'equipment-summary', NULL, '2026-02-24T00:17:45.903Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:17:45'),
-(234, 3, 'inventory@upriis.local', 'maintenance-summary', NULL, '2026-02-24T00:17:46.364Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:17:46'),
-(235, 3, 'inventory@upriis.local', 'roster', NULL, '2026-02-24T00:17:48.884Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:17:48'),
-(236, 3, 'inventory@upriis.local', 'home', NULL, '2026-02-24T00:17:52.431Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:17:52'),
-(237, 3, 'inventory@upriis.local', 'home', NULL, '2026-02-24T00:18:02.268Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:18:02'),
-(238, 3, 'inventory@upriis.local', 'roster', NULL, '2026-02-24T00:18:02.988Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:18:02'),
-(239, 3, 'inventory@upriis.local', 'employees', NULL, '2026-02-24T00:18:03.547Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:18:03'),
-(240, 3, 'inventory@upriis.local', 'roster', NULL, '2026-02-24T00:18:04.059Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:18:04'),
-(241, 3, 'inventory@upriis.local', 'employees', NULL, '2026-02-24T00:18:04.483Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:18:04'),
-(242, 3, 'inventory@upriis.local', 'roster', NULL, '2026-02-24T00:18:05.319Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:18:05'),
-(243, 3, 'inventory@upriis.local', 'employees', NULL, '2026-02-24T00:18:05.963Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:18:05'),
-(244, 3, 'inventory@upriis.local', 'roster', NULL, '2026-02-24T00:18:06.367Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:18:06'),
-(245, 3, 'inventory@upriis.local', 'employees', NULL, '2026-02-24T00:18:06.719Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:18:06'),
-(246, 3, 'inventory@upriis.local', 'roster', NULL, '2026-02-24T00:18:07.143Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:18:07'),
-(247, 3, 'inventory@upriis.local', 'employees', NULL, '2026-02-24T00:18:07.829Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:18:07'),
-(248, 3, 'inventory@upriis.local', 'employees', NULL, '2026-02-24T00:18:13.495Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:18:13'),
-(249, 3, 'inventory@upriis.local', 'roster', NULL, '2026-02-24T00:18:23.618Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:18:23'),
-(250, 3, 'inventory@upriis.local', 'employees', NULL, '2026-02-24T00:18:26.306Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:18:26'),
-(251, 3, 'inventory@upriis.local', 'roster', NULL, '2026-02-24T00:18:27.233Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:18:27'),
-(252, 3, 'inventory@upriis.local', 'employees', NULL, '2026-02-24T00:18:28.224Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:18:28'),
-(253, 3, 'inventory@upriis.local', 'roster', NULL, '2026-02-24T00:18:29.374Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:18:29'),
-(254, 3, 'inventory@upriis.local', 'employees', NULL, '2026-02-24T00:18:34.073Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:18:34'),
-(255, 3, 'inventory@upriis.local', 'employees', NULL, '2026-02-24T00:18:41.618Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:18:41'),
-(256, 3, 'inventory@upriis.local', 'employees', NULL, '2026-02-24T00:18:44.079Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:18:44'),
-(257, 3, 'inventory@upriis.local', 'employees', NULL, '2026-02-24T00:18:45.828Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:18:45'),
-(258, 3, 'inventory@upriis.local', 'roster', NULL, '2026-02-24T00:18:49.985Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:18:49'),
-(259, 3, 'inventory@upriis.local', 'accounts', NULL, '2026-02-24T00:19:15.935Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:19:15'),
-(260, 3, 'inventory@upriis.local', 'organization', NULL, '2026-02-24T00:20:42.637Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:20:42'),
-(261, 3, 'inventory@upriis.local', 'accounts', NULL, '2026-02-24T00:20:46.049Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:20:46'),
-(262, 3, 'inventory@upriis.local', 'accounts', NULL, '2026-02-24T00:20:47.476Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:20:47'),
-(263, 3, 'inventory@upriis.local', 'organization', NULL, '2026-02-24T00:20:48.060Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:20:48'),
-(264, 3, 'inventory@upriis.local', 'home', NULL, '2026-02-24T00:20:52.145Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:20:52'),
-(265, 3, 'inventory@upriis.local', 'organization', NULL, '2026-02-24T00:20:57.949Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:20:57'),
-(266, 3, 'inventory@upriis.local', 'accounts', NULL, '2026-02-24T00:20:58.741Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:20:58'),
-(267, 3, 'inventory@upriis.local', 'organization', NULL, '2026-02-24T00:20:59.465Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:20:59'),
-(268, 3, 'inventory@upriis.local', 'roster', NULL, '2026-02-24T00:21:05.828Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:21:05'),
-(269, 3, 'inventory@upriis.local', 'organization', NULL, '2026-02-24T00:21:29.553Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:21:29'),
-(270, 3, 'inventory@upriis.local', 'accounts', NULL, '2026-02-24T00:21:31.714Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:21:31'),
-(271, 3, 'inventory@upriis.local', 'organization', NULL, '2026-02-24T00:21:31.886Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:21:31'),
-(272, 3, 'inventory@upriis.local', 'accounts', NULL, '2026-02-24T00:21:32.586Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:21:32'),
-(273, 3, 'inventory@upriis.local', 'accounts', NULL, '2026-02-24T00:21:33.887Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:21:33'),
-(274, 3, 'inventory@upriis.local', 'employees', NULL, '2026-02-24T00:21:34.146Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:21:34'),
-(275, 3, 'inventory@upriis.local', 'computer', NULL, '2026-02-24T00:21:34.725Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:21:34'),
-(276, 3, 'inventory@upriis.local', 'organization', NULL, '2026-02-24T00:21:34.935Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:21:34'),
-(277, 3, 'inventory@upriis.local', 'accounts', NULL, '2026-02-24T00:21:35.954Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:21:35'),
-(278, 3, 'inventory@upriis.local', 'organization', NULL, '2026-02-24T00:21:36.354Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:21:36'),
-(279, 3, 'inventory@upriis.local', 'accounts', NULL, '2026-02-24T00:21:37.171Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:21:37'),
-(280, 3, 'inventory@upriis.local', 'accounts', NULL, '2026-02-24T00:21:38.288Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:21:38'),
-(281, 3, 'inventory@upriis.local', 'accounts', NULL, '2026-02-24T00:21:44.621Z', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 00:21:44');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `emember_tokens`
---
-
-CREATE TABLE `emember_tokens` (
-  `id` int(11) NOT NULL,
-  `user_id` int(11) NOT NULL,
-  `selector` varchar(64) NOT NULL,
-  `hashed_validator` varchar(128) NOT NULL,
-  `expires_at` datetime NOT NULL,
-  `created_at` datetime DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+(640, 3, 'inventory@upriis.local', 'UPDATE', 'Settings', 'Updated system settings (4 values)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 03:36:37'),
+(641, 3, 'inventory@upriis.local', 'LOGOUT', 'Authentication', 'User logged out', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 03:36:53'),
+(642, 3, 'inventory@upriis.local', 'LOGIN', 'Authentication', 'User logged in successfully', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 03:37:05'),
+(643, 3, 'inventory@upriis.local', 'EXPORT', 'Reports', 'Exported equipment summary report PDF', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 03:50:02'),
+(644, 3, 'inventory@upriis.local', 'EXPORT', 'Reports', 'Exported equipment summary report PDF', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 04:02:37'),
+(645, 3, 'inventory@upriis.local', 'EXPORT', 'Reports', 'Exported maintenance history report PDF (February 2026)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 04:03:37'),
+(646, 3, 'inventory@upriis.local', 'LOGOUT', 'Authentication', 'User logged out', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 04:50:54'),
+(647, 3, 'inventory@upriis.local', 'EXPORT', 'Reports', 'Exported equipment summary report PDF', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 04:53:17'),
+(648, 3, 'inventory@upriis.local', 'EXPORT', 'Reports', 'Exported equipment summary report PDF', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 04:54:56'),
+(649, 4, 'markpalacay515@gmail.com', 'LOGIN', 'Authentication', 'User logged in successfully', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 04:55:57'),
+(650, 3, 'inventory@upriis.local', 'UPDATE', 'Settings', 'Updated system settings (4 values)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 04:58:18'),
+(651, 4, 'markpalacay515@gmail.com', 'LOGOUT', 'Authentication', 'User logged out', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 04:59:30'),
+(652, NULL, 'system', 'LOGIN_FAILED', 'Authentication', 'Failed login attempt for: inventory@upriis.local (wrong password)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 0, '2026-02-24 04:59:41'),
+(653, 3, 'inventory@upriis.local', 'LOGIN', 'Authentication', 'User logged in successfully', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 04:59:48'),
+(654, 3, 'inventory@upriis.local', 'LOGOUT', 'Authentication', 'User logged out', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 05:02:25'),
+(655, 4, 'markpalacay515@gmail.com', 'LOGIN', 'Authentication', 'User logged in successfully', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 05:02:36'),
+(656, 4, 'markpalacay515@gmail.com', 'LOGOUT', 'Authentication', 'User logged out', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 05:04:01'),
+(657, 3, 'inventory@upriis.local', 'LOGIN', 'Authentication', 'User logged in successfully', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 05:04:17'),
+(658, 3, 'inventory@upriis.local', 'EXPORT', 'Reports', 'Exported equipment summary report PDF', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 05:09:55'),
+(659, 3, 'inventory@upriis.local', 'EXPORT', 'Reports', 'Exported maintenance summary report PDF', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 05:25:48'),
+(660, 3, 'inventory@upriis.local', 'EXPORT', 'Reports', 'Exported maintenance summary report PDF', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 05:26:53'),
+(661, 3, 'inventory@upriis.local', 'EXPORT', 'Reports', 'Exported maintenance history report PDF (February 2026)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 05:43:41'),
+(662, 3, 'inventory@upriis.local', 'EXPORT', 'Reports', 'Exported maintenance history report PDF (Week 08, 2026 (2026-02-16 – 2026-02-22))', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 05:45:48'),
+(663, 3, 'inventory@upriis.local', 'EXPORT', 'Reports', 'Exported checklist report PDF for record #59', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 05:52:21'),
+(664, 3, 'inventory@upriis.local', 'EXPORT', 'Reports', 'Exported checklist report PDF for record #59', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 05:57:42'),
+(665, 3, 'inventory@upriis.local', 'EXPORT', 'Reports', 'Exported checklist report PDF for record #59', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 05:58:50'),
+(666, 3, 'inventory@upriis.local', 'EXPORT', 'Reports', 'Exported checklist report PDF for record #59', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 05:59:32'),
+(667, 3, 'inventory@upriis.local', 'EXPORT', 'Reports', 'Exported checklist report PDF for record #59', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 06:09:38'),
+(668, NULL, 'system', 'EXPORT', 'Reports', 'Exported employee checklist report PDF for Ana G. Garcia (ID: 103)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 06:09:45'),
+(669, 3, 'inventory@upriis.local', 'EXPORT', 'Reports', 'Exported checklist report PDF for record #59', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 06:14:02'),
+(670, 3, 'inventory@upriis.local', 'EXPORT', 'Reports', 'Exported employee checklist report PDF for Ana G. Garcia (ID: 103)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 06:14:04'),
+(671, 3, 'inventory@upriis.local', 'EXPORT', 'Reports', 'Exported checklist report PDF for record #59', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 06:17:34'),
+(672, 3, 'inventory@upriis.local', 'EXPORT', 'Reports', 'Exported employee checklist report PDF for Ana G. Garcia (ID: 103)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 06:17:36'),
+(673, 3, 'inventory@upriis.local', 'EXPORT', 'Reports', 'Exported checklist report PDF for record #59', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 06:17:58'),
+(674, 3, 'inventory@upriis.local', 'EXPORT', 'Reports', 'Exported employee checklist report PDF for Ana G. Garcia (ID: 103)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 06:18:00'),
+(675, 3, 'inventory@upriis.local', 'EXPORT', 'Reports', 'Exported checklist report PDF for record #59', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 06:32:15'),
+(676, 3, 'inventory@upriis.local', 'EXPORT', 'Reports', 'Exported employee checklist report PDF for Ana G. Garcia (ID: 103)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 07:05:23'),
+(677, 3, 'inventory@upriis.local', 'LOGIN', 'Authentication', 'User logged in successfully', '::1', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36', 1, '2026-02-24 07:13:18'),
+(678, 3, 'inventory@upriis.local', 'CREATE', 'Maintenance', 'Recorded maintenance for schedule ID 45 (Equipment ID: 35, Type ID: 3). Status: Operational. Prepared by: Super Admin.', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 07:14:30'),
+(679, 3, 'inventory@upriis.local', 'LOGIN', 'Authentication', 'User logged in successfully', '::1', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36', 1, '2026-02-24 08:00:08'),
+(680, NULL, 'system', 'LOGIN_FAILED', 'Authentication', 'Failed login attempt for: inventory@upriis.local (wrong password)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 0, '2026-02-25 00:01:47'),
+(681, 3, 'inventory@upriis.local', 'LOGIN', 'Authentication', 'User logged in successfully', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-25 00:01:52'),
+(682, NULL, 'system', 'LOGIN_FAILED', 'Authentication', 'Failed login attempt for: inventory@upriis.local (wrong password)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 0, '2026-02-25 00:09:40'),
+(683, 3, 'inventory@upriis.local', 'LOGIN', 'Authentication', 'User logged in successfully', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-25 00:09:45'),
+(684, 4, 'markpalacay515@gmail.com', 'LOGIN', 'Authentication', 'User logged in successfully', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-25 00:11:46'),
+(685, 4, 'markpalacay515@gmail.com', 'EXPORT', 'Reports', 'Exported maintenance history report PDF (February 2026)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-25 00:12:07'),
+(686, 3, 'inventory@upriis.local', 'CREATE', 'Accounts', 'Created Admin account for Lexter N. Manuel (lexternmanuel@gmail.com), Status: Active.', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-25 00:12:43'),
+(687, 5, 'lexternmanuel@gmail.com', 'LOGIN', 'Authentication', 'User logged in successfully', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-25 00:13:10'),
+(688, 3, 'inventory@upriis.local', 'EXPORT', 'Reports', 'Exported maintenance history report PDF (February 2026)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-25 00:13:29'),
+(689, 3, 'inventory@upriis.local', 'EXPORT', 'Reports', 'Exported maintenance history report PDF (February 2026)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-25 00:14:03'),
+(690, 3, 'inventory@upriis.local', 'EXPORT', 'Reports', 'Exported maintenance history report PDF (February 2026)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-25 00:14:19'),
+(691, 4, 'markpalacay515@gmail.com', 'EXPORT', 'Reports', 'Exported maintenance history report PDF (February 2026)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-25 00:15:03'),
+(692, 3, 'inventory@upriis.local', 'EXPORT', 'Reports', 'Exported employee checklist report PDF for Demi Xochitl (ID: 645987)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-25 00:16:18'),
+(693, 3, 'inventory@upriis.local', 'EXPORT', 'Reports', 'Exported checklist report PDF for record #60', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-25 00:16:27'),
+(694, NULL, 'system', 'LOGIN_FAILED', 'Authentication', 'Failed login attempt for: inventory@upriis.local (wrong password)', '::1', 'Mozilla/5.0 (Linux; Android 13; RMX3081 Build/RKQ1.211119.001; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/145.0.7632.79 Mobile Safari/537.36 [FB_IAB/FB4A;FBAV/548.0.0.37.65;]', 0, '2026-02-25 00:22:48'),
+(695, NULL, 'system', 'LOGIN_FAILED', 'Authentication', 'Failed login attempt for: inventory@upriis.local (wrong password)', '::1', 'Mozilla/5.0 (Linux; Android 13; RMX3081 Build/RKQ1.211119.001; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/145.0.7632.79 Mobile Safari/537.36 [FB_IAB/FB4A;FBAV/548.0.0.37.65;]', 0, '2026-02-25 00:23:04'),
+(696, 5, 'lexternmanuel@gmail.com', 'LOGIN', 'Authentication', 'User logged in successfully', '::1', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36', 1, '2026-02-25 00:55:19'),
+(697, 3, 'inventory@upriis.local', 'LOGIN', 'Authentication', 'User logged in successfully', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-25 01:00:16'),
+(698, 5, 'lexternmanuel@gmail.com', 'LOGOUT', 'Authentication', 'User logged out', '::1', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36', 1, '2026-02-25 01:00:42'),
+(699, 3, 'inventory@upriis.local', 'LOGIN', 'Authentication', 'User logged in successfully', '::1', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36', 1, '2026-02-25 01:00:55'),
+(700, 3, 'inventory@upriis.local', 'LOGOUT', 'Authentication', 'User logged out', '::1', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36', 1, '2026-02-25 01:01:58'),
+(701, NULL, 'system', 'LOGIN_FAILED', 'Authentication', 'Failed login attempt for: inventory@upriis.local (wrong password)', '::1', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36', 0, '2026-02-25 01:05:26'),
+(702, 3, 'inventory@upriis.local', 'LOGIN', 'Authentication', 'User logged in successfully', '::1', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36', 1, '2026-02-25 01:05:32'),
+(703, 4, 'markpalacay515@gmail.com', 'LOGOUT', 'Authentication', 'User logged out', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-25 01:17:10'),
+(704, 3, 'inventory@upriis.local', 'LOGIN', 'Authentication', 'User logged in successfully', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-25 01:17:20');
 
 -- --------------------------------------------------------
 
@@ -512,6 +280,46 @@ CREATE TABLE `sessions` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `system_settings`
+--
+
+CREATE TABLE `system_settings` (
+  `setting_key` varchar(100) NOT NULL,
+  `setting_value` text DEFAULT NULL,
+  `setting_group` varchar(50) NOT NULL DEFAULT 'general',
+  `label` varchar(200) DEFAULT NULL,
+  `description` varchar(500) DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL ON UPDATE current_timestamp(),
+  `updated_by` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `system_settings`
+--
+
+INSERT INTO `system_settings` (`setting_key`, `setting_value`, `setting_group`, `label`, `description`, `updated_at`, `updated_by`) VALUES
+('backup_retention_days', '30', 'system', 'Log Retention (days)', 'Days to retain activity logs before cleanup', '2026-02-24 04:58:18', 3),
+('date_format', 'Y-m-d', 'system', 'Date Display Format', 'PHP date format for display', '2026-02-24 04:58:18', 3),
+('enable_activity_log', '1', 'system', 'Enable Activity Logging', 'Log user actions in the system', '2026-02-24 04:58:18', 3),
+('enforce_2fa', '1', 'security', 'Enforce 2FA', 'Require two-factor authentication for all users', '2026-02-24 02:19:15', 3),
+('items_per_page', '10', 'system', 'Default Items Per Page', 'Default pagination size', '2026-02-24 04:58:18', 3),
+('lockout_duration', '900', 'security', 'Lockout Duration (seconds)', 'How long account stays locked', '2026-02-24 02:19:15', 3),
+('maint_auto_schedule', '1', 'maintenance', 'Auto-Schedule Next', 'Automatically create next schedule after completion', '2026-02-24 01:55:41', 3),
+('maint_default_frequency', 'semi-annual', 'maintenance', 'Default Frequency', 'Default maintenance schedule frequency', '2026-02-24 01:55:41', 3),
+('maint_overdue_threshold_days', '7', 'maintenance', 'Overdue Threshold (days)', 'Days past due before flagged overdue', '2026-02-24 01:55:41', 3),
+('maint_reminder_days_before', '7', 'maintenance', 'Reminder Lead Days', 'Days before due date to show reminders', '2026-02-24 01:55:41', 3),
+('max_login_attempts', '5', 'security', 'Max Login Attempts', 'Failed attempts before lockout', '2026-02-24 02:19:15', 3),
+('org_address', '', 'organization', 'Office Address', 'Physical address of the office', NULL, NULL),
+('org_contact_email', '', 'organization', 'Contact Email', 'Primary contact email', NULL, NULL),
+('org_contact_phone', '', 'organization', 'Contact Phone', 'Primary contact phone number', NULL, NULL),
+('org_name', 'NIA UPRIIS', 'organization', 'Organization Name', 'Full name of the organization', NULL, NULL),
+('org_short_name', 'UPRIIS', 'organization', 'Short Name / Acronym', 'Abbreviated name used in headers', NULL, NULL),
+('password_min_length', '8', 'security', 'Minimum Password Length', 'Minimum characters for passwords', '2026-02-24 02:19:15', 3),
+('session_timeout', '3600', 'security', 'Session Timeout (seconds)', 'Auto-logout after inactivity', '2026-02-24 02:19:15', 3);
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `tbl_accounts`
 --
 
@@ -538,7 +346,9 @@ CREATE TABLE `tbl_accounts` (
 --
 
 INSERT INTO `tbl_accounts` (`id`, `user_name`, `email`, `password`, `role`, `status`, `failed_login_attempts`, `locked_until`, `last_login`, `last_login_ip`, `2fa_enabled`, `2fa_secret`, `created_at`, `updated_at`, `created_by`) VALUES
-(3, 'System Super Admin', 'inventory@upriis.local', '$2y$12$RAUQs6D0FBVNz.ky7N6rJegTTOCmDxYpO850YwZMlxyWX4bLDKl9G', 'Super Admin', 'Active', 0, NULL, NULL, NULL, 0, NULL, '2026-02-09 23:26:19', '2026-02-24 00:22:35', NULL);
+(3, 'Super Admin', 'inventory@upriis.local', '$2y$12$.5filGBaRzpga/bgNhvqQ.DtoMDdBWkPZnXwOETP3wG14wx7FfUv2', 'Super Admin', 'Active', 0, NULL, '2026-02-25 09:17:20', '180.191.20.238', 0, NULL, '2026-02-09 23:26:19', '2026-02-25 01:17:20', NULL),
+(4, 'Mark Angelo Palacay', 'markpalacay515@gmail.com', '$2y$12$43Qo9uzBsHjQZxiycJVVQu99LkKMrUGjv2AK7lovcYNO0uSg57uAO', 'Admin', 'Active', 0, NULL, '2026-02-25 08:11:46', '180.191.20.238', 0, NULL, '2026-02-24 01:44:20', '2026-02-25 00:11:46', 3),
+(5, 'Lexter N. Manuel', 'lexternmanuel@gmail.com', '$2y$12$VEFLi2XvomybiNgm62NOdOeRXUpF2ko.vPjp5dxHZrnDzsCVu/DQK', 'Admin', 'Active', 0, NULL, '2026-02-25 08:55:19', '175.158.198.115', 0, NULL, '2026-02-25 00:12:43', '2026-02-25 00:55:19', 3);
 
 -- --------------------------------------------------------
 
@@ -588,7 +398,34 @@ INSERT INTO `tbl_activity_logs` (`id`, `user_id`, `action`, `details`, `ip_addre
 (25, 3, 'login', 'User logged in successfully', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-02-24 08:03:36'),
 (26, 3, 'logout', 'User logged out', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-02-24 08:04:19'),
 (27, 3, 'login', 'User logged in successfully', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-02-24 08:04:25'),
-(28, 3, 'login', 'User logged in successfully', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-02-24 08:13:49');
+(28, 3, 'login', 'User logged in successfully', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-02-24 08:13:49'),
+(29, 3, 'logout', 'User logged out', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-02-24 08:40:34'),
+(30, 3, 'login', 'User logged in successfully', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-02-24 08:40:40'),
+(31, 3, 'logout', 'User logged out', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-02-24 09:12:30'),
+(32, 3, 'login', 'User logged in successfully', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-02-24 09:12:36'),
+(33, 3, 'login', 'User logged in successfully', '::1', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36', '2026-02-24 09:14:28'),
+(34, 3, 'settings_update', 'Updated system settings (4 values)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-02-24 09:36:39'),
+(35, 3, 'settings_update', 'Updated maintenance settings (4 values)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-02-24 09:37:57'),
+(36, 3, 'settings_update', 'Updated maintenance settings (4 values)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-02-24 09:38:04'),
+(37, 3, 'logout', 'User logged out', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-02-24 09:44:37'),
+(38, 4, 'login', 'User logged in successfully', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-02-24 09:44:46'),
+(39, 4, 'logout', 'User logged out', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-02-24 09:50:25'),
+(40, 3, 'login', 'User logged in successfully', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-02-24 09:50:49'),
+(41, 3, 'settings_update', 'Updated maintenance settings (4 values)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-02-24 09:55:41'),
+(42, 3, 'settings_update', 'Updated system settings (4 values)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-02-24 09:56:08'),
+(43, 3, 'profile_update', 'Changed display name', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-02-24 09:57:13'),
+(44, 3, 'password_change', 'Changed account password', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-02-24 09:57:46'),
+(45, 3, 'logout', 'User logged out', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-02-24 09:57:50'),
+(46, 3, 'login', 'User logged in successfully', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-02-24 09:58:04'),
+(47, 3, 'profile_update', 'Changed display name', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-02-24 09:58:13'),
+(48, 3, 'login', 'User logged in successfully', '::1', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36', '2026-02-24 10:10:43'),
+(49, 3, 'logout', 'User logged out', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-02-24 10:16:01'),
+(50, 4, 'login', 'User logged in successfully', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-02-24 10:16:10'),
+(51, 4, 'logout', 'User logged out', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-02-24 10:16:16'),
+(52, 3, 'login', 'User logged in successfully', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-02-24 10:16:34'),
+(53, 3, 'settings_update', 'Updated security settings (5 values)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-02-24 10:19:15'),
+(54, 3, 'logout', 'User logged out', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-02-24 10:20:03'),
+(55, 4, 'login', 'User logged in successfully', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-02-24 10:20:11');
 
 -- --------------------------------------------------------
 
@@ -759,14 +596,14 @@ CREATE TABLE `tbl_employee` (
   `location_id` int(11) NOT NULL,
   `createdAt` timestamp NOT NULL DEFAULT current_timestamp(),
   `updatedAt` timestamp NULL DEFAULT NULL ON UPDATE current_timestamp(),
-  `is_active` tinyint(1) NOT NULL DEFAULT 1
+  `is_archive` tinyint(1) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `tbl_employee`
 --
 
-INSERT INTO `tbl_employee` (`employeeId`, `firstName`, `middleName`, `lastName`, `suffixName`, `position`, `birthDate`, `sex`, `employmentStatus`, `photoPath`, `location_id`, `createdAt`, `updatedAt`, `is_active`) VALUES
+INSERT INTO `tbl_employee` (`employeeId`, `firstName`, `middleName`, `lastName`, `suffixName`, `position`, `birthDate`, `sex`, `employmentStatus`, `photoPath`, `location_id`, `createdAt`, `updatedAt`, `is_archive`) VALUES
 (1, 'Lexter', 'N.', 'Manuel', '', 'OJT Trainee', '2002-11-06', 'Male', 'Casual', 'employee_1_1770881693.jpeg', 4, '2026-02-10 03:41:25', '2026-02-12 07:34:53', 1),
 (100, 'Juan', 'P.', 'Dela Cruz', '', 'Project Engineer', '1990-05-15', 'Male', 'Permanent', NULL, 18, '2026-02-19 06:06:48', NULL, 1),
 (101, 'Maria', 'S.', 'Santos', '', 'Accountant III', '1988-08-22', 'Female', 'Permanent', NULL, 29, '2026-02-19 06:06:48', NULL, 1),
@@ -909,7 +746,8 @@ INSERT INTO `tbl_maintenance_record` (`recordId`, `scheduleId`, `templateId`, `e
 (56, 23, 8, 1, 13, 3, '2026-02-23 14:30:23', '[{\"desc\":\"Dust removal performed\",\"itemId\":\"19\",\"categoryId\":\"19\",\"categoryName\":\"I. PHYSICAL INSPECTION, INTERIORS AND CLEANING\",\"seq\":\"1\",\"status\":\"Yes\"},{\"desc\":\"Parts are intact\",\"itemId\":\"20\",\"categoryId\":\"19\",\"categoryName\":\"I. PHYSICAL INSPECTION, INTERIORS AND CLEANING\",\"seq\":\"2\",\"status\":\"No\"},{\"desc\":\"Power Supply is working properly\",\"itemId\":\"21\",\"categoryId\":\"20\",\"categoryName\":\"II. HARDWARE PERFORMANCE CHECK\",\"seq\":\"3\",\"status\":\"No\"}]', '', 'For Replacement', 'Good', 'SystemSuperAdmin', '[Select Supervisor Name]', '[Select Head of Office]'),
 (57, 43, 10, 3, 33, 3, '2026-02-23 14:30:39', '[{\"desc\":\"Screen surface cleaned (no smudges\\/dust)\",\"itemId\":\"25\",\"categoryId\":\"25\",\"categoryName\":\"I. PHYSICAL INSPECTION & CLEANING\",\"seq\":\"1\",\"status\":\"Yes\"},{\"desc\":\"Monitor casing wiped and free of dust\",\"itemId\":\"26\",\"categoryId\":\"25\",\"categoryName\":\"I. PHYSICAL INSPECTION & CLEANING\",\"seq\":\"2\",\"status\":\"Yes\"},{\"desc\":\"Ventilation openings clear of obstruction\",\"itemId\":\"27\",\"categoryId\":\"25\",\"categoryName\":\"I. PHYSICAL INSPECTION & CLEANING\",\"seq\":\"3\",\"status\":\"Yes\"},{\"desc\":\"Stand\\/mount secure and stable\",\"itemId\":\"28\",\"categoryId\":\"25\",\"categoryName\":\"I. PHYSICAL INSPECTION & CLEANING\",\"seq\":\"4\",\"status\":\"Yes\"},{\"desc\":\"No dead or stuck pixels detected\",\"itemId\":\"29\",\"categoryId\":\"26\",\"categoryName\":\"II. DISPLAY PERFORMANCE CHECK\",\"seq\":\"5\",\"status\":\"No\"},{\"desc\":\"Brightness and contrast levels acceptable\",\"itemId\":\"30\",\"categoryId\":\"26\",\"categoryName\":\"II. DISPLAY PERFORMANCE CHECK\",\"seq\":\"6\",\"status\":\"No\"},{\"desc\":\"Color reproduction is accurate\",\"itemId\":\"31\",\"categoryId\":\"26\",\"categoryName\":\"II. DISPLAY PERFORMANCE CHECK\",\"seq\":\"7\",\"status\":\"Yes\"},{\"desc\":\"No visible backlight bleed or flickering\",\"itemId\":\"32\",\"categoryId\":\"26\",\"categoryName\":\"II. DISPLAY PERFORMANCE CHECK\",\"seq\":\"8\",\"status\":\"Yes\"},{\"desc\":\"Power cable securely connected\",\"itemId\":\"33\",\"categoryId\":\"27\",\"categoryName\":\"III. CONNECTIVITY & CABLES\",\"seq\":\"9\",\"status\":\"N\\/A\"},{\"desc\":\"Video cable (HDMI\\/VGA\\/DP) securely connected\",\"itemId\":\"34\",\"categoryId\":\"27\",\"categoryName\":\"III. CONNECTIVITY & CABLES\",\"seq\":\"10\",\"status\":\"N\\/A\"},{\"desc\":\"No visible cable damage or fraying\",\"itemId\":\"35\",\"categoryId\":\"27\",\"categoryName\":\"III. CONNECTIVITY & CABLES\",\"seq\":\"11\",\"status\":\"N\\/A\"}]', '', 'For Replacement', 'Good', 'SystemSuperAdmin', '[Select Supervisor Name]', '[Select Head of Office]'),
 (58, 62, 11, 4, 22, 3, '2026-02-23 14:30:53', '[{\"desc\":\"Exterior casing cleaned and free of dust\",\"itemId\":\"36\",\"categoryId\":\"28\",\"categoryName\":\"I. PHYSICAL INSPECTION & CLEANING\",\"seq\":\"1\",\"status\":\"Yes\"},{\"desc\":\"Paper tray clean and properly aligned\",\"itemId\":\"37\",\"categoryId\":\"28\",\"categoryName\":\"I. PHYSICAL INSPECTION & CLEANING\",\"seq\":\"2\",\"status\":\"Yes\"},{\"desc\":\"Ventilation openings clear of obstruction\",\"itemId\":\"38\",\"categoryId\":\"28\",\"categoryName\":\"I. PHYSICAL INSPECTION & CLEANING\",\"seq\":\"3\",\"status\":\"Yes\"},{\"desc\":\"No paper debris inside printer\",\"itemId\":\"39\",\"categoryId\":\"28\",\"categoryName\":\"I. PHYSICAL INSPECTION & CLEANING\",\"seq\":\"4\",\"status\":\"Yes\"},{\"desc\":\"Test page printed successfully\",\"itemId\":\"40\",\"categoryId\":\"29\",\"categoryName\":\"II. PRINT QUALITY CHECK\",\"seq\":\"5\",\"status\":\"Yes\"},{\"desc\":\"Print alignment is correct\",\"itemId\":\"41\",\"categoryId\":\"29\",\"categoryName\":\"II. PRINT QUALITY CHECK\",\"seq\":\"6\",\"status\":\"Yes\"},{\"desc\":\"No streaks, smudges, or banding on output\",\"itemId\":\"42\",\"categoryId\":\"29\",\"categoryName\":\"II. PRINT QUALITY CHECK\",\"seq\":\"7\",\"status\":\"No\"},{\"desc\":\"Color output accurate (if color printer)\",\"itemId\":\"43\",\"categoryId\":\"29\",\"categoryName\":\"II. PRINT QUALITY CHECK\",\"seq\":\"8\",\"status\":\"No\"},{\"desc\":\"Ink\\/toner levels checked and adequate\",\"itemId\":\"44\",\"categoryId\":\"30\",\"categoryName\":\"III. MECHANICAL & CONSUMABLES\",\"seq\":\"9\",\"status\":\"No\"},{\"desc\":\"Paper feed mechanism operates smoothly\",\"itemId\":\"45\",\"categoryId\":\"30\",\"categoryName\":\"III. MECHANICAL & CONSUMABLES\",\"seq\":\"10\",\"status\":\"Yes\"},{\"desc\":\"Print head cleaned (inkjet) or drum inspected (laser)\",\"itemId\":\"46\",\"categoryId\":\"30\",\"categoryName\":\"III. MECHANICAL & CONSUMABLES\",\"seq\":\"11\",\"status\":\"Yes\"},{\"desc\":\"Rollers clean and in good condition\",\"itemId\":\"47\",\"categoryId\":\"30\",\"categoryName\":\"III. MECHANICAL & CONSUMABLES\",\"seq\":\"12\",\"status\":\"Yes\"}]', '', 'For Replacement', 'Good', 'SystemSuperAdmin', '[Select Supervisor Name]', '[Select Head of Office]'),
-(59, 25, 9, 1, 15, 3, '2026-02-23 15:54:36', '[{\"desc\":\"Dust removal performed\",\"itemId\":\"65\",\"categoryId\":\"35\",\"categoryName\":\"I. PHYSICAL INSPECTION, INTERIORS AND CLEANING\",\"seq\":\"1\",\"status\":\"Yes\"},{\"desc\":\"Parts are intact\",\"itemId\":\"66\",\"categoryId\":\"35\",\"categoryName\":\"I. PHYSICAL INSPECTION, INTERIORS AND CLEANING\",\"seq\":\"2\",\"status\":\"Yes\"},{\"desc\":\"Power Supply is working properly\",\"itemId\":\"67\",\"categoryId\":\"36\",\"categoryName\":\"II. HARDWARE PERFORMANCE CHECK\",\"seq\":\"3\",\"status\":\"Yes\"}]', '', 'Operational', 'Good', 'SystemSuperAdmin', 'TEST', '[Select Head of Office]');
+(59, 25, 9, 1, 15, 3, '2026-02-23 15:54:36', '[{\"desc\":\"Dust removal performed\",\"itemId\":\"65\",\"categoryId\":\"35\",\"categoryName\":\"I. PHYSICAL INSPECTION, INTERIORS AND CLEANING\",\"seq\":\"1\",\"status\":\"Yes\"},{\"desc\":\"Parts are intact\",\"itemId\":\"66\",\"categoryId\":\"35\",\"categoryName\":\"I. PHYSICAL INSPECTION, INTERIORS AND CLEANING\",\"seq\":\"2\",\"status\":\"Yes\"},{\"desc\":\"Power Supply is working properly\",\"itemId\":\"67\",\"categoryId\":\"36\",\"categoryName\":\"II. HARDWARE PERFORMANCE CHECK\",\"seq\":\"3\",\"status\":\"Yes\"}]', '', 'Operational', 'Good', 'SystemSuperAdmin', 'TEST', '[Select Head of Office]'),
+(60, 45, 10, 3, 35, 3, '2026-02-24 15:14:30', '[{\"desc\":\"Screen surface cleaned (no smudges\\/dust)\",\"itemId\":\"0\",\"categoryId\":\"0\",\"categoryName\":\"I. PHYSICAL INSPECTION & CLEANING\",\"seq\":\"1\",\"status\":\"Yes\"},{\"desc\":\"Monitor casing wiped and free of dust\",\"itemId\":\"0\",\"categoryId\":\"0\",\"categoryName\":\"I. PHYSICAL INSPECTION & CLEANING\",\"seq\":\"2\",\"status\":\"Yes\"},{\"desc\":\"Ventilation openings clear of obstruction\",\"itemId\":\"0\",\"categoryId\":\"0\",\"categoryName\":\"I. PHYSICAL INSPECTION & CLEANING\",\"seq\":\"3\",\"status\":\"Yes\"},{\"desc\":\"Stand\\/mount secure and stable\",\"itemId\":\"0\",\"categoryId\":\"0\",\"categoryName\":\"I. PHYSICAL INSPECTION & CLEANING\",\"seq\":\"4\",\"status\":\"Yes\"},{\"desc\":\"No dead or stuck pixels detected\",\"itemId\":\"0\",\"categoryId\":\"0\",\"categoryName\":\"II. DISPLAY PERFORMANCE CHECK\",\"seq\":\"5\",\"status\":\"Yes\"},{\"desc\":\"Brightness and contrast levels acceptable\",\"itemId\":\"0\",\"categoryId\":\"0\",\"categoryName\":\"II. DISPLAY PERFORMANCE CHECK\",\"seq\":\"6\",\"status\":\"Yes\"},{\"desc\":\"Color reproduction is accurate\",\"itemId\":\"0\",\"categoryId\":\"0\",\"categoryName\":\"II. DISPLAY PERFORMANCE CHECK\",\"seq\":\"7\",\"status\":\"Yes\"},{\"desc\":\"No visible backlight bleed or flickering\",\"itemId\":\"0\",\"categoryId\":\"0\",\"categoryName\":\"II. DISPLAY PERFORMANCE CHECK\",\"seq\":\"8\",\"status\":\"Yes\"},{\"desc\":\"Power cable securely connected\",\"itemId\":\"0\",\"categoryId\":\"0\",\"categoryName\":\"III. CONNECTIVITY & CABLES\",\"seq\":\"9\",\"status\":\"Yes\"},{\"desc\":\"Video cable (HDMI\\/VGA\\/DP) securely connected\",\"itemId\":\"0\",\"categoryId\":\"0\",\"categoryName\":\"III. CONNECTIVITY & CABLES\",\"seq\":\"10\",\"status\":\"Yes\"},{\"desc\":\"No visible cable damage or fraying\",\"itemId\":\"0\",\"categoryId\":\"0\",\"categoryName\":\"III. CONNECTIVITY & CABLES\",\"seq\":\"11\",\"status\":\"Yes\"}]', 'dasfsasafasdas', 'Operational', 'Good', 'Super Admin', '[Select Supervisor Name]', '[Select Head of Office]');
 
 -- --------------------------------------------------------
 
@@ -1047,7 +885,18 @@ INSERT INTO `tbl_maintenance_response` (`responseId`, `recordId`, `itemId`, `cat
 (112, 58, 47, 30, 'III. MECHANICAL & CONSUMABLES', 'Rollers clean and in good condition', 'Yes', 12),
 (113, 59, 65, 35, 'I. PHYSICAL INSPECTION, INTERIORS AND CLEANING', 'Dust removal performed', 'Yes', 1),
 (114, 59, 66, 35, 'I. PHYSICAL INSPECTION, INTERIORS AND CLEANING', 'Parts are intact', 'Yes', 2),
-(115, 59, 67, 36, 'II. HARDWARE PERFORMANCE CHECK', 'Power Supply is working properly', 'Yes', 3);
+(115, 59, 67, 36, 'II. HARDWARE PERFORMANCE CHECK', 'Power Supply is working properly', 'Yes', 3),
+(116, 60, NULL, NULL, 'I. PHYSICAL INSPECTION & CLEANING', 'Screen surface cleaned (no smudges/dust)', 'Yes', 1),
+(117, 60, NULL, NULL, 'I. PHYSICAL INSPECTION & CLEANING', 'Monitor casing wiped and free of dust', 'Yes', 2),
+(118, 60, NULL, NULL, 'I. PHYSICAL INSPECTION & CLEANING', 'Ventilation openings clear of obstruction', 'Yes', 3),
+(119, 60, NULL, NULL, 'I. PHYSICAL INSPECTION & CLEANING', 'Stand/mount secure and stable', 'Yes', 4),
+(120, 60, NULL, NULL, 'II. DISPLAY PERFORMANCE CHECK', 'No dead or stuck pixels detected', 'Yes', 5),
+(121, 60, NULL, NULL, 'II. DISPLAY PERFORMANCE CHECK', 'Brightness and contrast levels acceptable', 'Yes', 6),
+(122, 60, NULL, NULL, 'II. DISPLAY PERFORMANCE CHECK', 'Color reproduction is accurate', 'Yes', 7),
+(123, 60, NULL, NULL, 'II. DISPLAY PERFORMANCE CHECK', 'No visible backlight bleed or flickering', 'Yes', 8),
+(124, 60, NULL, NULL, 'III. CONNECTIVITY & CABLES', 'Power cable securely connected', 'Yes', 9),
+(125, 60, NULL, NULL, 'III. CONNECTIVITY & CABLES', 'Video cable (HDMI/VGA/DP) securely connected', 'Yes', 10),
+(126, 60, NULL, NULL, 'III. CONNECTIVITY & CABLES', 'No visible cable damage or fraying', 'Yes', 11);
 
 -- --------------------------------------------------------
 
@@ -1104,7 +953,7 @@ INSERT INTO `tbl_maintenance_schedule` (`scheduleId`, `equipmentType`, `equipmen
 (42, '3', 32, 'Semi-Annual', '2025-08-24', '2026-02-24', 1, '2026-02-19 06:06:48', '2026-02-19 07:23:15'),
 (43, '3', 33, 'Semi-Annual', '2026-02-23', '2026-08-22', 1, '2026-02-19 06:06:48', '2026-02-23 06:30:39'),
 (44, '3', 34, 'Annual', '2025-08-06', '2026-08-06', 1, '2026-02-19 06:06:48', '2026-02-19 07:23:15'),
-(45, '3', 35, 'Semi-Annual', '2025-08-10', '2026-02-10', 1, '2026-02-19 06:06:48', '2026-02-19 07:23:15'),
+(45, '3', 35, 'Semi-Annual', '2026-02-24', '2026-08-23', 1, '2026-02-19 06:06:48', '2026-02-24 07:14:30'),
 (46, '3', 36, 'Semi-Annual', '2025-09-10', '2026-03-10', 1, '2026-02-19 06:06:48', '2026-02-19 07:23:15'),
 (47, '3', 37, 'Semi-Annual', '2025-10-15', '2026-04-15', 1, '2026-02-19 06:06:48', '2026-02-19 07:23:15'),
 (48, '3', 38, 'Semi-Annual', '2025-10-01', '2026-04-01', 1, '2026-02-19 06:06:48', '2026-02-19 07:23:15'),
@@ -1312,7 +1161,7 @@ INSERT INTO `tbl_systemunit` (`systemunitId`, `systemUnitCategory`, `systemUnitB
 (18, 'Pre-Built', 'Dell Vostro 3710', 'Intel Core i5-12400', '8GB DDR4', 'Intel UHD 730', '512GB SSD', 'SU-2025-018', '2025', 107),
 (19, 'Pre-Built', 'HP ProDesk 405 G8', 'AMD Ryzen 5 5600G', '16GB DDR4', 'AMD Radeon Graphics', '512GB SSD', 'SU-2024-019', '2024', 108),
 (20, 'Pre-Built', 'Acer Veriton S2690', 'Intel Core i5-12400', '8GB DDR4', 'Intel UHD 730', '256GB SSD', 'SU-2025-020', '2025', 109),
-(21, 'Pre-Built', 'Lenovo ThinkCentre M80', 'Intel Core i5-10500', '16GB DDR4', 'Intel UHD 630', '512GB SSD', 'SU-2023-021', '2023', 110),
+(21, 'Pre-Built', 'Lenovo ThinkCentre M80', 'Intel Core i5-10500', '16GB DDR4', 'Intel UHD 630', '512GB SSD', 'SU-2023-021', '2025', 110),
 (22, 'Pre-Built', 'Dell OptiPlex 7090', 'Intel Core i7-10700', '16GB DDR4', 'Intel UHD 630', '1TB SSD', 'SU-2023-022', '2023', 111);
 
 -- --------------------------------------------------------
@@ -1459,15 +1308,6 @@ ALTER TABLE `activity_log`
   ADD KEY `idx_timestamp` (`timestamp`);
 
 --
--- Indexes for table `emember_tokens`
---
-ALTER TABLE `emember_tokens`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `selector` (`selector`),
-  ADD KEY `user_id` (`user_id`),
-  ADD KEY `expires_at` (`expires_at`);
-
---
 -- Indexes for table `location`
 --
 ALTER TABLE `location`
@@ -1523,6 +1363,12 @@ ALTER TABLE `sessions`
   ADD UNIQUE KEY `token` (`token`),
   ADD KEY `idx_user_id` (`user_id`),
   ADD KEY `idx_expires` (`expires_at`);
+
+--
+-- Indexes for table `system_settings`
+--
+ALTER TABLE `system_settings`
+  ADD PRIMARY KEY (`setting_key`);
 
 --
 -- Indexes for table `tbl_accounts`
@@ -1665,13 +1511,7 @@ ALTER TABLE `tbl_systemunit`
 -- AUTO_INCREMENT for table `activity_log`
 --
 ALTER TABLE `activity_log`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=282;
-
---
--- AUTO_INCREMENT for table `emember_tokens`
---
-ALTER TABLE `emember_tokens`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=705;
 
 --
 -- AUTO_INCREMENT for table `location`
@@ -1689,7 +1529,7 @@ ALTER TABLE `location_type`
 -- AUTO_INCREMENT for table `login_attempts`
 --
 ALTER TABLE `login_attempts`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=95;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=133;
 
 --
 -- AUTO_INCREMENT for table `password_resets`
@@ -1701,7 +1541,7 @@ ALTER TABLE `password_resets`
 -- AUTO_INCREMENT for table `remember_tokens`
 --
 ALTER TABLE `remember_tokens`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `role_permissions`
@@ -1719,13 +1559,13 @@ ALTER TABLE `sessions`
 -- AUTO_INCREMENT for table `tbl_accounts`
 --
 ALTER TABLE `tbl_accounts`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `tbl_activity_logs`
 --
 ALTER TABLE `tbl_activity_logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=56;
 
 --
 -- AUTO_INCREMENT for table `tbl_allinone`
@@ -1767,13 +1607,13 @@ ALTER TABLE `tbl_maintenance_frequency`
 -- AUTO_INCREMENT for table `tbl_maintenance_record`
 --
 ALTER TABLE `tbl_maintenance_record`
-  MODIFY `recordId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=60;
+  MODIFY `recordId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=61;
 
 --
 -- AUTO_INCREMENT for table `tbl_maintenance_response`
 --
 ALTER TABLE `tbl_maintenance_response`
-  MODIFY `responseId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=116;
+  MODIFY `responseId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=127;
 
 --
 -- AUTO_INCREMENT for table `tbl_maintenance_schedule`

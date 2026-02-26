@@ -66,7 +66,8 @@ try {
         INSERT INTO tbl_maintenance_schedule 
         (equipmentType, equipmentId, maintenanceFrequency, nextDueDate, isActive) 
         VALUES (?, ?, 'Semi-Annual', ?, 1)
-    ");
+    "); 
+
     $stmtInsert->execute([$typeId, $equipmentId, $dateToUse]);
     
     $newScheduleId = $db->lastInsertId();

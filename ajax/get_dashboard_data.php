@@ -35,7 +35,7 @@ try {
     $data['equipment']['unassigned'] = $data['equipment']['total'] - $data['equipment']['assigned'];
 
     // ─── People & Org ───
-    $data['employees']  = (int) $db->query("SELECT COUNT(*) FROM tbl_employee WHERE is_active = 1")->fetchColumn();
+    $data['employees']  = (int) $db->query("SELECT COUNT(*) FROM tbl_employee WHERE is_archive = 0")->fetchColumn();
     $data['software']   = (int) $db->query("SELECT COUNT(*) FROM tbl_software")->fetchColumn();
     $data['divisions']  = (int) $db->query("SELECT COUNT(*) FROM location WHERE location_type_id = 1 AND is_deleted = '0'")->fetchColumn();
     $data['sections']   = (int) $db->query("SELECT COUNT(*) FROM location WHERE location_type_id = 2 AND is_deleted = '0'")->fetchColumn();
@@ -220,7 +220,7 @@ try {
         FROM location l
         LEFT JOIN location sec ON sec.parent_location_id = l.location_id
         LEFT JOIN location unit ON unit.parent_location_id = sec.location_id
-        LEFT JOIN tbl_employee e ON (e.location_id = l.location_id OR e.location_id = sec.location_id OR e.location_id = unit.location_id) AND e.is_active = 1
+        LEFT JOIN tbl_employee e ON (e.location_id = l.location_id OR e.location_id = sec.location_id OR e.location_id = unit.location_id) AND e.is_archive = 0
         LEFT JOIN tbl_systemunit su ON su.employeeId = e.employeeId
         LEFT JOIN tbl_monitor mo ON mo.employeeId = e.employeeId
         LEFT JOIN tbl_printer pr ON pr.employeeId = e.employeeId

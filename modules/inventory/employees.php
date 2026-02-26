@@ -40,6 +40,101 @@ $jobOrderCount  = count(array_filter($employees, fn($e) => $e['employmentStatus'
 <link rel="stylesheet" href="assets/css/inventory.css?v=<?php echo time()?>">
 <link rel="stylesheet" href="assets/css/employees.css?v=<?php echo time()?>">
 
+<style>
+/* ── Equipment Assignment Section ── */
+.equipment-assignment-section {
+    border-top: 1px solid var(--border-color, #e5e7eb);
+    margin-top: 24px;
+    padding-top: 20px;
+}
+.equipment-add-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+.eq-add-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border: 1.5px dashed var(--border-color, #d1d5db);
+    background: var(--bg-light, #f9fafb);
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-medium, #6b7280);
+    cursor: pointer;
+    transition: all .18s ease;
+}
+.eq-add-btn:hover {
+    border-color: var(--primary-green, #16a34a);
+    color: var(--primary-green, #16a34a);
+    background: #f0fdf4;
+}
+.eq-add-btn i { font-size: 13px; }
+
+/* Equipment Section Cards */
+.eq-section-card {
+    border: 1px solid var(--border-color, #e5e7eb);
+    border-radius: 10px;
+    margin-bottom: 12px;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(-8px);
+    transition: opacity .25s ease, transform .25s ease;
+}
+.eq-section-card.eq-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+.eq-section-card.eq-removing {
+    opacity: 0;
+    transform: translateY(-8px);
+    transition: opacity .3s ease, transform .3s ease;
+}
+.eq-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: color-mix(in srgb, var(--eq-color, #4f46e5) 10%, white);
+    border-bottom: 1px solid color-mix(in srgb, var(--eq-color, #4f46e5) 20%, white);
+}
+.eq-card-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: 13.5px;
+    color: var(--eq-color, #4f46e5);
+}
+.eq-card-remove {
+    background: none;
+    border: none;
+    color: var(--text-light, #9ca3af);
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 13px;
+    transition: color .15s, background .15s;
+}
+.eq-card-remove:hover { color: #dc2626; background: #fee2e2; }
+.eq-card-fields {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+    padding: 14px;
+    background: #fff;
+}
+.eq-field { display: flex; flex-direction: column; gap: 4px; }
+.eq-field-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-medium, #6b7280);
+}
+</style>
+
 <!-- Page Header -->
 <div class="page-header">
     <div class="page-header-inner">
@@ -209,6 +304,39 @@ $jobOrderCount  = count(array_filter($employees, fn($e) => $e['employmentStatus'
             </div>
         </div>
 
+        <!-- Equipment Assignment Section -->
+        <div class="equipment-assignment-section" id="equipmentAssignmentSection">
+            <h6 class="form-section-title"><i class="fas fa-laptop"></i> Equipment Assignment <small class="text-muted fw-normal">(Optional — Add equipment to assign on creation)</small></h6>
+
+            <!-- Equipment Add Buttons -->
+            <div class="equipment-add-buttons">
+                <button type="button" class="eq-add-btn" onclick="addEquipmentSection('computer')">
+                    <i class="fas fa-desktop"></i><span>System Unit</span>
+                </button>
+                <button type="button" class="eq-add-btn" onclick="addEquipmentSection('allinone')">
+                    <i class="fas fa-computer"></i><span>All-in-One PC</span>
+                </button>
+                <button type="button" class="eq-add-btn" onclick="addEquipmentSection('monitor')">
+                    <i class="fas fa-tv"></i><span>Monitor</span>
+                </button>
+                <button type="button" class="eq-add-btn" onclick="addEquipmentSection('printer')">
+                    <i class="fas fa-print"></i><span>Printer</span>
+                </button>
+                <button type="button" class="eq-add-btn" onclick="addEquipmentSection('laptop')">
+                    <i class="fas fa-laptop"></i><span>Laptop</span>
+                </button>
+                <button type="button" class="eq-add-btn" onclick="addEquipmentSection('software')">
+                    <i class="fas fa-key"></i><span>Software License</span>
+                </button>
+                <button type="button" class="eq-add-btn" onclick="addEquipmentSection('other')">
+                    <i class="fas fa-server"></i><span>Other Equipment</span>
+                </button>
+            </div>
+
+            <!-- Dynamic Equipment Containers -->
+            <div id="equipmentSectionsContainer"></div>
+        </div>
+
         <div class="form-footer">
             <button type="button" class="btn-cancel"><i class="fas fa-times"></i> Cancel</button>
             <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Add Employee</button>
@@ -221,6 +349,7 @@ $jobOrderCount  = count(array_filter($employees, fn($e) => $e['employmentStatus'
 <script>
     var sectionsData = <?php echo json_encode($sections); ?>;
     var unitsData    = <?php echo json_encode($units); ?>;
+    var equipmentCounters = {};   // tracks how many of each type have been added
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
 <script src="assets/js/employees.js?v=<?php echo time(); ?>"></script>

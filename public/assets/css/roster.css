@@ -483,8 +483,68 @@ th.sort-active .sort-icon { opacity: 1; }
 .empty-state-card p { margin: 0; font-size: 15px; font-weight: 600; }
 
 /* ============================================================
-   RESPONSIVE — Roster-specific
+   RESPONSIVE TABLE — Action buttons fix & sticky actions
    ============================================================ */
+
+/* Ensure action-buttons never wrap weirdly */
+.action-buttons {
+    display: flex;
+    gap: 6px;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.col-actions {
+    text-align: right;
+    white-space: nowrap;
+    position: sticky;
+    right: 0;
+    z-index: 2;
+}
+
+/* Sticky actions column for horizontal scroll */
+.responsive-table td:last-child,
+.responsive-table th:last-child {
+    position: sticky;
+    right: 0;
+    z-index: 2;
+}
+
+.responsive-table th:last-child {
+    background: var(--primary-green);
+}
+
+.responsive-table td:last-child {
+    background: var(--bg-white);
+    box-shadow: -4px 0 8px rgba(0, 0, 0, 0.04);
+}
+
+.responsive-table tbody tr:hover td:last-child {
+    background: var(--bg-light);
+}
+
+.row-archived td:last-child {
+    background: rgba(245, 158, 11, 0.04) !important;
+}
+
+.row-inactive td:last-child {
+    background: var(--bg-white);
+}
+
+
+.archived-section {
+    border-top: 3px solid rgba(245, 158, 11, 0.3);
+}
+
+.archived-section .table-header {
+    border-bottom-color: rgba(245, 158, 11, 0.2);
+}
+
+.badge-archive {
+    background: var(--color-warning) !important;
+}
+
 @media (max-width: 768px) {
     .profile-header-integrated {
         flex-direction: column;
@@ -824,4 +884,23 @@ th.sort-active .sort-icon { opacity: 1; }
     .fab-equipment-panel {
         width: calc(100vw - 32px);
     }
+}
+
+/* ============================================================
+   DARK THEME — Roster sticky column overrides
+   ============================================================ */
+[data-theme="dark"] .responsive-table td:last-child {
+    background: var(--bg-card, #1a2633);
+}
+
+[data-theme="dark"] .responsive-table tbody tr:hover td:last-child {
+    background: var(--bg-light, #212d3a);
+}
+
+[data-theme="dark"] .row-archived td:last-child {
+    background: rgba(245, 158, 11, 0.06) !important;
+}
+
+[data-theme="dark"] .archived-section {
+    border-top-color: rgba(245, 158, 11, 0.25);
 }

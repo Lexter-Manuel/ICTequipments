@@ -25,7 +25,7 @@ try {
     $unassignedEquip = $totalEquipment - $assignedEquip;
 
     // ─── People ───
-    $employeeCount = (int) $db->query("SELECT COUNT(*) FROM tbl_employee WHERE is_active = 1")->fetchColumn();
+    $employeeCount = (int) $db->query("SELECT COUNT(*) FROM tbl_employee WHERE is_archive = 0")->fetchColumn();
     $softwareCount = (int) $db->query("SELECT COUNT(*) FROM tbl_software")->fetchColumn();
 
     // ─── Maintenance Stats ───

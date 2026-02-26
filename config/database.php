@@ -80,7 +80,7 @@ class DatabaseSeeder {
     
     private function createDefaultSuperAdmin() {
         // Use a static password for initial setup or generate one
-        $password = 'Admin@123'; 
+        $password = 'niaupriis2026'; 
         $hashedPassword = password_hash($password, PASSWORD_BCRYPT, ['cost' => 12]);
         
         $sql = "INSERT INTO tbl_accounts (user_name, email, password, role, status, created_at) 

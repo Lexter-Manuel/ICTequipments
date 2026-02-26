@@ -129,8 +129,12 @@ try {
         $whereParts = [$dateCondition];
 
         if ($search) {
-            $whereParts[]      = "(v.serial LIKE :s OR v.brand LIKE :s OR mr.preparedBy LIKE :s OR mr.remarks LIKE :s OR v.owner_name LIKE :s)";
-            $bindings[':s']    = "%$search%";
+            $whereParts[]      = "(v.serial LIKE :s1 OR v.brand LIKE :s2 OR mr.preparedBy LIKE :s3 OR mr.remarks LIKE :s4 OR v.owner_name LIKE :s5)";
+            $bindings[':s1']   = "%$search%";
+            $bindings[':s2']   = "%$search%";
+            $bindings[':s3']   = "%$search%";
+            $bindings[':s4']   = "%$search%";
+            $bindings[':s5']   = "%$search%";
         }
 
         if ($sectionUnit) {
@@ -370,7 +374,7 @@ try {
                 e.location_id
             FROM tbl_employee e
             LEFT JOIN location l ON e.location_id = l.location_id
-            WHERE e.is_active = 1
+            WHERE e.is_archive = 0
               AND l.location_name IN ($locPlaceholderStr)
             ORDER BY e.lastName, e.firstName
         ";

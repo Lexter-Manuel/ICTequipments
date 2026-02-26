@@ -473,11 +473,15 @@ a:hover { color: var(--primary-dark); }
 .btn-action.btn-edit:hover  { background: var(--primary-green); border-color: var(--primary-green); }
 .btn-action.btn-delete:hover,
 .btn-icon.btn-danger:hover  { background: var(--color-danger);  border-color: var(--color-danger); color: #fff; }
+.btn-action.btn-archive:hover { background: var(--color-warning); border-color: var(--color-warning); color: #fff; }
+.btn-action.btn-restore:hover { background: var(--color-success); border-color: var(--color-success); color: #fff; }
 
 /* Colour-coded action button variants */
-.btn-view   { color: var(--color-info); }
-.btn-edit   { color: var(--primary-green); }
-.btn-delete { color: var(--color-danger); }
+.btn-view    { color: var(--color-info); }
+.btn-edit    { color: var(--primary-green); }
+.btn-delete  { color: var(--color-danger); }
+.btn-archive { color: var(--color-warning); }
+.btn-restore { color: var(--color-success); }
 
 /* Toggle buttons (roster activate/deactivate) */
 .btn-toggle                { color: var(--text-medium); }
@@ -571,6 +575,20 @@ a:hover { color: var(--primary-dark); }
 .active-badge-no {
     background: rgba(220, 38, 38, 0.10);
     color: var(--color-danger);
+}
+
+.active-badge-archived {
+    background: rgba(245, 158, 11, 0.12);
+    color: var(--color-warning);
+}
+
+/* Archived row styling */
+.row-archived {
+    opacity: 0.6;
+    background: rgba(245, 158, 11, 0.04);
+}
+.row-archived:hover {
+    opacity: 0.85;
 }
 
 /* Sortable table header */
@@ -1146,6 +1164,13 @@ textarea.form-control {
 }
 [data-theme="dark"] .active-badge-no {
     background: rgba(248, 81, 73, 0.12);
+}
+[data-theme="dark"] .active-badge-archived {
+    background: rgba(245, 158, 11, 0.15);
+    color: #fbbf24;
+}
+[data-theme="dark"] .row-archived {
+    background: rgba(245, 158, 11, 0.06);
 }
 
 /* Buttons — adjust hover/gradient tones */

@@ -554,7 +554,60 @@ function renderMaintenanceForm(template, container) {
     </div>`;
 
     container.innerHTML = html;
+    setupStatusConditionControls();
     container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function setupStatusConditionControls() {
+    var overallSelect = document.getElementById('overallStatusSelect');
+    var conditionSelect = document.getElementById('conditionRatingSelect');
+
+    if (!overallSelect || !conditionSelect) return;
+
+    function setOptionEnabled(value, enabled) {
+        for (var i = 0; i < conditionSelect.options.length; i++) {
+            if (conditionSelect.options[i].value === value) {
+                conditionSelect.options[i].disabled = !enabled;
+                break;
+            }
+        }
+    }
+
+    function applyRules() {
+        var status = overallSelect.value;
+
+        if (status === 'Operational') {
+            conditionSelect.disabled = false;
+            for (var i = 0; i < conditionSelect.options.length; i++) {
+                conditionSelect.options[i].disabled = false;
+            }
+            return;
+        }
+
+        if (status === 'For Replacement') {
+            conditionSelect.disabled = false;
+            setOptionEnabled('Excellent', false);
+            setOptionEnabled('Good', false);
+            setOptionEnabled('Fair', true);
+            setOptionEnabled('Poor', true);
+            if (conditionSelect.options[conditionSelect.selectedIndex]?.disabled) {
+                conditionSelect.value = 'Fair';
+            }
+            return;
+        }
+
+        if (status === 'Disposed') {
+            setOptionEnabled('Excellent', false);
+            setOptionEnabled('Good', false);
+            setOptionEnabled('Fair', false);
+            setOptionEnabled('Poor', true);
+            conditionSelect.value = 'Poor';
+            conditionSelect.disabled = true;
+        }
+    }
+
+    overallSelect.addEventListener('change', applyRules);
+    applyRules();
 }
 
 // ============================================================

@@ -98,7 +98,7 @@ $byDivision = $db->query("
     FROM location l
     LEFT JOIN location sec ON sec.parent_location_id = l.location_id AND sec.is_deleted = '0'
     LEFT JOIN location unit ON unit.parent_location_id = sec.location_id AND unit.is_deleted = '0'
-    LEFT JOIN tbl_employee e ON (e.location_id = l.location_id OR e.location_id = sec.location_id OR e.location_id = unit.location_id) AND e.is_active = 1
+    LEFT JOIN tbl_employee e ON (e.location_id = l.location_id OR e.location_id = sec.location_id OR e.location_id = unit.location_id) AND e.is_archive = 0
     LEFT JOIN tbl_systemunit su ON su.employeeId = e.employeeId" . ($showSU ? '' : ' AND 1=0') . ($filterYear !== '' ? " AND su.yearAcquired = " . intval($filterYear) : '') . "
     LEFT JOIN tbl_monitor mo ON mo.employeeId = e.employeeId" . ($showMO ? '' : ' AND 1=0') . ($filterYear !== '' ? " AND mo.yearAcquired = " . intval($filterYear) : '') . "
     LEFT JOIN tbl_printer pr ON pr.employeeId = e.employeeId" . ($showPR ? '' : ' AND 1=0') . ($filterYear !== '' ? " AND pr.yearAcquired = " . intval($filterYear) : '') . "

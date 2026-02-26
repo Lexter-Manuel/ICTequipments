@@ -29,7 +29,15 @@ try {
             l.location_type_id,
             lt.name AS location_type_name,
             parent_loc.location_name AS parent_location_name,
-            grandparent_loc.location_name AS grandparent_location_name
+            grandparent_loc.location_name AS grandparent_location_name,
+            (
+                (SELECT COUNT(*) FROM tbl_systemunit     WHERE employeeId = e.employeeId) +
+                (SELECT COUNT(*) FROM tbl_allinone       WHERE employeeId = e.employeeId) +
+                (SELECT COUNT(*) FROM tbl_monitor        WHERE employeeId = e.employeeId) +
+                (SELECT COUNT(*) FROM tbl_printer        WHERE employeeId = e.employeeId) +
+                (SELECT COUNT(*) FROM tbl_otherequipment WHERE employeeId = e.employeeId) +
+                (SELECT COUNT(*) FROM tbl_software       WHERE employeeId = e.employeeId)
+            ) AS equipment_count
         FROM tbl_employee e
         LEFT JOIN location l            ON e.location_id = l.location_id
         LEFT JOIN location_type lt      ON l.location_type_id = lt.id
@@ -44,6 +52,9 @@ try {
         echo json_encode(['success' => false, 'message' => 'Employee not found.']);
         exit;
     }
+
+    // Derive is_active from equipment count — no extra column needed
+    $employee['is_active'] = ($employee['equipment_count'] ?? 0) > 0 ? 1 : 0;
 
     // ---- System Units ----
     $suStmt = $db->prepare("
@@ -86,6 +97,15 @@ try {
     $prtStmt->execute([':id' => $employeeId]);
     $printers = $prtStmt->fetchAll(PDO::FETCH_ASSOC);
 
+    // ---- Other Equipment (including Laptop) ----
+    $otherStmt = $db->prepare("
+        SELECT otherEquipmentId, equipmentType, brand, model, serialNumber, yearAcquired
+        FROM tbl_otherequipment
+        WHERE employeeId = :id
+    ");
+    $otherStmt->execute([':id' => $employeeId]);
+    $other = $otherStmt->fetchAll(PDO::FETCH_ASSOC);
+
     // ---- Software ----
     $swStmt = $db->prepare("
         SELECT softwareId, licenseSoftware, licenseDetails, licenseType, expiryDate, email
@@ -120,6 +140,7 @@ try {
         'allinones'   => $allinones,
         'monitors'    => $monitors,
         'printers'    => $printers,
+        'other'       => $other,
         'software'    => $software,
     ]);
 

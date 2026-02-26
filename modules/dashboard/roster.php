@@ -7,22 +7,34 @@ if (session_status() === PHP_SESSION_NONE) {
 require_once '../../config/database.php';
 $db = Database::getInstance()->getConnection();
 
-// Fetch Employees
-$employeeStmt = $db->query("
-    SELECT 
+// Fetch all employees with equipment counts
+$employeeSQL = "
+    SELECT
         e.*,
-        COALESCE(e.is_active, 1) AS is_active,
         l.location_name,
         l.location_type_id,
         lt.name AS location_type_name,
-        parent_loc.location_name AS parent_location_name
+        parent_loc.location_name AS parent_location_name,
+        (
+            (SELECT COUNT(*) FROM tbl_systemunit    WHERE employeeId = e.employeeId) +
+            (SELECT COUNT(*) FROM tbl_allinone      WHERE employeeId = e.employeeId) +
+            (SELECT COUNT(*) FROM tbl_monitor       WHERE employeeId = e.employeeId) +
+            (SELECT COUNT(*) FROM tbl_printer       WHERE employeeId = e.employeeId) +
+            (SELECT COUNT(*) FROM tbl_otherequipment WHERE employeeId = e.employeeId) +
+            (SELECT COUNT(*) FROM tbl_software      WHERE employeeId = e.employeeId)
+        ) AS equipment_count,
+        e.is_archive
     FROM tbl_employee e
-    LEFT JOIN location l ON e.location_id = l.location_id
-    LEFT JOIN location_type lt ON l.location_type_id = lt.id
-    LEFT JOIN location parent_loc ON l.parent_location_id = parent_loc.location_id
+    LEFT JOIN location l            ON e.location_id = l.location_id
+    LEFT JOIN location_type lt      ON l.location_type_id = lt.id
+    LEFT JOIN location parent_loc   ON l.parent_location_id = parent_loc.location_id
     ORDER BY e.lastName ASC, e.firstName ASC
-");
-$employees = $employeeStmt->fetchAll(PDO::FETCH_ASSOC);
+";
+$allEmployees = $db->query($employeeSQL)->fetchAll(PDO::FETCH_ASSOC);
+
+// Split into active roster vs archived
+$employees         = array_values(array_filter($allEmployees, fn($e) => !$e['is_archive']));
+$archivedEmployees = array_values(array_filter($allEmployees, fn($e) => (int)$e['is_archive'] === 1));
 
 // Dropdowns for Edit Modal
 $divisions = $db->query("SELECT location_id, location_name FROM location WHERE location_type_id = 1 AND is_deleted = '0' ORDER BY location_name ASC")->fetchAll(PDO::FETCH_ASSOC);
@@ -31,9 +43,10 @@ $units = $db->query("SELECT location_id, location_name, parent_location_id FROM 
 
 // Stats
 $totalEmployees = count($employees);
-$activeCount = count(array_filter($employees, fn($e) => ($e['is_active'] ?? 1) == 1));
-$casualCount = count(array_filter($employees, fn($e) => $e['employmentStatus'] === 'Casual'));
-$jobOrderCount = count(array_filter($employees, fn($e) => $e['employmentStatus'] === 'Job Order'));
+$activeCount    = count(array_filter($employees, fn($e) => ($e['equipment_count'] ?? 0) > 0));
+$archivedCount  = count($archivedEmployees);
+$casualCount    = count(array_filter($employees, fn($e) => $e['employmentStatus'] === 'Casual'));
+$jobOrderCount  = count(array_filter($employees, fn($e) => $e['employmentStatus'] === 'Job Order'));
 ?>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
@@ -72,8 +85,14 @@ $jobOrderCount = count(array_filter($employees, fn($e) => $e['employmentStatus']
             <div class="stat-label">Job Order</div>
             <div class="stat-value"><?php echo $jobOrderCount; ?></div>
         </div>
+        <div class="stat-card">
+            <i class="fas fa-archive stat-icon"></i>
+            <div class="stat-label">Archived</div>
+            <div class="stat-value"><?php echo $archivedCount; ?></div>
+        </div>
     </div>
 
+    <!-- ── Active Employees Table ── -->
     <div class="data-table-container">
         <div class="table-header">
             <h2 class="table-title"><i class="fas fa-list"></i> All Employees</h2>
@@ -100,7 +119,7 @@ $jobOrderCount = count(array_filter($employees, fn($e) => $e['employmentStatus']
             </div>
         </div>
 
-        <div class="data-table">
+        <div class="data-table responsive-table">
             <table id="rosterTable">
                 <thead>
                     <tr>
@@ -118,7 +137,7 @@ $jobOrderCount = count(array_filter($employees, fn($e) => $e['employmentStatus']
                     <?php foreach ($employees as $emp): 
                         $fullName = trim(implode(' ', array_filter([$emp['firstName'], $emp['middleName'], $emp['lastName'], $emp['suffixName']])));
                         $statusClass = strtolower(str_replace(' ', '-', $emp['employmentStatus']));
-                        $isActive = isset($emp['is_active']) ? (int)$emp['is_active'] : 1;
+                        $isActive = ($emp['equipment_count'] ?? 0) > 0 ? 1 : 0;
                         
                         $locationParts = [];
                         if ($emp['parent_location_name']) $locationParts[] = $emp['parent_location_name'];
@@ -132,34 +151,34 @@ $jobOrderCount = count(array_filter($employees, fn($e) => $e['employmentStatus']
                         data-assignment="<?php echo strtolower(htmlspecialchars($locationBreadcrumb)); ?>"
                         data-active="<?php echo $isActive; ?>"
                         class="<?php echo $isActive ? '' : 'row-inactive'; ?>">
-                        <td>
+                        <td data-label="Photo">
                             <?php if ($emp['photoPath']): ?>
                                 <img src="uploads/<?php echo htmlspecialchars($emp['photoPath']); ?>" class="employee-photo-thumb">
                             <?php else: ?>
                                 <div class="employee-photo-placeholder"><i class="fas fa-user"></i></div>
                             <?php endif; ?>
                         </td>
-                        <td><span class="emp-id"><?php echo htmlspecialchars($emp['employeeId']); ?></span></td>
-                        <td>
+                        <td data-label="ID"><span class="emp-id"><?php echo htmlspecialchars($emp['employeeId']); ?></span></td>
+                        <td data-label="Name">
                             <div class="emp-name"><?php echo htmlspecialchars($fullName); ?></div>
                             <div class="emp-sex"><?php echo htmlspecialchars($emp['sex']); ?></div>
                         </td>
-                        <td><span class="emp-position"><?php echo htmlspecialchars($emp['position']); ?></span></td>
-                        <td>
+                        <td data-label="Position"><span class="emp-position"><?php echo htmlspecialchars($emp['position']); ?></span></td>
+                        <td data-label="Assignment">
                             <?php if ($locationBreadcrumb): ?>
                                 <div class="location-badge"><i class="fas fa-map-marker-alt"></i> <?php echo htmlspecialchars($locationBreadcrumb); ?></div>
                             <?php else: ?>
                                 <span class="text-muted">—</span>
                             <?php endif; ?>
                         </td>
-                        <td><span class="status-badge status-<?php echo $statusClass; ?>"><?php echo htmlspecialchars($emp['employmentStatus']); ?></span></td>
-                        <td>
+                        <td data-label="Status"><span class="status-badge status-<?php echo $statusClass; ?>"><?php echo htmlspecialchars($emp['employmentStatus']); ?></span></td>
+                        <td data-label="Active">
                             <span class="active-badge active-badge-<?php echo $isActive ? 'yes' : 'no'; ?>">
                                 <i class="fas fa-<?php echo $isActive ? 'check-circle' : 'times-circle'; ?>"></i>
                                 <?php echo $isActive ? 'Active' : 'Inactive'; ?>
                             </span>
                         </td>
-                        <td>
+                        <td data-label="Actions">
                             <div class="action-buttons">
                                 <button class="btn-action btn-view" onclick="viewEmployee(<?php echo $emp['employeeId']; ?>)" title="View Profile">
                                     <i class="fas fa-eye"></i>
@@ -167,10 +186,8 @@ $jobOrderCount = count(array_filter($employees, fn($e) => $e['employmentStatus']
                                 <button class="btn-action btn-edit" onclick="editEmployee(<?php echo $emp['employeeId']; ?>)" title="Edit Employee">
                                     <i class="fas fa-edit"></i>
                                 </button>
-                                <button class="btn-action btn-toggle btn-toggle-<?php echo $isActive ? 'deactivate' : 'activate'; ?>"
-                                        onclick="toggleActiveStatus(<?php echo $emp['employeeId']; ?>, <?php echo $isActive; ?>, this)"
-                                        title="<?php echo $isActive ? 'Deactivate' : 'Activate'; ?> Employee">
-                                    <i class="fas fa-<?php echo $isActive ? 'user-slash' : 'user-check'; ?>"></i>
+                                <button class="btn-action btn-archive" onclick="archiveEmployee(<?php echo $emp['employeeId']; ?>, '<?php echo htmlspecialchars(addslashes($fullName)); ?>')" title="Archive Employee">
+                                    <i class="fas fa-archive"></i>
                                 </button>
                             </div>
                         </td>
@@ -179,8 +196,6 @@ $jobOrderCount = count(array_filter($employees, fn($e) => $e['employmentStatus']
                 </tbody>
             </table>
         </div>
-
-        <div class="data-table-cards" id="mobileCardsContainer"></div>
 
         <div class="table-footer">
             <div class="footer-info"><span id="recordCount"></span></div>
@@ -197,6 +212,84 @@ $jobOrderCount = count(array_filter($employees, fn($e) => $e['employmentStatus']
             </div>
         </div>
     </div>
+
+    <!-- ── Archived Employees Table ── -->
+    <?php if ($archivedCount > 0): ?>
+    <div class="data-table-container archived-section">
+        <div class="table-header">
+            <h2 class="table-title"><i class="fas fa-archive"></i> Archived Employees <span class="count-badge badge-archive"><?php echo $archivedCount; ?></span></h2>
+            <div class="table-controls">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="archivedSearch" placeholder="Search archived..." oninput="filterArchivedTable()">
+                </div>
+            </div>
+        </div>
+
+        <div class="data-table responsive-table">
+            <table id="archivedTable">
+                <thead>
+                    <tr>
+                        <th class="col-photo">Photo</th>
+                        <th>ID</th>
+                        <th>Full Name</th>
+                        <th>Position</th>
+                        <th>Last Assignment</th>
+                        <th>Status</th>
+                        <th class="col-actions">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="archivedTableBody">
+                    <?php foreach ($archivedEmployees as $emp):
+                        $fullName = trim(implode(' ', array_filter([$emp['firstName'], $emp['middleName'], $emp['lastName'], $emp['suffixName']])));
+                        $statusClass = strtolower(str_replace(' ', '-', $emp['employmentStatus']));
+
+                        $locationParts = [];
+                        if ($emp['parent_location_name']) $locationParts[] = $emp['parent_location_name'];
+                        if ($emp['location_name']) $locationParts[] = $emp['location_name'];
+                        $locationBreadcrumb = implode(' › ', $locationParts);
+                    ?>
+                    <tr data-name="<?php echo strtolower(htmlspecialchars($fullName)); ?>"
+                        data-empid="<?php echo htmlspecialchars($emp['employeeId']); ?>"
+                        class="row-archived">
+                        <td data-label="Photo">
+                            <?php if ($emp['photoPath']): ?>
+                                <img src="uploads/<?php echo htmlspecialchars($emp['photoPath']); ?>" class="employee-photo-thumb">
+                            <?php else: ?>
+                                <div class="employee-photo-placeholder"><i class="fas fa-user"></i></div>
+                            <?php endif; ?>
+                        </td>
+                        <td data-label="ID"><span class="emp-id"><?php echo htmlspecialchars($emp['employeeId']); ?></span></td>
+                        <td data-label="Name">
+                            <div class="emp-name"><?php echo htmlspecialchars($fullName); ?></div>
+                            <div class="emp-sex"><?php echo htmlspecialchars($emp['sex']); ?></div>
+                        </td>
+                        <td data-label="Position"><span class="emp-position"><?php echo htmlspecialchars($emp['position']); ?></span></td>
+                        <td data-label="Assignment">
+                            <?php if ($locationBreadcrumb): ?>
+                                <div class="location-badge"><i class="fas fa-map-marker-alt"></i> <?php echo htmlspecialchars($locationBreadcrumb); ?></div>
+                            <?php else: ?>
+                                <span class="text-muted">—</span>
+                            <?php endif; ?>
+                        </td>
+                        <td data-label="Status"><span class="status-badge status-<?php echo $statusClass; ?>"><?php echo htmlspecialchars($emp['employmentStatus']); ?></span></td>
+                        <td data-label="Actions">
+                            <div class="action-buttons">
+                                <button class="btn-action btn-view" onclick="viewEmployee(<?php echo $emp['employeeId']; ?>)" title="View Profile">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn-action btn-restore" onclick="restoreEmployee(<?php echo $emp['employeeId']; ?>, '<?php echo htmlspecialchars(addslashes($fullName)); ?>')" title="Restore Employee">
+                                    <i class="fas fa-undo"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <?php endif; ?>
 </div>
 
 <!-- ========================================
@@ -348,9 +441,13 @@ $jobOrderCount = count(array_filter($employees, fn($e) => $e['employmentStatus']
 <script>
 var rosterData = <?php 
     echo json_encode(array_map(function($emp) {
-        $emp['photo_url'] = !empty($emp['photoPath']) ? 'uploads/' . $emp['photoPath'] : null;
+        $emp['photo_url']      = !empty($emp['photoPath']) ? 'uploads/' . $emp['photoPath'] : null;
+        $emp['has_equipment']  = ($emp['equipment_count'] ?? 0) > 0;
+        // Keep is_active reflecting equipment status for any JS that reads it
+        $emp['is_active']      = $emp['has_equipment'] ? 1 : 0;
+        $emp['is_archive']     = (int) $emp['is_archive'];
         return $emp;
-    }, $employees)); 
+    }, array_merge($employees, $archivedEmployees))); 
 ?>;
 var sectionsData = <?php echo json_encode($sections); ?>;
 var unitsData = <?php echo json_encode($units); ?>;

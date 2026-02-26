@@ -205,6 +205,11 @@
     padding-right: 36px; 
 }
 
+.mnt-filter-input#histSearchInput {
+    background-image: none;
+    padding-right: var(--space-4);
+}
+
 .mnt-search-wrap {
     position: relative;
 }

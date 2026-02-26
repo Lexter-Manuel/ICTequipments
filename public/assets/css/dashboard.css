@@ -5,7 +5,7 @@
     height: 100vh;
     width: var(--sidebar-width);
     background: linear-gradient(175deg, var(--primary-green) 0%, var(--primary-dark) 100%);
-    z-index: 9000;
+    z-index: 10;
     box-shadow: var(--shadow-sidebar);
     transition: transform var(--transition-slow);
     display: flex;
@@ -752,9 +752,8 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        /* Fluid: 90-95% of header-top height via align-self + padding */
-        align-self: stretch;
         width: 48px;
+        height: 48px;
         flex-shrink: 0;
         background: var(--primary-green);
         cursor: pointer;
@@ -762,7 +761,6 @@
         box-shadow: 0 2px 8px rgba(45, 122, 79, 0.25);
         transition: background var(--transition-fast), box-shadow var(--transition-fast);
         z-index: 10;
-        /* Take up ~92% height of header row via margin */
         margin: 3px 0;
     }
 
@@ -867,7 +865,7 @@
         position: fixed;
         inset: 0;
         background: rgba(0, 0, 0, 0.40);
-        z-index: 8999;              /* below sidebar (9000), above content */
+        z-index: 9;              /* below sidebar (9000), above content */
         cursor: pointer;
     }
 
@@ -876,8 +874,6 @@
     }
 
     /* ---- Remaining layout tweaks ---- */
-    .header-top    { padding: 18px 20px; }
-    .header-bottom { padding: 10px 20px; }
     .username-text { display: none; }
 
     .datetime-display { order: 1; width: 100%; justify-content: center; }

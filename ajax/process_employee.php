@@ -72,6 +72,68 @@ function deleteOldPhoto($photoPath) {
     }
 }
 
+/**
+ * Schedule Semi-Annual maintenance for a newly inserted equipment item.
+ * Mirrors the logic in quick_add_schedule.php:
+ *   - Checks for an existing active schedule (safety guard)
+ *   - Finds the employee's location via view_maintenance_master
+ *   - Syncs nextDueDate with any neighbour equipment in the same location,
+ *     or defaults to today if no neighbour exists
+ *
+ * @param PDO    $db          Database connection
+ * @param int    $equipmentId The new equipment's primary-key ID
+ * @param int    $typeId      Numeric typeId from tbl_equipment_type_registry
+ *                            (1=System Unit, 2=All-in-One, 3=Monitor, 4=Printer, 5=Laptop, ...)
+ */
+function scheduleMaintenanceForEquipment($db, $equipmentId, $typeId) {
+    // 1. Safety check — skip if a schedule already exists
+    $stmtChk = $db->prepare("
+        SELECT scheduleId FROM tbl_maintenance_schedule
+        WHERE equipmentId = ? AND equipmentType = ? AND isActive = 1
+    ");
+    $stmtChk->execute([$equipmentId, $typeId]);
+    if ($stmtChk->fetch()) {
+        return; // Already has a schedule
+    }
+
+    // 2. Resolve the equipment's location via the master view
+    $stmtLoc = $db->prepare("
+        SELECT location_name FROM view_maintenance_master
+        WHERE id = ? AND type_id = ?
+    ");
+    $stmtLoc->execute([$equipmentId, $typeId]);
+    $locationRow  = $stmtLoc->fetch(PDO::FETCH_ASSOC);
+    $locationName = $locationRow['location_name'] ?? null;
+
+    // 3. Determine nextDueDate — sync with a neighbour in the same location if possible
+    $nextDueDate = date('Y-m-d'); // default: today
+    if ($locationName) {
+        $stmtNeighbour = $db->prepare("
+            SELECT ms.nextDueDate
+            FROM tbl_maintenance_schedule ms
+            JOIN view_maintenance_master v
+              ON ms.equipmentId = v.id AND ms.equipmentType = v.type_id
+            WHERE v.location_name = ?
+              AND ms.isActive = 1
+              AND ms.nextDueDate >= CURDATE()
+            ORDER BY ms.nextDueDate ASC
+            LIMIT 1
+        ");
+        $stmtNeighbour->execute([$locationName]);
+        $neighbour = $stmtNeighbour->fetch(PDO::FETCH_ASSOC);
+        if (!empty($neighbour['nextDueDate'])) {
+            $nextDueDate = $neighbour['nextDueDate'];
+        }
+    }
+
+    // 4. Insert the Semi-Annual schedule
+    $db->prepare("
+        INSERT INTO tbl_maintenance_schedule
+            (equipmentType, equipmentId, maintenanceFrequency, nextDueDate, isActive)
+        VALUES (?, ?, 'Semi-Annual', ?, 1)
+    ")->execute([$typeId, $equipmentId, $nextDueDate]);
+}
+
 // Check if form was submitted
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
@@ -157,10 +219,175 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 logActivity(ACTION_CREATE, MODULE_EMPLOYEES,
                     "Added employee {$firstName} {$lastName} (Employee ID: {$employeeId}, Position: {$position}, Status: {$employmentStatus}).");
+
+                // ── Process equipment sections ──────────────────────────────
+                $equipmentSaved = 0;
+                $equipmentErrors = [];
+                
+                // Get the employee's location from database (use authoritative value, not form input alone)
+                $empLocStmt = $db->prepare("SELECT location_id FROM tbl_employee WHERE employeeId = ? LIMIT 1");
+                $empLocStmt->execute([$employeeId]);
+                $empLocRow = $empLocStmt->fetch(PDO::FETCH_ASSOC);
+                $empLocation = $empLocRow['location_id'] ?? $locationId;
+                
+                if (!empty($_POST['equipmentData'])) {
+                    $equipmentItems = json_decode($_POST['equipmentData'], true);
+                    if (is_array($equipmentItems)) {
+                        foreach ($equipmentItems as $uid => $item) {
+                            $type = $item['_type'] ?? '';
+                            try {
+                                switch ($type) {
+                                    case 'computer':
+                                        $db->prepare("INSERT INTO tbl_systemunit
+                                            (systemUnitBrand, systemUnitSerial, systemUnitCategory, specificationProcessor,
+                                             specificationMemory, specificationGPU, specificationStorage, yearAcquired, employeeId)
+                                            VALUES (?,?,?,?,?,?,?,?,?)")
+                                          ->execute([
+                                            trim($item['brand']    ?? ''),
+                                            trim($item['serial']   ?? ''),
+                                            trim($item['category'] ?? ''),
+                                            trim($item['processor']?? ''),
+                                            trim($item['memory']   ?? ''),
+                                            trim($item['gpu']      ?? ''),
+                                            trim($item['storage']  ?? ''),
+                                            $item['year'] ?: null,
+                                            $employeeId
+                                          ]);
+                                        $newEqId = (int)$db->lastInsertId();
+                                        scheduleMaintenanceForEquipment($db, $newEqId, 1); // typeId 1 = System Unit
+                                        $equipmentSaved++;
+                                        break;
+
+                                    case 'allinone':
+                                        $db->prepare("INSERT INTO tbl_allinone
+                                            (allinoneBrand, specificationProcessor, specificationMemory,
+                                             specificationGPU, specificationStorage, yearAcquired,employeeId)
+                                            VALUES (?,?,?,?,?,?,?)")
+                                          ->execute([
+                                            trim($item['brand']    ?? ''),
+                                            trim($item['processor']?? ''),
+                                            trim($item['memory']   ?? ''),
+                                            trim($item['gpu']      ?? ''),
+                                            trim($item['storage']  ?? ''),
+                                            $item['year'] ?: null,
+                                            $employeeId
+                                          ]);
+                                        $newEqId = (int)$db->lastInsertId();
+                                        scheduleMaintenanceForEquipment($db, $newEqId, 2); // typeId 2 = All-in-One
+                                        $equipmentSaved++;
+                                        break;
+
+                                    case 'monitor':
+                                        $db->prepare("INSERT INTO tbl_monitor
+                                            (monitorBrand, monitorSerial, monitorSize, yearAcquired, employeeId)
+                                            VALUES (?,?,?,?,?)")
+                                          ->execute([
+                                            trim($item['brand']  ?? ''),
+                                            trim($item['serial'] ?? ''),
+                                            trim($item['size']   ?? ''),
+                                            $item['year'] ?: null,
+                                            $employeeId
+                                          ]);
+                                        $newEqId = (int)$db->lastInsertId();
+                                        scheduleMaintenanceForEquipment($db, $newEqId, 3); // typeId 3 = Monitor
+                                        $equipmentSaved++;
+                                        break;
+
+                                    case 'printer':
+                                        $db->prepare("INSERT INTO tbl_printer
+                                            (printerBrand, printerModel, printerSerial, yearAcquired, employeeId)
+                                            VALUES (?,?,?,?,?)")
+                                          ->execute([
+                                            trim($item['brand']  ?? ''),
+                                            trim($item['model']  ?? ''),
+                                            trim($item['serial'] ?? ''),
+                                            $item['year'] ?: null,
+                                            $employeeId
+                                          ]);
+                                        $newEqId = (int)$db->lastInsertId();
+                                        scheduleMaintenanceForEquipment($db, $newEqId, 4); // typeId 4 = Printer
+                                        $equipmentSaved++;
+                                        break;
+
+                                    case 'laptop':
+                                    case 'other':
+                                        $eqType = ($type === 'laptop') ? 'Laptop' : trim($item['eq_type'] ?? 'Other');
+                                        // Equipment is assigned to employee; use employee's location from database
+                                        $db->prepare("INSERT INTO tbl_otherequipment
+                                            (equipmentType, brand, model, serialNumber, yearAcquired, location_id, employeeId, status, createdAt)
+                                            VALUES (?,?,?,?,?,?,?,'In Use', NOW())")
+                                          ->execute([
+                                            $eqType,
+                                            trim($item['brand']  ?? ''),
+                                            trim($item['model']  ?? ''),
+                                            trim($item['serial'] ?? ''),
+                                            $item['year'] ?: null,
+                                            $empLocation,
+                                            $employeeId
+                                          ]);
+                                        $newEqId = (int)$db->lastInsertId();
+                                        // Schedule maintenance for Laptop (typeId 5); other types
+                                        // may have varying typeIds — look them up from the registry
+                                        if ($type === 'laptop') {
+                                            scheduleMaintenanceForEquipment($db, $newEqId, 5); // typeId 5 = Laptop
+                                        } else {
+                                            // Dynamically resolve typeId from the registry for any other type
+                                            $stmtType = $db->prepare("
+                                                SELECT typeId FROM tbl_equipment_type_registry
+                                                WHERE tableName = 'tbl_otherequipment'
+                                                  AND typeName = ?
+                                                LIMIT 1
+                                            ");
+                                            $stmtType->execute([$eqType]);
+                                            $registryRow = $stmtType->fetch(PDO::FETCH_ASSOC);
+                                            if ($registryRow) {
+                                                scheduleMaintenanceForEquipment($db, $newEqId, (int)$registryRow['typeId']);
+                                            }
+                                        }
+                                        $equipmentSaved++;
+                                        break;
+
+                                    case 'software':
+                                        $db->prepare("INSERT INTO tbl_software
+                                            (licenseSoftware, licenseDetails, licenseType, expiryDate, email, employeeId)
+                                            VALUES (?,?,?,?,?,?)")
+                                          ->execute([
+                                            trim($item['name']    ?? ''),
+                                            trim($item['details'] ?? ''),
+                                            trim($item['type']    ?? ''),
+                                            !empty($item['expiry']) ? $item['expiry'] : null,
+                                            trim($item['email']   ?? ''),
+                                            $employeeId
+                                          ]);
+                                        $equipmentSaved++;
+                                        break;
+                                }
+                            } catch (Exception $eqEx) {
+                                $equipmentErrors[] = "Failed to save {$type}: " . $eqEx->getMessage();
+                                error_log("Equipment insert error [{$uid}]: " . $eqEx->getMessage());
+                            }
+                        }
+                    }
+                }
+
+                // If at least 1 equipment was saved, mark the employee as Active (is_active = 1)
+                if ($equipmentSaved > 0) {
+                    $db->prepare("UPDATE tbl_employee SET is_active = 1 WHERE employeeId = ?")
+                       ->execute([$employeeId]);
+                }
+
+                $msg = 'Employee added successfully!';
+                if ($equipmentSaved > 0) {
+                    $msg .= " {$equipmentSaved} equipment item(s) assigned.";
+                }
+                if (!empty($equipmentErrors)) {
+                    $msg .= ' Some equipment could not be saved: ' . implode('; ', $equipmentErrors);
+                }
+                // ── End equipment processing ────────────────────────────────
                 
                 echo json_encode([
                     'success' => true,
-                    'message' => 'Employee added successfully!'
+                    'message' => $msg
                 ]);
                 break;
                 

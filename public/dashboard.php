@@ -28,6 +28,7 @@ require_once '../config/session-check.php';
     <link rel="stylesheet" href="assets/css/dashboard.css?v=<?php echo time()?>">
     <link rel="stylesheet" href="assets/css/other_equipment.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="assets/css/roster.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="assets/css/audit-trail.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="assets/css/dark-mode.css?v=<?php echo time(); ?>">
 </head>
 <body>
@@ -107,23 +108,24 @@ require_once '../config/session-check.php';
                     <span>Maintenance Summary</span>
                 </a>
             </div>
-            
+            <?php endif; ?>
             <div class="nav-section">
                 <div class="nav-section-title">Settings</div>
-                <a href="#" class="nav-item" data-page="organization">
-                    <i class="fas fa-sitemap"></i>
-                    <span>Organization</span>
-                </a>
                 <a href="#" class="nav-item" data-page="employees">
                     <i class="fas fa-users"></i>
                     <span>Employees</span>
+                </a>
+                <?php if ($_SESSION['role'] === 'Super Admin'): ?>
+                <a href="#" class="nav-item" data-page="organization">
+                    <i class="fas fa-sitemap"></i>
+                    <span>Organization</span>
                 </a>
                 <a href="#" class="nav-item" data-page="accounts">
                     <i class="fas fa-user-shield"></i>
                     <span>Accounts</span>
                 </a>
             </div>
-            <?php endif; ?>
+                <?php endif; ?>
         </nav>
     </aside>
     

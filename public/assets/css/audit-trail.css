@@ -1,0 +1,456 @@
+/* ============================================================
+   AUDIT-TRAIL.CSS — NIA UPRIIS ICT Inventory System
+   Module-specific styles for the Audit Trail page
+   Imports: root.css (loaded globally via dashboard.php)
+   ============================================================ */
+
+/* ============================================================
+   1. CONTAINER & HEADER
+   ============================================================ */
+.audit-container {
+    animation: fadeInUp 0.4s ease-out;
+}
+
+.audit-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-6);
+    flex-wrap: wrap;
+    gap: var(--space-4);
+}
+
+.audit-header h2 {
+    font-size: var(--text-xl);
+    font-weight: 700;
+    color: var(--text-dark);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.audit-header h2 i {
+    color: var(--primary-green);
+}
+
+/* ============================================================
+   2. FILTER PANEL
+   ============================================================ */
+.audit-filters {
+    background: var(--bg-white);
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-card);
+    padding: var(--space-5);
+    margin-bottom: var(--space-6);
+}
+
+.filter-row {
+    display: flex;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+    align-items: flex-end;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.filter-group label {
+    font-size: var(--text-xs);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-medium);
+}
+
+.filter-group input,
+.filter-group select {
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
+    background: var(--bg-white);
+    color: var(--text-dark);
+    min-width: 140px;
+    transition: border-color var(--transition-base);
+}
+
+.filter-group.wide input,
+.filter-group.wide select {
+    min-width: 210px;
+}
+
+.filter-group input:focus,
+.filter-group select:focus {
+    border-color: var(--primary-green);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(45, 122, 79, 0.12);
+}
+
+.filter-group input::placeholder {
+    color: var(--text-light);
+}
+
+.filter-btn {
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-md);
+    border: none;
+    font-weight: 600;
+    font-size: var(--text-sm);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.filter-btn.primary {
+    background: var(--primary-green);
+    color: #fff;
+}
+
+.filter-btn.primary:hover {
+    background: var(--primary-dark);
+}
+
+.filter-btn.secondary {
+    background: var(--neutral-100);
+    color: var(--text-medium);
+}
+
+.filter-btn.secondary:hover {
+    background: var(--border-color);
+}
+
+/* ============================================================
+   3. TABLE
+   ============================================================ */
+.audit-table-wrap {
+    background: var(--bg-white);
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+}
+
+.audit-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.audit-table thead th {
+    padding: var(--space-3) var(--space-4);
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 700;
+    color: var(--text-medium);
+    background: var(--bg-light);
+    border-bottom: 2px solid var(--border-color);
+    text-align: left;
+    white-space: nowrap;
+}
+
+.audit-table tbody td {
+    padding: 0.7rem var(--space-4);
+    font-size: var(--text-sm);
+    color: var(--text-dark);
+    border-bottom: 1px solid var(--neutral-100);
+    vertical-align: middle;
+}
+
+.audit-table tbody tr:hover {
+    background: var(--bg-light);
+}
+
+.audit-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* ============================================================
+   4. ACTION BADGES
+   Matches ACTION_* constants from the JS
+   ============================================================ */
+.action-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.22rem 0.65rem;
+    border-radius: var(--radius-md);
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+}
+
+.badge-LOGIN          { background: #dbeafe; color: #1e40af; }
+.badge-LOGOUT         { background: #e0e7ff; color: #3730a3; }
+.badge-LOGIN_FAILED   { background: #fee2e2; color: #991b1b; }
+.badge-PASSWORD_RESET { background: #fce7f3; color: #9d174d; }
+.badge-CREATE         { background: #dcfce7; color: #166534; }
+.badge-UPDATE         { background: #fef3c7; color: #92400e; }
+.badge-DELETE         { background: #fef2f2; color: #991b1b; }
+.badge-RESTORE        { background: #d1fae5; color: #065f46; }
+.badge-EXPORT         { background: #ede9fe; color: #5b21b6; }
+.badge-IMPORT         { background: #e0f2fe; color: #0369a1; }
+.badge-VIEW           { background: var(--neutral-100); color: var(--text-dark); }
+.badge-default        { background: var(--neutral-100); color: var(--text-medium); }
+
+/* ============================================================
+   5. MODULE BADGE
+   ============================================================ */
+.module-badge {
+    padding: 0.2rem 0.55rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.65rem;
+    font-weight: 600;
+    background: var(--primary-xlight);
+    color: var(--primary-dark);
+    border: 1px solid rgba(45, 122, 79, 0.20);
+    white-space: nowrap;
+}
+
+/* ============================================================
+   6. STATUS PILL
+   ============================================================ */
+.status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.22rem 0.6rem;
+    border-radius: var(--radius-full);
+    font-size: 0.65rem;
+    font-weight: 700;
+}
+
+.status-pill.success { background: #dcfce7; color: #166534; }
+.status-pill.failed  { background: #fef2f2; color: #991b1b; }
+
+.status-pill .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.status-pill.success .dot { background: #22c55e; }
+.status-pill.failed  .dot { background: #ef4444; }
+
+/* ============================================================
+   7. DESCRIPTION CELL (truncate w/ tooltip)
+   ============================================================ */
+.desc-cell {
+    max-width: 340px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--text-medium);
+}
+
+/* ============================================================
+   8. PAGINATION
+   ============================================================ */
+.audit-pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-4) var(--space-5);
+    border-top: 1px solid var(--border-color);
+    flex-wrap: wrap;
+    gap: var(--space-2);
+}
+
+.audit-pagination .page-info {
+    font-size: var(--text-sm);
+    color: var(--text-medium);
+}
+
+.audit-pagination .page-btns {
+    display: flex;
+    gap: var(--space-1);
+    flex-wrap: wrap;
+}
+
+.page-btn {
+    padding: 0.35rem 0.65rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--bg-white);
+    color: var(--text-dark);
+    font-size: var(--text-sm);
+    cursor: pointer;
+    transition: all var(--transition-base);
+}
+
+.page-btn:hover:not(:disabled) {
+    background: var(--neutral-100);
+}
+
+.page-btn.active {
+    background: var(--primary-green);
+    color: #fff;
+    border-color: var(--primary-green);
+}
+
+.page-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* ============================================================
+   9. EMPTY / LOADING STATES
+   ============================================================ */
+.audit-empty {
+    text-align: center;
+    padding: var(--space-10);
+    color: var(--text-light);
+}
+
+.audit-empty i {
+    font-size: var(--text-3xl);
+    color: var(--neutral-300);
+    margin-bottom: var(--space-3);
+    display: block;
+}
+
+/* ============================================================
+   10. RESPONSIVE
+   ============================================================ */
+@media (max-width: 768px) {
+    .filter-row {
+        flex-direction: column;
+    }
+
+    .filter-group,
+    .filter-group.wide {
+        width: 100%;
+    }
+
+    .filter-group input,
+    .filter-group select {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .audit-table-wrap {
+        overflow-x: auto;
+    }
+
+    .desc-cell {
+        max-width: 200px;
+    }
+}
+
+/* ============================================================
+   11. DARK MODE — Audit Trail Overrides
+   Applied when <html data-theme="dark">
+   ============================================================ */
+
+/* Filter inputs */
+[data-theme="dark"] .audit-filters {
+    background: var(--bg-white);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .filter-group input,
+[data-theme="dark"] .filter-group select {
+    background: var(--bg-light);
+    color: var(--text-dark);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .filter-group input:focus,
+[data-theme="dark"] .filter-group select:focus {
+    border-color: var(--primary-green);
+    box-shadow: 0 0 0 3px rgba(61, 155, 107, 0.25);
+}
+
+[data-theme="dark"] .filter-group input::placeholder {
+    color: var(--text-light);
+}
+
+[data-theme="dark"] .filter-btn.secondary {
+    background: var(--bg-light);
+    color: var(--text-medium);
+}
+
+[data-theme="dark"] .filter-btn.secondary:hover {
+    background: var(--border-color);
+}
+
+/* Table */
+[data-theme="dark"] .audit-table-wrap {
+    background: var(--bg-white);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .audit-table thead th {
+    background: var(--bg-light);
+    color: var(--text-medium);
+    border-bottom-color: var(--border-color);
+}
+
+[data-theme="dark"] .audit-table tbody td {
+    border-bottom-color: var(--border-color);
+}
+
+[data-theme="dark"] .audit-table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+/* Action badges — dark mode: subtler bg, brighter text */
+[data-theme="dark"] .badge-LOGIN          { background: rgba(96, 165, 250, 0.14);  color: #93bbfd; }
+[data-theme="dark"] .badge-LOGOUT         { background: rgba(129, 140, 248, 0.14); color: #a5b4fc; }
+[data-theme="dark"] .badge-LOGIN_FAILED   { background: rgba(248, 81, 73, 0.14);   color: #f85149; }
+[data-theme="dark"] .badge-PASSWORD_RESET { background: rgba(236, 72, 153, 0.14);  color: #f472b6; }
+[data-theme="dark"] .badge-CREATE         { background: rgba(63, 185, 80, 0.14);   color: #3fb950; }
+[data-theme="dark"] .badge-UPDATE         { background: rgba(210, 153, 34, 0.14);  color: #d29922; }
+[data-theme="dark"] .badge-DELETE         { background: rgba(248, 81, 73, 0.14);   color: #f85149; }
+[data-theme="dark"] .badge-RESTORE        { background: rgba(52, 211, 153, 0.14);  color: #6ee7b7; }
+[data-theme="dark"] .badge-EXPORT         { background: rgba(167, 139, 250, 0.14); color: #c4b5fd; }
+[data-theme="dark"] .badge-IMPORT         { background: rgba(88, 166, 255, 0.14);  color: #58a6ff; }
+[data-theme="dark"] .badge-VIEW           { background: rgba(255, 255, 255, 0.06); color: var(--text-medium); }
+[data-theme="dark"] .badge-default        { background: rgba(255, 255, 255, 0.06); color: var(--text-light); }
+
+/* Module badge */
+[data-theme="dark"] .module-badge {
+    background: rgba(61, 155, 107, 0.15);
+    color: #3fb950;
+    border-color: rgba(61, 155, 107, 0.30);
+}
+
+/* Status pill */
+[data-theme="dark"] .status-pill.success {
+    background: rgba(63, 185, 80, 0.14);
+    color: #3fb950;
+}
+
+[data-theme="dark"] .status-pill.failed {
+    background: rgba(248, 81, 73, 0.14);
+    color: #f85149;
+}
+
+[data-theme="dark"] .status-pill.success .dot { background: #3fb950; }
+[data-theme="dark"] .status-pill.failed  .dot { background: #f85149; }
+
+/* Pagination */
+[data-theme="dark"] .page-btn {
+    background: var(--bg-white);
+    border-color: var(--border-color);
+    color: var(--text-dark);
+}
+
+[data-theme="dark"] .page-btn:hover:not(:disabled) {
+    background: var(--bg-light);
+}
+
+[data-theme="dark"] .page-btn.active {
+    background: var(--primary-green);
+    color: #fff;
+    border-color: var(--primary-green);
+}

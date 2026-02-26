@@ -251,6 +251,7 @@ function renderPersonalInformation(emp) {
     
     // Active status
     var isActive = emp.is_active == 1;
+    var isArchived = emp.is_archive == 1;
     
     var fullName = [emp.firstName, emp.middleName, emp.lastName, emp.suffixName]
         .filter(Boolean)
@@ -273,6 +274,7 @@ function renderPersonalInformation(emp) {
                         <i class="fas fa-${isActive ? 'check-circle' : 'times-circle'}"></i>
                         ${isActive ? 'Active' : 'Inactive'}
                     </span>
+                    ${isArchived ? `<span class="active-badge active-badge-archived"><i class="fas fa-archive"></i> Archived</span>` : ''}
                 </div>
                 <div class="profile-position-large">
                     <i class="fas fa-briefcase"></i> ${emp.position || '—'}
@@ -850,40 +852,6 @@ function renderPagination(total) {
 }
 
 // ========================================
-// TOGGLE ACTIVE STATUS
-// ========================================
-function toggleActiveStatus(employeeId, currentStatus, buttonElement) {
-    var newStatus = currentStatus == 1 ? 0 : 1;
-    var action = newStatus == 1 ? 'activate' : 'deactivate';
-    
-    if (!confirm(`Are you sure you want to ${action} this employee?`)) {
-        return;
-    }
-    
-    fetch(`${BASE_URL}ajax/toggle_employee_status.php`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ employeeId: employeeId, isActive: newStatus })
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (data.success) {
-            showAlert('success', `Employee ${action}d successfully!`);
-            setTimeout(() => window.location.reload(), 1000);
-        } else {
-            showAlert('danger', data.message || `Failed to ${action} employee`);
-        }
-    })
-    .catch(err => {
-        showAlert('danger', 'Error: ' + err);
-    });
-}
-
-// Equipment type map now lives in maintenance-conductor.js (EQUIPMENT_TYPE_MAP)
-// Just ensure it's loaded when roster page initializes
-ensureEquipmentTypeMap();
-
-// ========================================
 // MAINTENANCE — thin wrapper around shared openMaintenanceModal()
 // ========================================
 // GENERATE EMPLOYEE CHECKLIST REPORT
@@ -1076,3 +1044,78 @@ document.addEventListener('click', function(e) {
         toggleFabPanel(false);
     }
 });
+
+// ========================================
+// ARCHIVE / RESTORE EMPLOYEE
+// ========================================
+
+function archiveEmployee(employeeId, fullName) {
+    if (!confirm('Archive employee "' + fullName + '"?\n\nAll assigned equipment will be unassigned.')) {
+        return;
+    }
+
+    var formData = new FormData();
+    formData.append('action', 'archive');
+    formData.append('employeeId', employeeId);
+
+    fetch(BASE_URL + 'ajax/archive_employee.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+        if (data.success) {
+            showAlert('success', data.message);
+            // Reload page to reflect changes
+            setTimeout(function() { location.reload(); }, 800);
+        } else {
+            showAlert('danger', data.message || 'Failed to archive employee.');
+        }
+    })
+    .catch(function(err) {
+        console.error('Archive error:', err);
+        showAlert('danger', 'An error occurred while archiving the employee.');
+    });
+}
+
+function restoreEmployee(employeeId, fullName) {
+    if (!confirm('Restore employee "' + fullName + '" from archive?')) {
+        return;
+    }
+
+    var formData = new FormData();
+    formData.append('action', 'restore');
+    formData.append('employeeId', employeeId);
+
+    fetch(BASE_URL + 'ajax/archive_employee.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+        if (data.success) {
+            showAlert('success', data.message);
+            setTimeout(function() { location.reload(); }, 800);
+        } else {
+            showAlert('danger', data.message || 'Failed to restore employee.');
+        }
+    })
+    .catch(function(err) {
+        console.error('Restore error:', err);
+        showAlert('danger', 'An error occurred while restoring the employee.');
+    });
+}
+
+// ========================================
+// ARCHIVED TABLE SEARCH
+// ========================================
+function filterArchivedTable() {
+    var searchTerm = (document.getElementById('archivedSearch') ? document.getElementById('archivedSearch').value : '').toLowerCase();
+    var rows = document.querySelectorAll('#archivedTableBody tr');
+    rows.forEach(function(row) {
+        var name = row.dataset.name || '';
+        var empid = row.dataset.empid || '';
+        var match = name.includes(searchTerm) || empid.includes(searchTerm);
+        row.style.display = match ? '' : 'none';
+    });
+}
