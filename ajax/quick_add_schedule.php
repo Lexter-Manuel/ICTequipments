@@ -32,15 +32,16 @@ try {
     $locationRow = $stmtLoc->fetch(PDO::FETCH_ASSOC);
     $locationName = $locationRow['location_name'] ?? null;
 
-    // 3. Determine the Start Date
+    // 3. Determine the Start Date + Location Group
     $dateToUse = date('Y-m-d'); // Default: Today
     $syncMessage = "Started new cycle (No location set)";
+    $locationGroupId = null;
 
     if ($locationName) {
         // Look for ANY other equipment in this same location that already has a schedule
         // We join Schedule + View to find a "neighbor"
         $stmtNeighbor = $db->prepare("
-            SELECT ms.nextDueDate 
+            SELECT ms.nextDueDate, ms.location_group_id 
             FROM tbl_maintenance_schedule ms
             JOIN view_maintenance_master v 
               ON ms.equipmentId = v.id AND ms.equipmentType = v.type_id
@@ -55,6 +56,7 @@ try {
 
         if ($neighbor && !empty($neighbor['nextDueDate'])) {
             $dateToUse = $neighbor['nextDueDate'];
+            $locationGroupId = $neighbor['location_group_id'] ?? null;
             $syncMessage = "Synced with location: " . $locationName;
         } else {
             $syncMessage = "Started new cycle for location: " . $locationName;
@@ -64,11 +66,11 @@ try {
     // 4. Create the Schedule
     $stmtInsert = $db->prepare("
         INSERT INTO tbl_maintenance_schedule 
-        (equipmentType, equipmentId, maintenanceFrequency, nextDueDate, isActive) 
-        VALUES (?, ?, 'Semi-Annual', ?, 1)
+        (equipmentType, equipmentId, maintenanceFrequency, nextDueDate, isActive, location_group_id, is_synced) 
+        VALUES (?, ?, 'Semi-Annual', ?, 1, ?, 1)
     "); 
 
-    $stmtInsert->execute([$typeId, $equipmentId, $dateToUse]);
+    $stmtInsert->execute([$typeId, $equipmentId, $dateToUse, $locationGroupId]);
     
     $newScheduleId = $db->lastInsertId();
 

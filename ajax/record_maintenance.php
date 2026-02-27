@@ -126,7 +126,50 @@ try {
         ");
         $stmtUpdate->execute([$daysToAdd, $input['scheduleId']]);
 
+        // ── Divergence Detection ──
+        // If this equipment belongs to a location group, check if it's now out of sync
+        $stmtGroup = $db->prepare("
+            SELECT location_group_id, nextDueDate 
+            FROM tbl_maintenance_schedule 
+            WHERE scheduleId = ?
+        ");
+        $stmtGroup->execute([$input['scheduleId']]);
+        $schedRow = $stmtGroup->fetch(PDO::FETCH_ASSOC);
+
+        if (!empty($schedRow['location_group_id'])) {
+            // Find the most common nextDueDate among group peers
+            $stmtPeers = $db->prepare("
+                SELECT nextDueDate, COUNT(*) as cnt
+                FROM tbl_maintenance_schedule
+                WHERE location_group_id = ? AND isActive = 1 AND scheduleId != ?
+                GROUP BY nextDueDate
+                ORDER BY cnt DESC
+                LIMIT 1
+            ");
+            $stmtPeers->execute([$schedRow['location_group_id'], $input['scheduleId']]);
+            $peerDate = $stmtPeers->fetchColumn();
+
+            if ($peerDate && abs(strtotime($schedRow['nextDueDate']) - strtotime($peerDate)) > 7 * 86400) {
+                // Diverged: more than 7 days different from group
+                $db->prepare("UPDATE tbl_maintenance_schedule SET is_synced = 0 WHERE scheduleId = ?")
+                   ->execute([$input['scheduleId']]);
+            } else {
+                // Still in sync
+                $db->prepare("UPDATE tbl_maintenance_schedule SET is_synced = 1 WHERE scheduleId = ?")
+                   ->execute([$input['scheduleId']]);
+            }
+        }
+
         $db->commit();
+
+        // ── Post-commit: Update Maintenance Metrics (non-blocking) ──
+        try {
+            require_once __DIR__ . '/../includes/maintenanceMetrics.php';
+            computeEquipmentMetrics($db, $realTypeId, $realEquipmentId);
+        } catch (Exception $metricsErr) {
+            // Metrics computation is non-critical; don't fail the request
+            error_log("Metrics computation failed: " . $metricsErr->getMessage());
+        }
 
         logActivity(ACTION_CREATE, MODULE_MAINTENANCE,
             "Recorded maintenance for schedule ID {$input['scheduleId']} (Equipment ID: {$realEquipmentId}, Type ID: {$realTypeId}). Status: " . ($input['overallStatus'] ?? 'Operational') . ". Prepared by: " . ($input['signatories']['preparedBy'] ?? 'Unknown') . ".");

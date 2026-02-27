@@ -1005,3 +1005,199 @@ async function viewRecordDetail(recordId) {
             `<div class="detail-empty"><i class="fas fa-exclamation-triangle"></i> Failed to load: ${escHtml(e.message)}</div>`;
     }
 }
+
+/* =========================================================
+   BATCH INITIALIZE SCHEDULES — Multi-step Modal
+   ========================================================= */
+var batchLocations = [];
+var batchSelectedLocation = null;
+var batchCurrentStep = 1;
+
+function openBatchInitModal() {
+    batchCurrentStep = 1;
+    batchSelectedLocation = null;
+    showBatchStep(1);
+
+    var modalEl = document.getElementById('batchInitModal');
+    var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+    modal.show();
+
+    loadBatchLocations();
+}
+
+async function loadBatchLocations() {
+    var listEl = document.getElementById('batchLocationList');
+    listEl.innerHTML = '<div class="text-center py-4"><span class="spinner-border spinner-border-sm"></span> Loading locations…</div>';
+
+    try {
+        var r = await fetch(`${SCHED_API}?view=batch_locations`);
+        var j = await r.json();
+        if (!j.success) throw new Error(j.message);
+
+        batchLocations = j.data || [];
+        renderBatchLocations(batchLocations);
+    } catch (e) {
+        listEl.innerHTML = '<div class="text-center py-4 text-danger">Failed to load locations.</div>';
+    }
+}
+
+function renderBatchLocations(locs) {
+    var listEl = document.getElementById('batchLocationList');
+
+    if (!locs.length) {
+        listEl.innerHTML = '<div class="text-center py-4" style="color:var(--text-light);">No locations found.</div>';
+        return;
+    }
+
+    var html = '';
+    locs.forEach(function(loc) {
+        var hasUnscheduled = loc.unscheduled > 0;
+        var selectedClass = (batchSelectedLocation && batchSelectedLocation.location_id === loc.location_id) ? 'batch-loc-selected' : '';
+        var unschedBadge = hasUnscheduled
+            ? '<span class="badge bg-warning text-dark" style="font-size:11px;">' + loc.unscheduled + ' unscheduled</span>'
+            : '<span class="badge bg-success" style="font-size:11px;">All scheduled</span>';
+        var parentLabel = loc.parent_name ? '<span style="color:var(--text-light); font-size:12px;">under ' + escHtml(loc.parent_name) + '</span>' : '';
+
+        html += '<div class="batch-loc-item ' + selectedClass + '" data-id="' + loc.location_id + '" onclick="selectBatchLocation(' + loc.location_id + ')">'
+            + '<div class="batch-loc-info">'
+            + '<div class="batch-loc-name"><i class="fas ' + (loc.type_id == 3 ? 'fa-sitemap' : 'fa-building') + '" style="color:var(--primary-green); margin-right:6px;"></i>'
+            + escHtml(loc.location_name) + ' <span class="batch-loc-type">[' + loc.type_label + ']</span></div>'
+            + '<div style="display:flex; gap:8px; align-items:center;">' + parentLabel + '</div>'
+            + '</div>'
+            + '<div class="batch-loc-stats">'
+            + '<span style="font-size:12px; color:var(--text-dark);"><strong>' + loc.total + '</strong> equipment</span>'
+            + '<span style="font-size:12px; color:var(--text-light);">' + loc.scheduled + ' scheduled</span>'
+            + unschedBadge
+            + '</div>'
+            + '</div>';
+    });
+
+    listEl.innerHTML = html;
+}
+
+function filterBatchLocations() {
+    var q = (document.getElementById('batchLocSearch').value || '').toLowerCase().trim();
+    if (!q) {
+        renderBatchLocations(batchLocations);
+        return;
+    }
+    var filtered = batchLocations.filter(function(loc) {
+        return loc.location_name.toLowerCase().includes(q)
+            || (loc.parent_name || '').toLowerCase().includes(q);
+    });
+    renderBatchLocations(filtered);
+}
+
+function selectBatchLocation(locationId) {
+    batchSelectedLocation = batchLocations.find(function(l) { return l.location_id == locationId; });
+
+    // Highlight selected
+    document.querySelectorAll('.batch-loc-item').forEach(function(el) {
+        el.classList.toggle('batch-loc-selected', el.dataset.id == locationId);
+    });
+
+    // Show next button
+    document.getElementById('batchNextBtn').style.display = 'inline-flex';
+}
+
+function showBatchStep(step) {
+    batchCurrentStep = step;
+    document.getElementById('batchStep1').style.display = step === 1 ? 'block' : 'none';
+    document.getElementById('batchStep2').style.display = step === 2 ? 'block' : 'none';
+    document.getElementById('batchStep3').style.display = step === 3 ? 'block' : 'none';
+
+    document.getElementById('batchBackBtn').style.display = step > 1 && step < 3 ? 'inline-flex' : 'none';
+    document.getElementById('batchNextBtn').style.display = step === 1 && batchSelectedLocation ? 'inline-flex' : 'none';
+    document.getElementById('batchConfirmBtn').style.display = step === 2 ? 'inline-flex' : 'none';
+    document.getElementById('batchCancelBtn').textContent = step === 3 ? 'Close' : 'Cancel';
+}
+
+function batchGoNext() {
+    if (batchCurrentStep === 1 && batchSelectedLocation) {
+        // Populate step 2
+        var loc = batchSelectedLocation;
+        document.getElementById('batchSelectedInfo').innerHTML = ''
+            + '<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">'
+            + '<div>'
+            + '<div style="font-size:var(--text-base); font-weight:600; color:var(--text-dark);"><i class="fas fa-map-marker-alt" style="color:var(--primary-green);"></i> ' + escHtml(loc.location_name) + '</div>'
+            + '<div style="font-size:var(--text-sm); color:var(--text-light);">' + loc.type_label + (loc.parent_name ? ' under ' + escHtml(loc.parent_name) : '') + '</div>'
+            + '</div>'
+            + '<div style="display:flex; gap:12px; font-size:var(--text-sm);">'
+            + '<span><strong>' + loc.total + '</strong> total</span>'
+            + '<span style="color:var(--color-success);"><strong>' + loc.scheduled + '</strong> scheduled</span>'
+            + '<span style="color:var(--color-warning);"><strong>' + loc.unscheduled + '</strong> unscheduled</span>'
+            + '</div>'
+            + '</div>';
+
+        // Default start date: today + 7 days
+        var defaultDate = new Date();
+        defaultDate.setDate(defaultDate.getDate() + 7);
+        document.getElementById('batchStartDate').value = defaultDate.toISOString().split('T')[0];
+
+        showBatchStep(2);
+    }
+}
+
+function batchGoBack() {
+    if (batchCurrentStep === 2) {
+        showBatchStep(1);
+    }
+}
+
+async function executeBatchInit() {
+    if (!batchSelectedLocation) return;
+
+    var startDate = document.getElementById('batchStartDate').value;
+    var frequency = document.getElementById('batchFrequency').value;
+
+    if (!startDate) {
+        alert('Please select a start date.');
+        return;
+    }
+
+    showBatchStep(3);
+    document.getElementById('batchResultContent').innerHTML = '<div class="text-center py-4"><span class="spinner-border spinner-border-sm me-2"></span> Creating schedules…</div>';
+
+    try {
+        var r = await fetch((typeof BASE_URL !== 'undefined' ? BASE_URL : '') + 'ajax/batch_initialize_schedule.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                locationId: batchSelectedLocation.location_id,
+                startDate: startDate,
+                frequency: frequency
+            })
+        });
+        var j = await r.json();
+
+        if (!j.success) {
+            document.getElementById('batchResultContent').innerHTML = '<div class="text-center py-4">'
+                + '<div style="font-size:48px; color:var(--color-danger); margin-bottom:12px;"><i class="fas fa-times-circle"></i></div>'
+                + '<h5 style="color:var(--text-dark);">Failed</h5>'
+                + '<p style="color:var(--text-light);">' + escHtml(j.message) + '</p>'
+                + '</div>';
+            return;
+        }
+
+        document.getElementById('batchResultContent').innerHTML = '<div class="text-center py-4">'
+            + '<div style="font-size:48px; color:var(--color-success); margin-bottom:12px;"><i class="fas fa-check-circle"></i></div>'
+            + '<h5 style="color:var(--text-dark);">Schedules Created!</h5>'
+            + '<p style="color:var(--text-light); margin-bottom:16px;">' + escHtml(j.message) + '</p>'
+            + '<div style="display:flex; justify-content:center; gap:24px; font-size:var(--text-sm);">'
+            + '<div><span style="font-size:24px; font-weight:700; color:var(--color-success);">' + j.created + '</span><br>Created</div>'
+            + '<div><span style="font-size:24px; font-weight:700; color:var(--text-light);">' + j.skipped + '</span><br>Skipped</div>'
+            + '<div><span style="font-size:24px; font-weight:700; color:var(--primary-green);">' + j.total + '</span><br>Total</div>'
+            + '</div>'
+            + '</div>';
+
+        // Refresh the schedule page data
+        loadStats();
+        loadDetailedSchedule(1);
+        loadSummaryView();
+
+    } catch (e) {
+        document.getElementById('batchResultContent').innerHTML = '<div class="text-center py-4 text-danger">'
+            + '<i class="fas fa-exclamation-triangle"></i> Network error: ' + escHtml(e.message)
+            + '</div>';
+    }
+}

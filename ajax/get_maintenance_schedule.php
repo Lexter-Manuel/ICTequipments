@@ -163,6 +163,8 @@ if ($view === 'detailed') {
         ms.maintenanceFrequency,
         ms.nextDueDate,
         ms.lastMaintenanceDate,
+        ms.location_group_id,
+        ms.is_synced,
         DATEDIFF(ms.nextDueDate, CURDATE()) AS daysDue,
         v.brand,
         v.serial,
@@ -426,6 +428,80 @@ if ($view === 'divisions') {
     $sql = "SELECT location_id, location_name FROM location WHERE location_type_id = 1 AND is_deleted = '0' ORDER BY location_name";
     $rows = $db->query($sql)->fetchAll(PDO::FETCH_ASSOC);
     echo json_encode(['success' => true, 'data' => $rows]);
+    exit;
+}
+
+// ==================================================================
+// MODE: BATCH_LOCATIONS — locations available for batch scheduling
+// Returns units and leaf-sections with counts of:
+//   total equipment, already scheduled, unscheduled
+// ==================================================================
+if ($view === 'batch_locations') {
+    // Get all units + leaf sections (same logic as get_section_units.php)
+    $sqlLocs = "
+        SELECT 
+            l.location_id,
+            l.location_name,
+            l.location_type_id,
+            l.parent_location_id
+        FROM location l
+        WHERE l.is_deleted = '0'
+          AND (
+                l.location_type_id = 3
+                OR
+                (l.location_type_id = 2 AND NOT EXISTS (
+                    SELECT 1 FROM location c
+                    WHERE c.parent_location_id = l.location_id
+                      AND c.location_type_id = 3
+                      AND c.is_deleted = '0'
+                ))
+          )
+        ORDER BY l.location_name ASC
+    ";
+    $locations = $db->query($sqlLocs)->fetchAll(PDO::FETCH_ASSOC);
+
+    $result = [];
+    foreach ($locations as $loc) {
+        // Count total equipment at this location
+        $stmtTotal = $db->prepare("
+            SELECT COUNT(*) FROM view_maintenance_master v WHERE v.location_name = ?
+        ");
+        $stmtTotal->execute([$loc['location_name']]);
+        $totalEquip = (int)$stmtTotal->fetchColumn();
+
+        // Count already-scheduled equipment
+        $stmtSched = $db->prepare("
+            SELECT COUNT(*) 
+            FROM tbl_maintenance_schedule ms
+            JOIN view_maintenance_master v ON ms.equipmentId = v.id AND ms.equipmentType = v.type_id
+            WHERE v.location_name = ? AND ms.isActive = 1
+        ");
+        $stmtSched->execute([$loc['location_name']]);
+        $scheduled = (int)$stmtSched->fetchColumn();
+
+        $unscheduled = $totalEquip - $scheduled;
+
+        // Resolve parent name for display
+        $parentName = '';
+        if ($loc['parent_location_id']) {
+            $stmtParent = $db->prepare("SELECT location_name FROM location WHERE location_id = ?");
+            $stmtParent->execute([$loc['parent_location_id']]);
+            $parentName = $stmtParent->fetchColumn() ?: '';
+        }
+
+        $result[] = [
+            'location_id'   => $loc['location_id'],
+            'location_name' => $loc['location_name'],
+            'type_id'       => $loc['location_type_id'],
+            'type_label'    => $loc['location_type_id'] == 2 ? 'Section' : 'Unit',
+            'parent_name'   => $parentName,
+            'total'         => $totalEquip,
+            'scheduled'     => $scheduled,
+            'unscheduled'   => $unscheduled,
+        ];
+    }
+
+    echo json_encode(['success' => true, 'data' => $result]);
     exit;
 }
 

@@ -19,6 +19,9 @@
             </div>
         </div>
         <div class="mnt-header-right">
+            <button class="btn btn-success btn-sm" id="btnBatchInit" onclick="openBatchInitModal()" title="Initialize schedules for a unit/section">
+                <i class="fas fa-magic"></i> Batch Initialize
+            </button>
             <div class="mnt-view-toggle" id="mainViewToggle">
                 <button class="mnt-toggle-btn active" id="btnDetailed" onclick="switchView('detailed')">
                     <i class="fas fa-list"></i> Specific Equipment
@@ -220,6 +223,90 @@
     </div><!-- /#view-summary -->
 
 </div><!-- /.page-content -->
+
+<!-- ══════════════════════════════════════════════════════
+     BATCH INITIALIZE MODAL
+══════════════════════════════════════════════════════ -->
+<div class="modal fade" id="batchInitModal" tabindex="-1" aria-labelledby="batchInitModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" style="border-radius: var(--radius-xl); overflow: hidden;">
+            <div class="modal-header" style="background: var(--primary-green); color: #fff; border: none; padding: var(--space-4) var(--space-5);">
+                <h5 class="modal-title" id="batchInitModalLabel">
+                    <i class="fas fa-magic me-2"></i> Batch Initialize Maintenance Schedules
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" style="padding: var(--space-5);">
+                <!-- Step 1: Select Location -->
+                <div id="batchStep1">
+                    <div style="margin-bottom: var(--space-4);">
+                        <p style="color: var(--text-light); font-size: var(--text-sm); margin: 0;">
+                            Select a unit or section to create maintenance schedules for all equipment under it.
+                            Equipment that already has an active schedule will be skipped.
+                        </p>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Search Locations</label>
+                        <input type="text" class="form-control" id="batchLocSearch" placeholder="Type to filter units/sections..." oninput="filterBatchLocations()">
+                    </div>
+
+                    <div id="batchLocationList" style="max-height: 320px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: var(--radius-lg);">
+                        <div class="text-center py-4"><span class="spinner-border spinner-border-sm"></span> Loading locations…</div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Configure -->
+                <div id="batchStep2" style="display: none;">
+                    <div class="batch-selected-info" id="batchSelectedInfo" style="background: var(--bg-light); border-radius: var(--radius-lg); padding: var(--space-4); margin-bottom: var(--space-4);">
+                        <!-- Populated by JS -->
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Start Date (Shared Due Date)</label>
+                            <input type="date" class="form-control" id="batchStartDate">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Frequency</label>
+                            <select class="form-select" id="batchFrequency">
+                                <option value="Monthly">Monthly (30 days)</option>
+                                <option value="Quarterly">Quarterly (90 days)</option>
+                                <option value="Semi-Annual" selected>Semi-Annual (180 days)</option>
+                                <option value="Annual">Annual (365 days)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info" style="font-size: var(--text-sm);">
+                        <i class="fas fa-info-circle me-1"></i>
+                        All equipment under this location will share the same due date initially.
+                        If any equipment is maintained off-cycle, it will automatically diverge to its own schedule.
+                    </div>
+                </div>
+
+                <!-- Step 3: Result -->
+                <div id="batchStep3" style="display: none;">
+                    <div id="batchResultContent" class="text-center py-4">
+                        <span class="spinner-border spinner-border-sm"></span> Processing…
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid var(--border-color); padding: var(--space-3) var(--space-5);">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" id="batchCancelBtn">Cancel</button>
+                <button type="button" class="btn btn-outline-secondary" id="batchBackBtn" style="display:none;" onclick="batchGoBack()">
+                    <i class="fas fa-arrow-left"></i> Back
+                </button>
+                <button type="button" class="btn btn-success" id="batchNextBtn" style="display:none;" onclick="batchGoNext()">
+                    Next <i class="fas fa-arrow-right"></i>
+                </button>
+                <button type="button" class="btn btn-success" id="batchConfirmBtn" style="display:none;" onclick="executeBatchInit()">
+                    <i class="fas fa-check"></i> Create Schedules
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <?php include __DIR__ . '/../../includes/components/maintenance_modal.php'; ?>
 <?php include __DIR__ . '/../../includes/components/detail_view_modal.php'; ?>
