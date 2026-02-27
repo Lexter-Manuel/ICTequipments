@@ -117,27 +117,15 @@ $employees = $stmtEmployees->fetchAll();
         </div>
     </div>
 
-    <div class="data-table-container">
-        <div class="table-header">
-            <h2 class="table-title"><i class="fas fa-list"></i> System Unit Inventory</h2>
-            <div class="table-controls">
-                <div class="filter-group">
-                    <select id="suStatusFilter" onchange="filterSystemUnits()">
-                        <option value="">All Statuses</option>
-                        <option value="Operational">Operational</option>
-                        <option value="For Replacement">For Replacement</option>
-                        <option value="Disposed">Disposed</option>
-                    </select>
-                </div>
-                <div class="search-box">
-                    <i class="fas fa-search"></i>
-                    <input type="text" id="systemunitSearch" placeholder="Search serial, brand, processor..." oninput="filterSystemUnits()">
-                </div>
-                <button class="btn btn-primary" onclick="openAddSystemUnit()">
-                    <i class="fas fa-plus"></i> Add System Unit
-                </button>
-            </div>
+    <div class="filters-bar">
+        <div class="filter-group" style="flex:1">
+            <label><i class="fas fa-search"></i> Search:</label>
+            <input type="text" id="systemunitSearch" placeholder="Serial, brand, processor..." oninput="filterSystemUnits()">
         </div>
+        <button class="btn btn-primary" onclick="openAddSystemUnit()">
+            <i class="fas fa-plus"></i> Add System Unit
+        </button>
+    </div>
 
     <div class="data-table">
         <table>
@@ -211,7 +199,6 @@ $employees = $stmtEmployees->fetchAll();
             </label>
         </div>
     </div>
-    </div>
 </div>
 
 <!-- ══ MONITORS TAB ══ -->
@@ -231,27 +218,15 @@ $employees = $stmtEmployees->fetchAll();
         </div>
     </div>
 
-    <div class="data-table-container">
-        <div class="table-header">
-            <h2 class="table-title"><i class="fas fa-list"></i> Monitor Inventory</h2>
-            <div class="table-controls">
-                <div class="filter-group">
-                    <select id="monStatusFilter" onchange="filterMonitors()">
-                        <option value="">All Statuses</option>
-                        <option value="Operational">Operational</option>
-                        <option value="For Replacement">For Replacement</option>
-                        <option value="Disposed">Disposed</option>
-                    </select>
-                </div>
-                <div class="search-box">
-                    <i class="fas fa-search"></i>
-                    <input type="text" id="monitorSearch" placeholder="Search serial, brand, size..." oninput="filterMonitors()">
-                </div>
-                <button class="btn btn-primary" onclick="openAddMonitor()">
-                    <i class="fas fa-plus"></i> Add Monitor
-                </button>
-            </div>
+    <div class="filters-bar">
+        <div class="filter-group" style="flex:1">
+            <label><i class="fas fa-search"></i> Search:</label>
+            <input type="text" id="monitorSearch" placeholder="Serial, brand, size..." oninput="filterMonitors()">
         </div>
+        <button class="btn btn-primary" onclick="openAddMonitor()">
+            <i class="fas fa-plus"></i> Add Monitor
+        </button>
+    </div>
 
     <div class="data-table">
         <table>
@@ -316,7 +291,6 @@ $employees = $stmtEmployees->fetchAll();
             </label>
         </div>
     </div>
-    </div>
 </div>
 
 <!-- ══ ALL-IN-ONE TAB ══ -->
@@ -336,27 +310,15 @@ $employees = $stmtEmployees->fetchAll();
         </div>
     </div>
 
-    <div class="data-table-container">
-        <div class="table-header">
-            <h2 class="table-title"><i class="fas fa-list"></i> All-in-One Inventory</h2>
-            <div class="table-controls">
-                <div class="filter-group">
-                    <select id="aioStatusFilter" onchange="filterAllInOnes()">
-                        <option value="">All Statuses</option>
-                        <option value="Operational">Operational</option>
-                        <option value="For Replacement">For Replacement</option>
-                        <option value="Disposed">Disposed</option>
-                    </select>
-                </div>
-                <div class="search-box">
-                    <i class="fas fa-search"></i>
-                    <input type="text" id="allinoneSearch" placeholder="Search brand, serial, processor..." oninput="filterAllInOnes()">
-                </div>
-                <button class="btn btn-primary" onclick="openAddAllInOne()">
-                    <i class="fas fa-plus"></i> Add All-in-One
-                </button>
-            </div>
+    <div class="filters-bar">
+        <div class="filter-group" style="flex:1">
+            <label><i class="fas fa-search"></i> Search:</label>
+            <input type="text" id="allinoneSearch" placeholder="Brand, serial, processor..." oninput="filterAllInOnes()">
         </div>
+        <button class="btn btn-primary" onclick="openAddAllInOne()">
+            <i class="fas fa-plus"></i> Add All-in-One
+        </button>
+    </div>
 
     <div class="data-table">
         <table>
@@ -422,7 +384,6 @@ $employees = $stmtEmployees->fetchAll();
                 </select>
             </label>
         </div>
-    </div>
     </div>
 </div>
 
@@ -592,7 +553,7 @@ $employees = $stmtEmployees->fetchAll();
                                 <input type="text" class="form-control" id="aioMemory" required placeholder="e.g., 8GB DDR4">
                             </div>
                         </div>
-                        <div class="row mb-0">
+                        <div class="row mb-3">
                             <div class="col-md-6">
                                 <label for="aioGPU" class="form-label">GPU *</label>
                                 <input type="text" class="form-control" id="aioGPU" required placeholder="e.g., Intel Iris Xe Graphics">
@@ -600,6 +561,12 @@ $employees = $stmtEmployees->fetchAll();
                             <div class="col-md-6">
                                 <label for="aioStorage" class="form-label">Storage *</label>
                                 <input type="text" class="form-control" id="aioStorage" required placeholder="e.g., 512GB SSD">
+                            </div>
+                        </div>
+                        <div class="row mb-0">
+                            <div class="col-md-6">
+                                <label for="aioYear" class="form-label">Year Acquired</label>
+                                <input type="number" class="form-control" id="aioYear" min="1990" max="<?php echo date('Y') + 1; ?>" placeholder="YYYY">
                             </div>
                         </div>
                     </div>

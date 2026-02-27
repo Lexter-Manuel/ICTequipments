@@ -178,6 +178,7 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
             <table>
                 <thead>
                     <tr>
+                        <th>#</th>
                         <th>Serial Number</th>
                         <th>Brand &amp; Category</th>
                         <th>Specifications</th>
@@ -196,6 +197,7 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                             data-brand="<?php echo strtolower(htmlspecialchars($s['systemUnitBrand'] ?? '')); ?>"
                             data-employee="<?php echo strtolower(htmlspecialchars($s['employeeName'] ?? '')); ?>"
                             data-status="<?php echo $status; ?>">
+                        <td class="row-counter"></td>
                         <td><span class="serial-number"><?php echo htmlspecialchars($s['systemUnitSerial']); ?></span></td>
                         <td>
                             <div style="font-weight:600;color:var(--text-dark)"><?php echo htmlspecialchars($s['systemUnitBrand']); ?></div>
@@ -293,6 +295,7 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
             <table>
                 <thead>
                     <tr>
+                        <th>#</th>
                         <th>Serial Number</th>
                         <th>Brand &amp; Model</th>
                         <th>Size</th>
@@ -311,6 +314,7 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                             data-brand="<?php echo strtolower(htmlspecialchars($m['monitorBrand'] ?? '')); ?>"
                             data-employee="<?php echo strtolower(htmlspecialchars($m['employeeName'] ?? '')); ?>"
                             data-status="<?php echo $status; ?>">
+                        <td class="row-counter"></td>
                         <td><span class="serial-number"><?php echo htmlspecialchars($m['monitorSerial']); ?></span></td>
                         <td><div style="font-weight:600;color:var(--text-dark)"><?php echo htmlspecialchars($m['monitorBrand']); ?></div></td>
                         <td><?php echo htmlspecialchars($m['monitorSize'] ?? 'N/A'); ?></td>
@@ -401,6 +405,8 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
             <table>
                 <thead>
                     <tr>
+                        <th>#</th>
+                        <th>Serial Number</th>
                         <th>Brand &amp; Model</th>
                         <th>Specifications</th>
                         <th>Year</th>
@@ -417,6 +423,8 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                             data-brand="<?php echo strtolower(htmlspecialchars($a['allinoneBrand'] ?? '')); ?>"
                             data-employee="<?php echo strtolower(htmlspecialchars($a['employeeName'] ?? '')); ?>"
                             data-status="<?php echo $status; ?>">
+                        <td class="row-counter"></td>
+                        <td><span class="serial-number"><?php echo htmlspecialchars($a['allinoneSerial'] ?? 'N/A'); ?></span></td>
                         <td><div style="font-weight:600;color:var(--text-dark)"><?php echo htmlspecialchars($a['allinoneBrand']); ?></div></td>
                         <td>
                             <div class="spec-item"><i class="fas fa-microchip"></i><span class="spec-value"><?php echo htmlspecialchars($a['specificationProcessor']); ?></span></div>
@@ -511,6 +519,7 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
             <table id="printerTable">
                 <thead>
                     <tr>
+                        <th>#</th>
                         <th>Serial Number</th>
                         <th>Brand &amp; Model</th>
                         <th>Year Acquired</th>
@@ -522,7 +531,7 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                 </thead>
                 <tbody id="printerTableBody">
                     <?php if (empty($printers)): ?>
-                    <tr><td colspan="7" class="empty-state"><i class="fas fa-inbox"></i><p>No printer records found</p></td></tr>
+                    <tr><td colspan="8" class="empty-state"><i class="fas fa-inbox"></i><p>No printer records found</p></td></tr>
                     <?php else: ?>
                         <?php foreach ($printers as $p):
                             $status = $p['employeeId'] ? 'Working' : 'Available';
@@ -534,6 +543,7 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                             data-employee="<?php echo strtolower($p['employeeName'] ?? ''); ?>"
                             data-year="<?php echo $p['yearAcquired'] ?? ''; ?>"
                             data-status="<?php echo $status; ?>">
+                            <td class="row-counter"></td>
                             <td><span class="serial-number"><?php echo htmlspecialchars($p['printerSerial'] ?? 'N/A'); ?></span></td>
                             <td>
                                 <div class="brand-model">
@@ -635,6 +645,7 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
             <table id="otherTable">
                 <thead>
                     <tr>
+                        <th>#</th>
                         <th>Serial Number</th>
                         <th>Equipment Type</th>
                         <th>Brand &amp; Model</th>
@@ -647,7 +658,7 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                 </thead>
                 <tbody id="otherTableBody">
                     <?php if (empty($otherEquipment)): ?>
-                    <tr><td colspan="8" class="empty-state"><i class="fas fa-inbox"></i><p>No equipment records found</p></td></tr>
+                    <tr><td colspan="9" class="empty-state"><i class="fas fa-inbox"></i><p>No equipment records found</p></td></tr>
                     <?php else: ?>
                         <?php foreach ($otherEquipment as $o):
                             $displayStatus = $o['employeeId'] ? 'In Use' : $o['status'];
@@ -667,6 +678,7 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                             data-employee="<?php echo strtolower($o['employeeName'] ?? ''); ?>"
                             data-status="<?php echo $displayStatus; ?>"
                             data-year="<?php echo $o['yearAcquired']; ?>">
+                            <td class="row-counter"></td>
                             <td><span class="serial-number"><?php echo htmlspecialchars($o['serialNumber']); ?></span></td>
                             <td>
                                 <div class="equipment-type">
@@ -870,13 +882,13 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                     <div class="form-section">
                         <h6 class="form-section-title"><i class="fas fa-info-circle"></i> Device Information</h6>
                         <div class="row mb-3">
-                            <div class="col-md-8">
+                            <div class="col-md-6">
                                 <label for="aioBrand" class="form-label">Brand &amp; Model *</label>
                                 <input type="text" class="form-control" id="aioBrand" required placeholder="e.g., HP All-in-One 24-df1033">
                             </div>
-                            <div class="col-md-4">
-                                <label for="aioYear" class="form-label">Year Acquired</label>
-                                <input type="number" class="form-control" id="aioYear" min="1990" max="<?php echo date('Y') + 1; ?>" placeholder="YYYY">
+                            <div class="col-md-6">
+                                <label for="aioSerial" class="form-label">Serial Number *</label>
+                                <input type="text" class="form-control" id="aioSerial" required placeholder="e.g., AIO-SN12345">
                             </div>
                         </div>
                         <div class="row mb-3">
@@ -889,7 +901,7 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                                 <input type="text" class="form-control" id="aioMemory" required placeholder="e.g., 8GB DDR4">
                             </div>
                         </div>
-                        <div class="row mb-0">
+                        <div class="row mb-3">
                             <div class="col-md-6">
                                 <label for="aioGPU" class="form-label">GPU *</label>
                                 <input type="text" class="form-control" id="aioGPU" required placeholder="e.g., Intel Iris Xe Graphics">
@@ -898,6 +910,13 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                                 <label for="aioStorage" class="form-label">Storage *</label>
                                 <input type="text" class="form-control" id="aioStorage" required placeholder="e.g., 512GB SSD">
                             </div>
+                        </div>
+                        <div class="row mb-0">
+                            <div class="col-md-6">
+                                <label for="aioYear" class="form-label">Year Acquired *</label>
+                                <input type="text" class="form-control" id="aioYear" required placeholder="e.g., 2023">
+                            </div>
+
                         </div>
                     </div>
                     <div class="form-section">

@@ -350,6 +350,7 @@ function editAllInOne(id) {
                 document.getElementById('aioMemory').value = a.specificationMemory;
                 document.getElementById('aioGPU').value = a.specificationGPU;
                 document.getElementById('aioStorage').value = a.specificationStorage;
+                if (document.getElementById('aioYear')) document.getElementById('aioYear').value = a.yearAcquired || '';
                 document.getElementById('aioEmployee').value = a.employeeId || '';
                 var modal = new bootstrap.Modal(document.getElementById('allinoneModal'));
                 modal.show();
@@ -370,6 +371,7 @@ function saveAllInOne() {
     formData.append('memory', document.getElementById('aioMemory').value);
     formData.append('gpu', document.getElementById('aioGPU').value);
     formData.append('storage', document.getElementById('aioStorage').value);
+    if (document.getElementById('aioYear')) formData.append('year_acquired', document.getElementById('aioYear').value);
     formData.append('employee_id', document.getElementById('aioEmployee').value);
     
     fetch('../ajax/manage_allinone.php', {

@@ -868,3 +868,9 @@
     color: var(--bg-light);
     background: var(--accent-green);
 }
+
+.btn-sm {
+    padding: var(--space-3);
+    border-radius: var(--bs-border-radius);
+    background: var(--primary-green);
+}

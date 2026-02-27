@@ -418,18 +418,8 @@ $jobOrderCount  = count(array_filter($employees, fn($e) => $e['employmentStatus'
                     <span id="detailType" class="badge bg-secondary">Type</span>
                 </div>
                 
-                <ul class="list-group list-group-flush">
-                    <li class="list-group-item d-flex justify-content-between px-0">
-                        <span class="text-muted">Assigned To:</span>
-                        <span id="detailOwner" class="fw-bold text-dark">Employee Name</span>
-                    </li>
-                    <li class="list-group-item d-flex justify-content-between px-0">
-                        <span class="text-muted">Location:</span>
-                        <span id="detailLocation" class="text-dark">Location Name</span>
-                    </li>
-                    <li class="list-group-item d-flex justify-content-between px-0">
-                        <span class="text-muted">Status:</span>
-                        <span class="text-success fw-bold">Active</span> </li>
+                <!-- Dynamic specs rendered by JS based on equipment type -->
+                <ul id="detailSpecsList" class="list-group list-group-flush">
                 </ul>
             </div>
             <div class="modal-footer border-0 bg-light justify-content-center">

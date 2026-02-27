@@ -64,13 +64,14 @@ function renderSystemUnits(units) {
     var tbody = document.getElementById('systemunitTableBody');
     tbody.innerHTML = '';
     if (units.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text-medium);padding:20px">No system units found</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--text-medium);padding:20px">No system units found</td></tr>';
         return;
     }
     units.forEach(function(s) {
         var cls = s.status.toLowerCase();
         var tr = document.createElement('tr');
         tr.innerHTML =
+            '<td class="row-counter"></td>' +
             '<td><strong style="color:var(--primary-green)">' + escapeHtml(s.systemUnitSerial) + '</strong></td>' +
             '<td><div style="font-weight:600">' + escapeHtml(s.systemUnitBrand) + '</div><div style="font-size:12px;color:var(--text-light)"><i class="fas fa-tag"></i> ' + escapeHtml(s.systemUnitCategory) + '</div></td>' +
             '<td><div class="spec-item"><i class="fas fa-microchip"></i><span class="spec-value">' + escapeHtml(s.specificationProcessor) + '</span></div><div class="spec-item"><i class="fas fa-memory"></i><span class="spec-value">' + escapeHtml(s.specificationMemory) + '</span></div><div class="spec-item"><i class="fas fa-hdd"></i><span class="spec-value">' + escapeHtml(s.specificationStorage) + '</span></div></td>' +
@@ -184,13 +185,14 @@ function renderMonitors(monitors) {
     var tbody = document.getElementById('monitorTableBody');
     tbody.innerHTML = '';
     if (monitors.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text-medium);padding:20px">No monitors found</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--text-medium);padding:20px">No monitors found</td></tr>';
         return;
     }
     monitors.forEach(function(m) {
         var cls = m.status.toLowerCase();
         var tr = document.createElement('tr');
         tr.innerHTML =
+            '<td class="row-counter"></td>' +
             '<td><strong style="color:var(--primary-green)">' + escapeHtml(m.monitorSerial) + '</strong></td>' +
             '<td><div style="font-weight:600">' + escapeHtml(m.monitorBrand) + '</div></td>' +
             '<td>' + escapeHtml(m.monitorSize) + '</td>' +
@@ -292,13 +294,15 @@ function renderAllInOnes(units) {
     var tbody = document.getElementById('allinoneTableBody');
     tbody.innerHTML = '';
     if (units.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-medium);padding:20px">No all-in-one PCs found</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--text-medium);padding:20px">No all-in-one PCs found</td></tr>';
         return;
     }
     units.forEach(function(a) {
         var cls = a.status.toLowerCase();
         var tr = document.createElement('tr');
         tr.innerHTML =
+            '<td class="row-counter"></td>' +
+            '<td><span class="serial-number">' + escapeHtml(a.allinoneSerial || 'N/A') + '</span></td>' +
             '<td><div style="font-weight:600">' + escapeHtml(a.allinoneBrand) + '</div></td>' +
             '<td><div class="spec-item"><i class="fas fa-microchip"></i><span class="spec-value">' + escapeHtml(a.specificationProcessor) + '</span></div><div class="spec-item"><i class="fas fa-memory"></i><span class="spec-value">' + escapeHtml(a.specificationMemory) + '</span></div><div class="spec-item"><i class="fas fa-hdd"></i><span class="spec-value">' + escapeHtml(a.specificationStorage) + '</span></div></td>' +
             '<td>' + escapeHtml(a.yearAcquired || 'N/A') + '</td>' +
@@ -326,6 +330,7 @@ function editAllInOne(id) {
                 var a = data.data;
                 document.getElementById('allinoneModalTitle').textContent = 'Edit All-in-One';
                 document.getElementById('aioBrand').value = a.allinoneBrand;
+                document.getElementById('aioSerial').value = a.allinoneSerial || '';
                 document.getElementById('aioProcessor').value = a.specificationProcessor;
                 document.getElementById('aioMemory').value = a.specificationMemory;
                 document.getElementById('aioGPU').value = a.specificationGPU;
@@ -343,6 +348,7 @@ function saveAllInOne() {
     formData.append('action', currentAllInOneId ? 'update' : 'create');
     if (currentAllInOneId) formData.append('allinone_id', currentAllInOneId);
     formData.append('brand', document.getElementById('aioBrand').value);
+    formData.append('allinoneSerial', document.getElementById('aioSerial').value);
     formData.append('processor', document.getElementById('aioProcessor').value);
     formData.append('memory', document.getElementById('aioMemory').value);
     formData.append('gpu', document.getElementById('aioGPU').value);
@@ -428,6 +434,7 @@ function applySystemUnitTableState() {
     }
 
     renderPaginationGeneric('suPaginationControls', suCurrentPage, totalPages, 'goToSUPage');
+    updateRowCounters('systemunitTableBody', start + 1);
 }
 
 function goToSUPage(page) {
@@ -488,6 +495,7 @@ function applyMonitorTableState() {
     }
 
     renderPaginationGeneric('monPaginationControls', monCurrentPage, totalPages, 'goToMonPage');
+    updateRowCounters('monitorTableBody', start + 1);
 }
 
 function goToMonPage(page) {
@@ -547,6 +555,7 @@ function applyAIOTableState() {
     }
 
     renderPaginationGeneric('aioPaginationControls', aioCurrentPage, totalPages, 'goToAIOPage');
+    updateRowCounters('allinoneTableBody', start + 1);
 }
 
 function goToAIOPage(page) {
@@ -610,6 +619,7 @@ function applyPrinterTableState() {
     }
 
     renderPaginationGeneric('prPaginationControls', printerCurrentPage, totalPages, 'goToPrinterPage');
+    updateRowCounters('printerTableBody', start + 1);
 }
 
 function goToPrinterPage(page) {
@@ -745,6 +755,7 @@ function applyOtherTableState() {
     }
 
     renderPaginationGeneric('otherPaginationControls', otherCurrentPage, totalPages, 'goToOtherPage');
+    updateRowCounters('otherTableBody', start + 1);
 }
 
 function goToOtherPage(page) {

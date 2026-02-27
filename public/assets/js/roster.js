@@ -11,6 +11,7 @@ var editCurrentImageFile = null;
 var editCropModal;
 var currentEmployeeId = null;
 var currentEmployeeEquipment = []; // Stores all equipment for FAB panel
+var currentProfileData = null; // Stores full profile data for equipment detail lookup
 var fabMaintenanceQueue = [];
 var fabQueueIndex = 0;
 
@@ -187,6 +188,7 @@ function viewEmployee(employeeId) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
+                currentProfileData = data; // Store full profile data for equipment details
                 renderEmployeeProfile(data);
                 document.getElementById('roster-list-view').style.display = 'none';
                 document.getElementById('employee-profile-view').style.display = 'block';
@@ -505,7 +507,7 @@ function createEquipmentCard(type, brand, serial, icon, id, equipmentType) {
                 <div class="row g-2">
                     <div class="col-6">
                         <button class="btn btn-sm btn-light w-100 border" 
-                                onclick="viewEquipmentDetails('${safeType}', '${safeBrand}', '${safeSerial}', '${icon}')">
+                                onclick="viewEquipmentDetails('${safeType}', ${id}, '${icon}')">
                             <i class="fas fa-eye text-secondary"></i> View
                         </button>
                     </div>
@@ -521,22 +523,105 @@ function createEquipmentCard(type, brand, serial, icon, id, equipmentType) {
     `;
 }
 
-function viewEquipmentDetails(type, brand, serial, icon) {
-    document.getElementById('detailBrand').innerText = brand;
-    document.getElementById('detailSerial').innerText = "SN: " + serial;
+// mula dito
+
+function findEquipmentItem(type, id) {
+    if (!currentProfileData) return null;
+    var normalType = type.toLowerCase();
+
+    if (normalType === 'systemunit') {
+        return (currentProfileData.systemUnits || []).find(function(i) { return i.systemunitId == id; });
+    }
+    if (normalType === 'allinone') {
+        return (currentProfileData.allinones || []).find(function(i) { return i.allinoneId == id; });
+    }
+    if (normalType === 'monitor') {
+        return (currentProfileData.monitors || []).find(function(i) { return i.monitorId == id; });
+    }
+    if (normalType === 'printer') {
+        return (currentProfileData.printers || []).find(function(i) { return i.printerId == id; });
+    }
+    // Other equipment — type could be "Laptop", "Projector", etc.
+    return (currentProfileData.other || []).find(function(i) { return i.otherEquipmentId == id; });
+}
+
+function buildSpecRows(type, item) {
+    if (!item) return '';
+    var normalType = type.toLowerCase();
+    var rows = '';
+
+    if (normalType === 'systemunit') {
+        rows += specRow('Category', item.systemUnitCategory);
+        rows += specRow('Processor', item.specificationProcessor);
+        rows += specRow('Memory', item.specificationMemory);
+        rows += specRow('GPU', item.specificationGPU);
+        rows += specRow('Storage', item.specificationStorage);
+        rows += specRow('Year Acquired', item.yearAcquired);
+    } else if (normalType === 'allinone') {
+        rows += specRow('Processor', item.specificationProcessor);
+        rows += specRow('Memory', item.specificationMemory);
+        rows += specRow('GPU', item.specificationGPU);
+        rows += specRow('Storage', item.specificationStorage);
+    } else if (normalType === 'monitor') {
+        rows += specRow('Screen Size', item.monitorSize);
+        rows += specRow('Year Acquired', item.yearAcquired);
+    } else if (normalType === 'printer') {
+        rows += specRow('Model', item.printerModel);
+        rows += specRow('Year Acquired', item.yearAcquired);
+    } else {
+        // Other equipment
+        rows += specRow('Type', item.equipmentType);
+        rows += specRow('Model', item.model);
+        rows += specRow('Year Acquired', item.yearAcquired);
+    }
+
+    return rows;
+}
+
+function specRow(label, value) {
+    return `
+        <li class="list-group-item d-flex justify-content-between px-0">
+            <span class="text-muted">${label}:</span>
+            <span class="fw-bold text-dark">${value || '—'}</span>
+        </li>`;
+}
+
+function viewEquipmentDetails(type, id, icon) {
+    var item = findEquipmentItem(type, id);
+    var normalType = type.toLowerCase();
+
+    // Determine brand / serial from the found item
+    var brand = '—', serial = '—';
+    if (item) {
+        if (normalType === 'systemunit')       { brand = item.systemUnitBrand; serial = item.systemUnitSerial; }
+        else if (normalType === 'allinone')    { brand = item.allinoneBrand;   serial = item.allinoneSerial; }
+        else if (normalType === 'monitor')     { brand = item.monitorBrand;    serial = item.monitorSerial; }
+        else if (normalType === 'printer')     { brand = item.printerBrand;    serial = item.printerSerial; }
+        else                                   { brand = item.brand;           serial = item.serialNumber; }
+    }
+
+    document.getElementById('detailBrand').innerText = brand || '—';
+    document.getElementById('detailSerial').innerText = 'SN: ' + (serial || 'N/A');
     document.getElementById('detailType').innerText = type.toUpperCase();
-    document.getElementById('detailIcon').className = `fas fa-${icon} fa-3x text-secondary`;
-    
-    // Grab owner info from the profile header
-    const owner = document.querySelector('.profile-name-large') ? document.querySelector('.profile-name-large').innerText : 'Unknown';
-    const location = document.querySelector('.profile-badges-group .status-badge') ? 'Current Assignment' : 'N/A';
-    
-    document.getElementById('detailOwner').innerText = owner;
-    document.getElementById('detailLocation').innerText = location;
+    document.getElementById('detailIcon').className = 'fas fa-' + icon + ' fa-3x text-secondary';
+
+    // Owner & location from profile header
+    var owner = document.querySelector('.profile-name-large') ? document.querySelector('.profile-name-large').innerText : 'Unknown';
+    var locationEl = document.querySelector('.profile-badges-group .status-badge');
+    var location = locationEl ? 'Current Assignment' : 'N/A';
+
+    // Build dynamic spec rows + common rows
+    var specsHtml = buildSpecRows(type, item);
+    specsHtml += specRow('Assigned To', owner);
+    specsHtml += specRow('Location', location);
+
+    document.getElementById('detailSpecsList').innerHTML = specsHtml;
 
     var modal = new bootstrap.Modal(document.getElementById('equipmentDetailsModal'));
     modal.show();
 }
+
+// hanggang dito
 
 function editEmployee(employeeId) {
     var employee = rosterData.find(emp => emp.employeeId == employeeId);
