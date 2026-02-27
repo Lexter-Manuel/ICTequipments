@@ -1,28 +1,4 @@
-/**
- * RealtimeManager — Smart polling with change detection
- * 
- * Instead of hammering the server every 1 second with full data fetches,
- * this polls a tiny endpoint (check_updates.php) every N seconds. That
- * endpoint returns only timestamps (~200 bytes). Only when a category
- * timestamp changes does the manager fire an event so the page can
- * refresh just that data.
- * 
- * Usage:
- *   // Auto-starts on construction
- *   const realtime = new RealtimeManager({ interval: 5000 });
- * 
- *   // Listen for specific category changes
- *   realtime.on('equipment', () => { reloadEquipmentTable(); });
- *   realtime.on('employees', () => { reloadEmployeeList(); });
- *   realtime.on('*', (category) => { console.log(category + ' changed'); });
- * 
- *   // Temporary pause (e.g. while user is editing a form)
- *   realtime.pause();
- *   realtime.resume();
- * 
- *   // Cleanup
- *   realtime.destroy();
- */
+
 
 class RealtimeManager {
     /**
@@ -192,10 +168,12 @@ class RealtimeManager {
             if (!data.success) throw new Error(data.message || 'Check failed');
 
             this._consecutiveErrors = 0;
+            this._updateBadge(true);
             this._processTimestamps(data.timestamps);
 
         } catch (err) {
             this._consecutiveErrors++;
+            this._updateBadge(false);
             if (this._consecutiveErrors <= 3) {
                 console.warn('[RealtimeManager] Poll error:', err.message,
                     `(retry in ${this._currentInterval() / 1000}s)`);
@@ -234,6 +212,21 @@ class RealtimeManager {
             wildcards.forEach(fn => {
                 try { fn(cat); } catch (e) { console.error('[RealtimeManager] Wildcard listener error:', e); }
             });
+        }
+    }
+
+    /** Update the visual live-badge in the header */
+    _updateBadge(online) {
+        const badge = document.getElementById('realtimeBadge');
+        if (!badge) return;
+        if (online) {
+            badge.classList.remove('offline');
+            badge.innerHTML = '<span class="realtime-dot"></span>';
+            badge.title = 'Real-time updates active';
+        } else {
+            badge.classList.add('offline');
+            badge.innerHTML = '<span class="realtime-dot"></span>';
+            badge.title = 'Connection lost — retrying';
         }
     }
 }

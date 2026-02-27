@@ -640,6 +640,20 @@ function navigateToPage(pageName) {
     }
 }
 
+/**
+ * Call this after a successful AJAX save to instantly push a change check
+ * instead of waiting for the next poll cycle. This ensures the current
+ * user sees their own changes immediately.
+ *
+ * Usage from any page script:
+ *   notifyRealtimeChange();
+ */
+function notifyRealtimeChange() {
+    if (window.dashboardApp && window.dashboardApp.realtime) {
+        window.dashboardApp.realtime.checkNow();
+    }
+}
+
 // Keyboard shortcut: Escape closes dropdown
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {

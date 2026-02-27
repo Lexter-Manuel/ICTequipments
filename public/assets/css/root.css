@@ -1240,3 +1240,7 @@ textarea.form-control {
 [data-theme="dark"] img {
     opacity: 0.92;
 }
+
+.modal-body {
+    overflow: scroll;
+}

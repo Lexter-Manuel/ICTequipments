@@ -232,6 +232,7 @@ require_once '../config/session-check.php';
                             <span id="currentTime"></span>
                         </div>
                     </div>
+                     <span class="realtime-badge" id="realtimeBadge" title="Real-time updates active"><span class="realtime-dot"></span></span>
                 </div>
             </div>
         </header>
