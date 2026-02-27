@@ -17,12 +17,66 @@ class DashboardApp {
         this.init();
     }
     
+    // Map data categories → page names whose cache should be invalidated
+    static CATEGORY_PAGE_MAP = {
+        'equipment':    ['home', 'equipment', 'computer', 'printer', 'otherequipment', 'roster',
+                         'equipment-summary', 'equipment-assignment', 'maintenance-schedule'],
+        'employees':    ['home', 'employees', 'roster', 'equipment-assignment'],
+        'maintenance':  ['home', 'maintenance-schedule', 'maintenance-history', 'perform-maintenance',
+                         'pending-approvals', 'history', 'schedule', 'notifications', 'maintenance-summary'],
+        'software':     ['home', 'software'],
+        'organization': ['home', 'organization', 'divisions', 'sections', 'units'],
+        'accounts':     ['accounts', 'profile'],
+        'settings':     ['settings', 'home'],
+    };
+
     init() {
         this.setupNavigation();
         this.setupMobileMenu();
         this.setupProfileDropdown();
         this.loadInitialPage();
         this.setupAnimations();
+        this.setupRealtime();
+    }
+
+    /**
+     * Setup smart real-time polling
+     * Polls a lightweight endpoint every 5s; only refreshes when data changes
+     */
+    setupRealtime() {
+        if (typeof RealtimeManager === 'undefined') {
+            console.warn('[Dashboard] RealtimeManager not loaded — real-time disabled');
+            return;
+        }
+
+        this.realtime = new RealtimeManager({
+            interval: 5000,           // 5-second check interval
+            pauseOnHidden: true,      // save resources when tab hidden
+        });
+
+        // Listen to every category via wildcard
+        this.realtime.on('*', (category) => {
+            this._handleDataChange(category);
+        });
+    }
+
+    /**
+     * Handle a data-change event from the RealtimeManager
+     * Invalidates relevant page caches and reloads the current page if affected
+     */
+    _handleDataChange(category) {
+        const affectedPages = DashboardApp.CATEGORY_PAGE_MAP[category] || [];
+
+        // Invalidate cached HTML for every affected page
+        affectedPages.forEach(page => {
+            delete this.pageCache[page];
+        });
+
+        // If the user is currently viewing an affected page, silently refresh it
+        if (affectedPages.includes(this.currentPage)) {
+            console.log(`[Realtime] "${category}" changed → refreshing "${this.currentPage}"`);
+            this.reloadPage();
+        }
     }
     
     /**
@@ -82,6 +136,9 @@ class DashboardApp {
      * @param {boolean} useCache - Whether to use cached version
      */
     async loadPage(pageName, useCache = true) {
+        // Save sub-tab state before navigating away
+        this.saveSubTabState();
+
         // Check cache first
         if (useCache && this.pageCache[pageName]) {
             this.renderPage(this.pageCache[pageName], pageName);
@@ -169,6 +226,10 @@ class DashboardApp {
     renderPage(html, pageName) {
         this.contentArea.innerHTML = html;
         this.currentPage = pageName;
+
+        // Keep URL clean — persist page via sessionStorage only
+        history.replaceState({ page: pageName }, '');
+        sessionStorage.setItem('nia-active-page', pageName);
         
         // Update sidebar active state
         this.updateSidebarActive(pageName);
@@ -183,6 +244,9 @@ class DashboardApp {
         if (window.initPage && typeof window.initPage === 'function') {
             window.initPage();
         }
+
+        // Restore sub-tab state after page renders
+        this.restoreSubTabState(pageName);
         
         // Add fade-in animation
         this.contentArea.classList.add('page-content');
@@ -363,10 +427,40 @@ class DashboardApp {
     }
     
     /**
-     * Load initial page (dashboard home)
+     * Load initial page – restores last active page from URL hash or sessionStorage
      */
     loadInitialPage() {
-        this.loadPage('home');
+        var page = 'home';
+
+        // Restore last active page from sessionStorage
+        var saved = sessionStorage.getItem('nia-active-page');
+        if (saved && this.getPageMap()[saved]) {
+            page = saved;
+        }
+
+        // Strip any leftover hash from the URL
+        if (window.location.hash) {
+            history.replaceState(null, '', window.location.pathname);
+        }
+
+        this.loadPage(page);
+    }
+
+    /**
+     * Returns the page map for validation
+     */
+    getPageMap() {
+        return {
+            'home': true, 'roster': true, 'employees': true, 'equipment': true,
+            'computer': true, 'printer': true, 'software': true, 'otherequipment': true,
+            'organization': true, 'divisions': true, 'sections': true, 'units': true,
+            'maintenance-schedule': true, 'maintenance-templates': true,
+            'equipment-assignment': true, 'perform-maintenance': true,
+            'pending-approvals': true, 'maintenance-history': true,
+            'schedule': true, 'history': true, 'notifications': true,
+            'equipment-summary': true, 'maintenance-summary': true,
+            'audit-trail': true, 'accounts': true, 'profile': true, 'settings': true
+        };
     }
     
     /**
@@ -398,10 +492,125 @@ class DashboardApp {
     }
     
     /**
-     * Reload current page (refresh)
+     * Reload current page (refresh) while preserving sub-tab state
      */
     reloadPage() {
+        this.saveSubTabState();
         this.loadPage(this.currentPage, false);
+    }
+
+    /**
+     * Save active sub-tab state to sessionStorage
+     */
+    saveSubTabState() {
+        var state = {};
+
+        // Equipment category tabs (e.g. category-computers, category-printers)
+        var activeCategory = this.contentArea.querySelector('.category-content.active');
+        if (activeCategory && activeCategory.id) {
+            state.category = activeCategory.id.replace('category-', '');
+        }
+
+        // Equipment sub-tabs (e.g. subtab-systemunits, subtab-monitors)
+        var activeSubTab = this.contentArea.querySelector('.sub-tab-content.active');
+        if (activeSubTab && activeSubTab.id) {
+            state.subtab = activeSubTab.id.replace('subtab-', '');
+        }
+
+        // Organization tabs (data-tab attribute)
+        var activeOrgTab = this.contentArea.querySelector('.org-tab.active');
+        if (activeOrgTab && activeOrgTab.dataset.tab) {
+            state.orgTab = activeOrgTab.dataset.tab;
+        }
+
+        // Maintenance division-view sub-tabs
+        var activeDvPanel = this.contentArea.querySelector('.dv-panel.dv-panel-active');
+        if (activeDvPanel && activeDvPanel.id) {
+            state.dvPanel = activeDvPanel.id;
+        }
+
+        if (Object.keys(state).length > 0) {
+            sessionStorage.setItem('nia-subtab-state', JSON.stringify(state));
+        }
+    }
+
+    /**
+     * Restore sub-tab state from sessionStorage after page renders
+     */
+    restoreSubTabState(pageName) {
+        var raw = sessionStorage.getItem('nia-subtab-state');
+        if (!raw) return;
+
+        try {
+            var state = JSON.parse(raw);
+        } catch (e) { return; }
+
+        // Clear after reading so it only applies once
+        sessionStorage.removeItem('nia-subtab-state');
+
+        // Use requestAnimationFrame to ensure DOM is ready
+        requestAnimationFrame(() => {
+            // Equipment category tabs
+            if (state.category) {
+                var catBtn = this.contentArea.querySelector('#categoryTabs .toggle-btn');
+                var catBtns = this.contentArea.querySelectorAll('#categoryTabs .toggle-btn');
+                var targetCat = document.getElementById('category-' + state.category);
+                if (targetCat) {
+                    this.contentArea.querySelectorAll('.category-content').forEach(c => c.classList.remove('active'));
+                    catBtns.forEach(b => b.classList.remove('active'));
+                    targetCat.classList.add('active');
+                    // Find and activate the matching button
+                    catBtns.forEach(b => {
+                        if (b.getAttribute('onclick') && b.getAttribute('onclick').includes("'" + state.category + "'")) {
+                            b.classList.add('active');
+                        }
+                    });
+                }
+            }
+
+            // Equipment sub-tabs
+            if (state.subtab) {
+                var subBtns = this.contentArea.querySelectorAll('.subtoggle-btn');
+                var targetSub = document.getElementById('subtab-' + state.subtab);
+                if (targetSub) {
+                    this.contentArea.querySelectorAll('.sub-tab-content').forEach(c => c.classList.remove('active'));
+                    subBtns.forEach(b => b.classList.remove('active'));
+                    targetSub.classList.add('active');
+                    subBtns.forEach(b => {
+                        if (b.getAttribute('onclick') && b.getAttribute('onclick').includes("'" + state.subtab + "'")) {
+                            b.classList.add('active');
+                        }
+                    });
+                }
+            }
+
+            // Organization tabs
+            if (state.orgTab) {
+                var orgTabs = this.contentArea.querySelectorAll('#orgTabs .org-tab');
+                var orgPanels = this.contentArea.querySelectorAll('.org-tab-panel');
+                var targetOrgPanel = document.getElementById('panel-' + state.orgTab);
+                if (targetOrgPanel) {
+                    orgTabs.forEach(t => t.classList.remove('active'));
+                    orgPanels.forEach(p => p.classList.remove('active'));
+                    targetOrgPanel.classList.add('active');
+                    orgTabs.forEach(t => {
+                        if (t.dataset.tab === state.orgTab) t.classList.add('active');
+                    });
+                }
+            }
+
+            // Maintenance division-view sub-tabs
+            if (state.dvPanel) {
+                // Determine which type based on panel id prefix
+                if (state.dvPanel.includes('Sched') && typeof switchSchedSubtab === 'function') {
+                    var tab = state.dvPanel.replace('dvSchedPanel', '').toLowerCase();
+                    switchSchedSubtab(tab);
+                } else if (state.dvPanel.includes('Hist') && typeof switchHistSubtab === 'function') {
+                    var tab = state.dvPanel.replace('dvHistPanel', '').toLowerCase();
+                    switchHistSubtab(tab);
+                }
+            }
+        });
     }
     
     /**

@@ -117,20 +117,33 @@ $employees = $stmtEmployees->fetchAll();
         </div>
     </div>
 
-    <div class="filters-bar">
-        <div class="filter-group" style="flex:1">
-            <label><i class="fas fa-search"></i> Search:</label>
-            <input type="text" id="systemunitSearch" placeholder="Serial, brand, processor..." oninput="filterSystemUnits()">
+    <div class="data-table-container">
+        <div class="table-header">
+            <h2 class="table-title"><i class="fas fa-list"></i> System Unit Inventory</h2>
+            <div class="table-controls">
+                <div class="filter-group">
+                    <select id="suStatusFilter" onchange="filterSystemUnits()">
+                        <option value="">All Statuses</option>
+                        <option value="Operational">Operational</option>
+                        <option value="For Replacement">For Replacement</option>
+                        <option value="Disposed">Disposed</option>
+                    </select>
+                </div>
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="systemunitSearch" placeholder="Search serial, brand, processor..." oninput="filterSystemUnits()">
+                </div>
+                <button class="btn btn-primary" onclick="openAddSystemUnit()">
+                    <i class="fas fa-plus"></i> Add System Unit
+                </button>
+            </div>
         </div>
-        <button class="btn btn-primary" onclick="openAddSystemUnit()">
-            <i class="fas fa-plus"></i> Add System Unit
-        </button>
-    </div>
 
     <div class="data-table">
         <table>
             <thead>
                 <tr>
+                    <th>#</th>
                     <th>Serial Number</th>
                     <th>Brand &amp; Category</th>
                     <th>Specifications</th>
@@ -145,6 +158,7 @@ $employees = $stmtEmployees->fetchAll();
                 <?php foreach ($systemUnits as $s): ?>
                 <?php $status = $s['employeeId'] ? 'Active' : 'Available'; ?>
                 <tr>
+                    <td class="row-counter"></td>
                     <td><span class="serial-number"><?php echo htmlspecialchars($s['systemUnitSerial']); ?></span></td>
                     <td>
                         <div style="font-weight:600;color:var(--text-dark)"><?php echo htmlspecialchars($s['systemUnitBrand']); ?></div>
@@ -197,6 +211,7 @@ $employees = $stmtEmployees->fetchAll();
             </label>
         </div>
     </div>
+    </div>
 </div>
 
 <!-- ══ MONITORS TAB ══ -->
@@ -216,20 +231,33 @@ $employees = $stmtEmployees->fetchAll();
         </div>
     </div>
 
-    <div class="filters-bar">
-        <div class="filter-group" style="flex:1">
-            <label><i class="fas fa-search"></i> Search:</label>
-            <input type="text" id="monitorSearch" placeholder="Serial, brand, size..." oninput="filterMonitors()">
+    <div class="data-table-container">
+        <div class="table-header">
+            <h2 class="table-title"><i class="fas fa-list"></i> Monitor Inventory</h2>
+            <div class="table-controls">
+                <div class="filter-group">
+                    <select id="monStatusFilter" onchange="filterMonitors()">
+                        <option value="">All Statuses</option>
+                        <option value="Operational">Operational</option>
+                        <option value="For Replacement">For Replacement</option>
+                        <option value="Disposed">Disposed</option>
+                    </select>
+                </div>
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="monitorSearch" placeholder="Search serial, brand, size..." oninput="filterMonitors()">
+                </div>
+                <button class="btn btn-primary" onclick="openAddMonitor()">
+                    <i class="fas fa-plus"></i> Add Monitor
+                </button>
+            </div>
         </div>
-        <button class="btn btn-primary" onclick="openAddMonitor()">
-            <i class="fas fa-plus"></i> Add Monitor
-        </button>
-    </div>
 
     <div class="data-table">
         <table>
             <thead>
                 <tr>
+                    <th>#</th>
                     <th>Serial Number</th>
                     <th>Brand &amp; Model</th>
                     <th>Size</th>
@@ -244,6 +272,7 @@ $employees = $stmtEmployees->fetchAll();
                 <?php foreach ($monitors as $m): ?>
                 <?php $status = $m['employeeId'] ? 'Active' : 'Available'; ?>
                 <tr>
+                    <td class="row-counter"></td>
                     <td><span class="serial-number"><?php echo htmlspecialchars($m['monitorSerial']); ?></span></td>
                     <td><div style="font-weight:600;color:var(--text-dark)"><?php echo htmlspecialchars($m['monitorBrand']); ?></div></td>
                     <td><?php echo htmlspecialchars($m['monitorSize'] ?? 'N/A'); ?></td>
@@ -287,6 +316,7 @@ $employees = $stmtEmployees->fetchAll();
             </label>
         </div>
     </div>
+    </div>
 </div>
 
 <!-- ══ ALL-IN-ONE TAB ══ -->
@@ -306,20 +336,34 @@ $employees = $stmtEmployees->fetchAll();
         </div>
     </div>
 
-    <div class="filters-bar">
-        <div class="filter-group" style="flex:1">
-            <label><i class="fas fa-search"></i> Search:</label>
-            <input type="text" id="allinoneSearch" placeholder="Brand, processor..." oninput="filterAllInOnes()">
+    <div class="data-table-container">
+        <div class="table-header">
+            <h2 class="table-title"><i class="fas fa-list"></i> All-in-One Inventory</h2>
+            <div class="table-controls">
+                <div class="filter-group">
+                    <select id="aioStatusFilter" onchange="filterAllInOnes()">
+                        <option value="">All Statuses</option>
+                        <option value="Operational">Operational</option>
+                        <option value="For Replacement">For Replacement</option>
+                        <option value="Disposed">Disposed</option>
+                    </select>
+                </div>
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="allinoneSearch" placeholder="Search brand, serial, processor..." oninput="filterAllInOnes()">
+                </div>
+                <button class="btn btn-primary" onclick="openAddAllInOne()">
+                    <i class="fas fa-plus"></i> Add All-in-One
+                </button>
+            </div>
         </div>
-        <button class="btn btn-primary" onclick="openAddAllInOne()">
-            <i class="fas fa-plus"></i> Add All-in-One
-        </button>
-    </div>
 
     <div class="data-table">
         <table>
             <thead>
                 <tr>
+                    <th>#</th>
+                    <th>Serial Number</th>
                     <th>Brand &amp; Model</th>
                     <th>Specifications</th>
                     <th>Assigned To</th>
@@ -332,6 +376,8 @@ $employees = $stmtEmployees->fetchAll();
                 <?php foreach ($allInOnes as $a): ?>
                 <?php $status = $a['employeeId'] ? 'Active' : 'Available'; ?>
                 <tr>
+                    <td class="row-counter"></td>
+                    <td><span class="serial-number"><?php echo htmlspecialchars($a['allinoneSerial'] ?? 'N/A'); ?></span></td>
                     <td><div style="font-weight:600;color:var(--text-dark)"><?php echo htmlspecialchars($a['allinoneBrand']); ?></div></td>
                     <td>
                         <div class="spec-item"><i class="fas fa-microchip"></i><span class="spec-value"><?php echo htmlspecialchars($a['specificationProcessor']); ?></span></div>
@@ -376,6 +422,7 @@ $employees = $stmtEmployees->fetchAll();
                 </select>
             </label>
         </div>
+    </div>
     </div>
 </div>
 
@@ -526,9 +573,13 @@ $employees = $stmtEmployees->fetchAll();
                     <div class="form-section">
                         <h6 class="form-section-title"><i class="fas fa-info-circle"></i> Device Information</h6>
                         <div class="row mb-3">
-                            <div class="col-md-12">
+                            <div class="col-md-6">
                                 <label for="aioBrand" class="form-label">Brand &amp; Model *</label>
                                 <input type="text" class="form-control" id="aioBrand" required placeholder="e.g., HP All-in-One 24-df1033">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="aioSerial" class="form-label">Serial Number *</label>
+                                <input type="text" class="form-control" id="aioSerial" required placeholder="e.g., AIO-SN12345">
                             </div>
                         </div>
                         <div class="row mb-3">

@@ -63,8 +63,10 @@ switch ($action) {
         $currentPw = $input['current_password'] ?? '';
         $newPw = $input['new_password'] ?? '';
 
-        if (strlen($newPw) < 8) {
-            jsonResponse(['success' => false, 'message' => 'New password must be at least 8 characters']);
+        $minPwLen = (int) getSystemSetting('password_min_length', 8);
+        if ($minPwLen < 6) $minPwLen = 8;
+        if (strlen($newPw) < $minPwLen) {
+            jsonResponse(['success' => false, 'message' => "New password must be at least {$minPwLen} characters"]);
         }
 
         // Verify current password

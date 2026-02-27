@@ -81,7 +81,7 @@ async function loadDetailedHistory(page = 1) {
     var sectionUnit = document.getElementById('histSectionUnitFilter')?.value || '';
     var tbody  = document.getElementById('histDetailedBody');
 
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:60px;color:var(--text-light);">
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:60px;color:var(--text-light);">
         <i class="fas fa-spinner fa-spin" style="font-size:1.5rem;"></i>
         <div style="margin-top:10px;">Loading…</div></td></tr>`;
 
@@ -96,7 +96,7 @@ async function loadDetailedHistory(page = 1) {
         var pag  = res.pagination;
 
         if (!rows.length) {
-            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:60px;color:var(--text-light);font-style:italic;">
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:60px;color:var(--text-light);font-style:italic;">
                 <i class="fas fa-inbox" style="font-size:2rem;display:block;margin-bottom:10px;"></i>
                 No maintenance records found for the selected filters.</td></tr>`;
             document.getElementById('histRecordCount').textContent = 'No records found';
@@ -105,7 +105,8 @@ async function loadDetailedHistory(page = 1) {
         }
 
         var html = '';
-        rows.forEach(r => {
+        var rowStart = (pag.page - 1) * pag.limit;
+        rows.forEach((r, idx) => {
             var dateLabel = formatDate(r.maintenanceDate);
             var timeLabel = formatTime(r.maintenanceDate);
             var cond      = r.conditionRating || 'Good';
@@ -116,6 +117,7 @@ async function loadDetailedHistory(page = 1) {
 
             html += `
             <tr>
+                <td class="row-counter">${rowStart + idx + 1}</td>
                 <td>
                     <div class="mnt-date-primary completed">${escHtml(dateLabel)}</div>
                     <div class="mnt-date-sub">${escHtml(timeLabel)}</div>
@@ -158,7 +160,7 @@ async function loadDetailedHistory(page = 1) {
 
     } catch (e) {
         console.error('Failed to load detailed history:', e);
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--color-danger);">
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--color-danger);">
             <i class="fas fa-exclamation-triangle"></i> Failed to load data: ${escHtml(e.message)}</td></tr>`;
     }
 }
@@ -509,7 +511,7 @@ function renderHistAll(assets) {
     var tbody = document.getElementById('dvHistAllBody');
 
     if (!assets.length) {
-        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:40px; color:var(--text-light); font-style:italic;">No records match the selected filter.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:40px; color:var(--text-light); font-style:italic;">No records match the selected filter.</td></tr>`;
         return;
     }
 
@@ -517,11 +519,12 @@ function renderHistAll(assets) {
     assets.sort((a, b) => (b.maintenanceDate || '').localeCompare(a.maintenanceDate || ''));
 
     var html = '';
-    assets.forEach(a => {
+    assets.forEach((a, idx) => {
         var cond = a.conditionRating || 'Good';
         var tn   = a.type_name || 'System Unit';
         html += `
             <tr>
+                <td class="row-counter">${idx + 1}</td>
                 <td>
                     <div class="mnt-equip-cell">
                         <div class="mnt-equip-icon ${getTypeClass(tn)}"><i class="fas ${getIcon(tn)}"></i></div>

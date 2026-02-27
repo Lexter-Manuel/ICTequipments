@@ -68,6 +68,31 @@ function verifyCSRFToken($token) {
 }
 
 /**
+ * Get a single system setting from the database.
+ * Falls back to $default if the key is missing or the table doesn't exist.
+ *
+ * @param string $key     The setting_key to look up
+ * @param mixed  $default Fallback value
+ * @return string|mixed
+ */
+function getSystemSetting(string $key, $default = '') {
+    static $cache = [];
+    if (array_key_exists($key, $cache)) {
+        return $cache[$key];
+    }
+    try {
+        $db = Database::getInstance()->getConnection();
+        $stmt = $db->prepare("SELECT setting_value FROM system_settings WHERE setting_key = ? LIMIT 1");
+        $stmt->execute([$key]);
+        $val = $stmt->fetchColumn();
+        $cache[$key] = ($val !== false) ? $val : $default;
+    } catch (PDOException $e) {
+        $cache[$key] = $default;
+    }
+    return $cache[$key];
+}
+
+/**
  * Sanitize Input
  */
 function sanitizeInput($data) {
@@ -164,7 +189,7 @@ define('ACTION_RESTORE', 'RESTORE');
 // --- Data operations ---
 define('ACTION_EXPORT',  'EXPORT');
 define('ACTION_IMPORT',  'IMPORT');
-define('ACTION_VIEW',    'VIEW');      // use sparingly – only sensitive views
+define('ACTION_VIEW',    'VIEW');
 
 // --- Module constants (WHERE) ---
 define('MODULE_EMPLOYEES',         'Employees');
@@ -196,6 +221,16 @@ function logActivity(string $action, ?string $module = null, ?string $descriptio
     try {
         $db = Database::getInstance()->getConnection();
 
+        // Honour the enable_activity_log system setting (default: enabled)
+        $loggingEnabled = true;
+        try {
+            $chk = $db->prepare("SELECT setting_value FROM system_settings WHERE setting_key = 'enable_activity_log' LIMIT 1");
+            $chk->execute();
+            $val = $chk->fetchColumn();
+            if ($val === '0') $loggingEnabled = false;
+        } catch (PDOException $e) { /* table may not exist yet */ }
+        if (!$loggingEnabled) return;
+
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
@@ -221,8 +256,54 @@ function logActivity(string $action, ?string $module = null, ?string $descriptio
             ':success'     => $success ? 1 : 0,
         ]);
 
+        // ── Auto-notify real-time change tracker ──
+        if ($success && $module) {
+            notifyDataChange($module);
+        }
+
     } catch (PDOException $e) {
         error_log("Activity Log Error: " . $e->getMessage());
+    }
+}
+
+/**
+ * Notify the real-time change tracker that a data category was modified.
+ * Maps MODULE_* constants to tracker categories and touches the timestamp.
+ * This is ultra-cheap: a single UPSERT on a tiny table.
+ *
+ * @param string $module One of the MODULE_* constants, or a tracker category name directly
+ */
+function notifyDataChange(string $module): void {
+    // Map MODULE_* constants → tracker categories
+    static $categoryMap = [
+        'Computers'         => 'equipment',
+        'Printers'          => 'equipment',
+        'Other Equipment'   => 'equipment',
+        'Employees'         => 'employees',
+        'Maintenance'       => 'maintenance',
+        'Software Licenses' => 'software',
+        'Divisions'         => 'organization',
+        'Sections'          => 'organization',
+        'Units'             => 'organization',
+        'Organization'      => 'organization',
+        'Accounts'          => 'accounts',
+        'Settings'          => 'settings',
+        'Profile'           => 'accounts',
+    ];
+
+    $category = $categoryMap[$module] ?? strtolower($module);
+
+    try {
+        $db = Database::getInstance()->getConnection();
+        $stmt = $db->prepare("
+            INSERT INTO data_change_tracker (category, updated_at)
+            VALUES (:cat, NOW(3))
+            ON DUPLICATE KEY UPDATE updated_at = NOW(3)
+        ");
+        $stmt->execute([':cat' => $category]);
+    } catch (PDOException $e) {
+        // Non-critical — never break the main operation
+        error_log("Change Tracker Error: " . $e->getMessage());
     }
 }
 

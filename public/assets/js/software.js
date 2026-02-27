@@ -57,6 +57,7 @@ function applyTableState() {
     }
 
     renderPaginationControls('paginationControls', currentPage, totalPages, 'goToPage');
+    updateRowCounters('softwareTableBody', total === 0 ? 0 : start + 1);
 }
 
 function goToPage(page) {
@@ -134,7 +135,7 @@ function saveSoftware() {
         if (data.success) {
             alert(data.message);
             bootstrap.Modal.getInstance(document.getElementById('softwareModal')).hide();
-            location.reload();
+            reloadCurrentPage();
         } else {
             alert('Error: ' + data.message);
         }
@@ -160,7 +161,7 @@ function deleteSoftware(id) {
     .then(data => {
         if (data.success) {
             alert(data.message);
-            location.reload();
+            reloadCurrentPage();
         } else {
             alert('Error: ' + data.message);
         }

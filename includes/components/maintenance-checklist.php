@@ -350,7 +350,7 @@ function submitMaintenance() {
         alert('Maintenance record submitted successfully!\n\nThe next maintenance due date has been updated.');
         
         setTimeout(() => {
-            window.location.href = '?page=maintenance-history';
+            navigateToPage('maintenance-history');
         }, 1500);
     }
 }

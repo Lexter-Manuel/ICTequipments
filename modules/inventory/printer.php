@@ -84,8 +84,9 @@ $availableCount = count(array_filter($printers, fn($p) => $p['employeeId'] == nu
             <div class="filter-group">
                 <select id="statusFilter" onchange="filterPrinters()">
                     <option value="">All Statuses</option>
-                    <option value="Working">Working</option>
-                    <option value="Available">Available</option>
+                    <option value="Operational">Operational</option>
+                    <option value="For Replacement">For Replacement</option>
+                    <option value="Disposed">Disposed</option>
                 </select>
             </div>
             <div class="search-box">
@@ -99,6 +100,7 @@ $availableCount = count(array_filter($printers, fn($p) => $p['employeeId'] == nu
         <table id="printerTable">
             <thead>
                 <tr>
+                    <th>#</th>
                     <th>Serial Number</th>
                     <th>Brand &amp; Model</th>
                     <th>Year Acquired</th>
@@ -110,7 +112,7 @@ $availableCount = count(array_filter($printers, fn($p) => $p['employeeId'] == nu
             </thead>
             <tbody id="printerTableBody">
                 <?php if (empty($printers)): ?>
-                <tr><td colspan="7" class="empty-state"><i class="fas fa-inbox"></i><p>No printer records found</p></td></tr>
+                <tr><td colspan="8" class="empty-state"><i class="fas fa-inbox"></i><p>No printer records found</p></td></tr>
                 <?php else: ?>
                     <?php foreach ($printers as $p):
                         $status = $p['employeeId'] ? 'Working' : 'Available';
@@ -122,6 +124,7 @@ $availableCount = count(array_filter($printers, fn($p) => $p['employeeId'] == nu
                         data-employee="<?php echo strtolower($p['employeeName'] ?? ''); ?>"
                         data-year="<?php echo $p['yearAcquired'] ?? ''; ?>"
                         data-status="<?php echo $status; ?>">
+                        <td class="row-counter"></td>
                         <td><span class="serial-number"><?php echo htmlspecialchars($p['printerSerial'] ?? 'N/A'); ?></span></td>
                         <td>
                             <div class="brand-model">

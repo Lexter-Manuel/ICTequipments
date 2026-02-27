@@ -95,6 +95,7 @@
                 <table class="mnt-table">
                     <thead>
                         <tr>
+                            <th>#</th>
                             <th>Due Date</th>
                             <th>Equipment</th>
                             <th>Location / Owner</th>
@@ -104,7 +105,7 @@
                         </tr>
                     </thead>
                     <tbody id="schedDetailedBody">
-                        <tr><td colspan="6" class="text-center py-4"><span class="spinner-border spinner-border-sm me-2"></span> Loading schedule…</td></tr>
+                        <tr><td colspan="7" class="text-center py-4"><span class="spinner-border spinner-border-sm me-2"></span> Loading schedule…</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -194,6 +195,7 @@
                                 <table class="dv-group-table" id="dvSchedAllTable">
                                     <thead>
                                         <tr>
+                                            <th>#</th>
                                             <th>Equipment</th>
                                             <th>Unit / Section</th>
                                             <th>Owner</th>

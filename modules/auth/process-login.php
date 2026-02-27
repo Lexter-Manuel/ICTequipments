@@ -58,21 +58,28 @@ try {
     $ipAddress = getClientIP();
     $db = Database::getInstance()->getConnection();
     
+    // Read login-security settings from DB (fall back to constants)
+    $maxAttempts    = (int) getSystemSetting('max_login_attempts', MAX_LOGIN_ATTEMPTS);
+    $lockoutSeconds = (int) getSystemSetting('lockout_duration', LOGIN_LOCKOUT_TIME);
+    if ($maxAttempts < 3)  $maxAttempts    = MAX_LOGIN_ATTEMPTS;
+    if ($lockoutSeconds < 60) $lockoutSeconds = LOGIN_LOCKOUT_TIME;
+    $lockoutMinutes = ceil($lockoutSeconds / 60);
+
     // Check failed login attempts
     $stmt = $db->prepare("
         SELECT COUNT(*) as attempts 
         FROM login_attempts 
         WHERE ip_address = ? 
-        AND attempt_time > DATE_SUB(NOW(), INTERVAL 1 MINUTE)
+        AND attempt_time > DATE_SUB(NOW(), INTERVAL ? SECOND)
         AND success = 0
     ");
-    $stmt->execute([$ipAddress]);
+    $stmt->execute([$ipAddress, $lockoutSeconds]);
     $attempts = $stmt->fetch();
     
-    if ($attempts['attempts'] >= MAX_LOGIN_ATTEMPTS) {
+    if ($attempts['attempts'] >= $maxAttempts) {
         jsonResponse([
             'success' => false,
-            'message' => 'Too many failed login attempts. Please try again in 1 minute.'
+            'message' => "Too many failed login attempts. Please try again in {$lockoutMinutes} minute(s)."
         ], 429);
     }
     
@@ -155,7 +162,7 @@ try {
     $stmt->execute([$ipAddress]);
     
     // Check if there's a redirect URL
-    $redirect = $_SESSION['redirect_after_login'] ?? '../../public/dashboard.php';
+    $redirect = $_SESSION['redirect_after_login'] ?? '/ictequipment/';
     unset($_SESSION['redirect_after_login']);
     
     jsonResponse([

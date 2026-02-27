@@ -397,7 +397,7 @@ function renderMaintenanceForm(template, container) {
     const isModal = !document.getElementById('selectAsset');
     const cancelAction = isModal
         ? `document.getElementById('maintenanceModal')?.querySelector('[data-bs-dismiss]')?.click()`
-        : `location.reload()`;
+        : `reloadCurrentPage()`;
 
     const html = `
     <div class="mc-card">
@@ -684,7 +684,7 @@ function saveMaintenanceRecord() {
                 return;
             }
             alert('Maintenance record submitted successfully!');
-            location.reload();
+            reloadCurrentPage();
         } else {
             alert('Error: ' + res.message);
             if (submitBtn) {

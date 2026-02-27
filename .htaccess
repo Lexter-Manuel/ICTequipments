@@ -1,0 +1,14 @@
+RewriteEngine On
+RewriteBase /ictequipment/
+
+# Redirect direct hits to public/dashboard.php back to clean root URL
+RewriteCond %{THE_REQUEST} \s/ictequipment/public/dashboard\.php[\s?#] [NC]
+RewriteRule ^ /ictequipment/ [R=302,L]
+
+# Rewrite clean root URL to public/dashboard.php (BEFORE file/dir check)
+RewriteRule ^(index\.php)?$ public/dashboard.php [L]
+
+# Don't rewrite other requests for actual files or directories
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]

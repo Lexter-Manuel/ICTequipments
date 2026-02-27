@@ -63,6 +63,7 @@ require_once '../../config/database.php';
         <table class="audit-table">
             <thead>
                 <tr>
+                    <th>#</th>
                     <th>Timestamp</th>
                     <th>User</th>
                     <th>Action</th>
@@ -74,7 +75,7 @@ require_once '../../config/database.php';
             </thead>
             <tbody id="auditTableBody">
                 <tr>
-                    <td colspan="7">
+                    <td colspan="8">
                         <div class="audit-empty">
                             <i class="fas fa-spinner fa-spin"></i>
                             <p>Loading audit trail...</p>
@@ -140,13 +141,13 @@ function loadAuditTrail(page) {
     });
 
     var tbody = document.getElementById('auditTableBody');
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--text-light);"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--text-light);"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>';
 
     fetch('../ajax/get_audit_trail.php?' + params.toString())
         .then(function(r) { return r.json(); })
         .then(function(resp) {
             if (!resp.success) {
-                tbody.innerHTML = '<tr><td colspan="7"><div class="audit-empty"><i class="fas fa-exclamation-circle"></i><p>Error loading data</p></div></td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8"><div class="audit-empty"><i class="fas fa-exclamation-circle"></i><p>Error loading data</p></div></td></tr>';
                 return;
             }
 
@@ -157,13 +158,15 @@ function loadAuditTrail(page) {
 
             var data = resp.data;
             if (!data.length) {
-                tbody.innerHTML = '<tr><td colspan="7"><div class="audit-empty"><i class="fas fa-clipboard-check"></i><p>No activity logs found</p></div></td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8"><div class="audit-empty"><i class="fas fa-clipboard-check"></i><p>No activity logs found</p></div></td></tr>';
                 document.getElementById('auditPagination').style.display = 'none';
                 return;
             }
 
             var html = '';
-            data.forEach(function(row) {
+            var pag   = resp.pagination;
+            var rowStart = (pag.page - 1) * pag.per_page;
+            data.forEach(function(row, idx) {
                 var dt      = new Date(row.timestamp);
                 var dateStr = dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
                 var timeStr = dt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -177,6 +180,9 @@ function loadAuditTrail(page) {
                 var statusTxt  = isSuccess ? 'Success' : 'Failed';
 
                 html += '<tr>';
+
+                // Row counter
+                html += '<td class="row-counter" style="font-family:var(--font-mono);font-weight:600;font-size:0.8rem;color:var(--text-medium);">' + (rowStart + idx + 1) + '</td>';
 
                 // Timestamp
                 html += '<td style="white-space:nowrap;">'
@@ -228,7 +234,6 @@ function loadAuditTrail(page) {
             tbody.innerHTML = html;
 
             // Pagination
-            var pag   = resp.pagination;
             auditTotalPages = pag.total_pages;
             var start = (pag.page - 1) * pag.per_page + 1;
             var end   = Math.min(pag.page * pag.per_page, pag.total);
@@ -253,7 +258,7 @@ function loadAuditTrail(page) {
         })
         .catch(function(e) {
             console.error('Audit trail error:', e);
-            tbody.innerHTML = '<tr><td colspan="7"><div class="audit-empty"><i class="fas fa-exclamation-triangle"></i><p>Failed to load audit trail</p></div></td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8"><div class="audit-empty"><i class="fas fa-exclamation-triangle"></i><p>Failed to load audit trail</p></div></td></tr>';
         });
 }
 

@@ -98,18 +98,24 @@ function deleteAccount(id, name) {
 }
 
 function postAction(data) {
-    var form = document.createElement('form');
-    form.method = 'POST';
-    form.action = `${BASE_URL}ajax/process_account.php`;
+    var formData = new FormData();
     for (var [key, value] of Object.entries(data)) {
-        var input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = key;
-        input.value = value;
-        form.appendChild(input);
+        formData.append(key, value);
     }
-    document.body.appendChild(form);
-    form.submit();
+    fetch(`${BASE_URL}ajax/process_account.php`, {
+        method: 'POST',
+        body: formData,
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(r => r.json())
+    .then(result => {
+        alert(result.message);
+        reloadCurrentPage();
+    })
+    .catch(err => {
+        alert('Error: ' + err);
+        reloadCurrentPage();
+    });
 }
 
 /* ---- Confirm Modal ---- */
@@ -148,13 +154,19 @@ function filterTable() {
     var query = document.getElementById('searchInput').value.toLowerCase();
     var statusFilter = document.getElementById('statusFilter').value;
     var rows = document.querySelectorAll('#accountsTable tbody tr[data-status]');
+    var counter = 1;
 
     rows.forEach(row => {
         var text = row.textContent.toLowerCase();
         var status = row.dataset.status;
         var matchSearch = text.includes(query);
         var matchStatus = !statusFilter || status === statusFilter;
-        row.style.display = matchSearch && matchStatus ? '' : 'none';
+        var visible = matchSearch && matchStatus;
+        row.style.display = visible ? '' : 'none';
+        var counterCell = row.querySelector('td.row-counter');
+        if (counterCell && visible) {
+            counterCell.textContent = counter++;
+        }
     });
 }
 
@@ -222,25 +234,39 @@ function togglePassword(fieldId) {
 
 /* ---- Form Submit Validation ---- */
 document.getElementById('accountForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+
     var pw = document.getElementById('password').value;
     var cpw = document.getElementById('confirmPassword').value;
     var action = document.getElementById('formAction').value;
 
     if (action === 'add' && !pw) {
-        e.preventDefault();
         alert('Password is required when creating a new account.');
         return;
     }
 
     if (pw && pw !== cpw) {
-        e.preventDefault();
         alert('Passwords do not match. Please re-enter.');
         return;
     }
 
     if (pw && pw.length < 8) {
-        e.preventDefault();
         alert('Password must be at least 8 characters long.');
         return;
     }
+
+    var formData = new FormData(this);
+    fetch(`${BASE_URL}ajax/process_account.php`, {
+        method: 'POST',
+        body: formData,
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(r => r.json())
+    .then(result => {
+        alert(result.message);
+        if (result.success) {
+            reloadCurrentPage();
+        }
+    })
+    .catch(err => alert('Error: ' + err));
 });

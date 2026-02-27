@@ -13,12 +13,12 @@ try {
     // Load all queries from shared include
     require_once __DIR__ . '/../../includes/queries/equipment_summary_queries.php';
 
-    // Build query string for print URL
-    $printParams = [];
-    if ($filterDivision !== '') $printParams['division'] = $filterDivision;
-    if ($filterEqType   !== '') $printParams['eq_type']  = $filterEqType;
-    if ($filterYear     !== '') $printParams['year']     = $filterYear;
-    $printQuery = !empty($printParams) ? '?' . http_build_query($printParams) : '';
+    // Build query string for export URL
+    $exportParams = [];
+    if ($filterDivision !== '') $exportParams['division'] = $filterDivision;
+    if ($filterEqType   !== '') $exportParams['eq_type']  = $filterEqType;
+    if ($filterYear     !== '') $exportParams['year']     = $filterYear;
+    $exportQuery = !empty($exportParams) ? '?' . http_build_query($exportParams) : '';
 
 } catch (PDOException $e) {
     error_log("Equipment summary error: " . $e->getMessage());
@@ -32,7 +32,7 @@ try {
         <h2><i class="fas fa-boxes"></i> Equipment Summary Report</h2>
         <div style="display: flex; gap: 0.5rem; align-items: center;">
             <button class="print-btn" id="toggleEqFilters" onclick="document.getElementById('eqFilterPanel').classList.toggle('open')"><i class="fas fa-filter"></i> Filters</button>
-            <button class="print-btn" onclick="window.open('../includes/generative/generate_equipment_summary.php<?= $printQuery ?>', '_blank')"><i class="fas fa-print"></i> Print Report</button>
+            <button class="print-btn" onclick="window.open('../includes/generative/export_equipment_summary_csv.php<?= $exportQuery ?>', '_blank')"><i class="fas fa-file-excel"></i> Export Excel</button>
         </div>
     </div>
 
@@ -129,13 +129,14 @@ try {
             <div class="rpt-panel-header"><h3><i class="fas fa-building"></i> Equipment by Division</h3></div>
             <div class="rpt-panel-body" style="padding: 0;">
                 <table class="rpt-table">
-                    <thead><tr><th>Division</th><th>SU</th><th>Monitors</th><th>Printers</th><th>AIO</th><th>Total</th></tr></thead>
+                    <thead><tr><th>#</th><th>Division</th><th>SU</th><th>Monitors</th><th>Printers</th><th>AIO</th><th>Total</th></tr></thead>
                     <tbody>
-                        <?php $gTotal = 0; foreach ($byDivision as $div):
+                        <?php $gTotal = 0; foreach ($byDivision as $divIdx => $div):
                             $dTotal = $div['system_units'] + $div['monitors'] + $div['printers'] + $div['allinones'];
                             $gTotal += $dTotal;
                         ?>
                         <tr>
+                            <td style="font-family: var(--font-mono);"><?= $divIdx + 1 ?></td>
                             <td style="font-weight: 600;"><?= htmlspecialchars($div['division']) ?></td>
                             <td style="font-family: var(--font-mono);"><?= $div['system_units'] ?></td>
                             <td style="font-family: var(--font-mono);"><?= $div['monitors'] ?></td>
@@ -145,7 +146,7 @@ try {
                         </tr>
                         <?php endforeach; ?>
                     </tbody>
-                    <tfoot><tr><td>Grand Total</td><td colspan="4"></td><td style="font-family: var(--font-mono);"><?= $gTotal ?></td></tr></tfoot>
+                    <tfoot><tr><td></td><td>Grand Total</td><td colspan="4"></td><td style="font-family: var(--font-mono);"><?= $gTotal ?></td></tr></tfoot>
                 </table>
             </div>
         </div>
@@ -189,10 +190,11 @@ try {
             <div class="rpt-panel-header"><h3><i class="fas fa-calendar"></i> Acquisition Timeline</h3></div>
             <div class="rpt-panel-body" style="padding: 0;">
                 <table class="rpt-table">
-                    <thead><tr><th>Year</th><th>Count</th><th>% of Total</th></tr></thead>
+                    <thead><tr><th>#</th><th>Year</th><th>Count</th><th>% of Total</th></tr></thead>
                     <tbody>
-                        <?php foreach ($byYear as $yr): $pct = $total > 0 ? round(($yr['total'] / $total) * 100, 1) : 0; ?>
+                        <?php foreach ($byYear as $yrIdx => $yr): $pct = $total > 0 ? round(($yr['total'] / $total) * 100, 1) : 0; ?>
                         <tr>
+                            <td style="font-family: var(--font-mono);"><?= $yrIdx + 1 ?></td>
                             <td style="font-weight: 600; font-family: var(--font-mono);"><?= $yr['year_acquired'] ?></td>
                             <td style="font-family: var(--font-mono);"><?= $yr['total'] ?></td>
                             <td style="font-family: var(--font-mono);"><?= $pct ?>%</td>

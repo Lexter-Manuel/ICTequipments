@@ -123,6 +123,7 @@ $jobOrderCount  = count(array_filter($employees, fn($e) => $e['employmentStatus'
             <table id="rosterTable">
                 <thead>
                     <tr>
+                        <th>#</th>
                         <th class="col-photo">Photo</th>
                         <th class="sortable" data-col="empid">ID <span class="sort-icon"><i class="fas fa-sort"></i></span></th>
                         <th class="sortable" data-col="name">Full Name <span class="sort-icon"><i class="fas fa-sort"></i></span></th>
@@ -151,6 +152,7 @@ $jobOrderCount  = count(array_filter($employees, fn($e) => $e['employmentStatus'
                         data-assignment="<?php echo strtolower(htmlspecialchars($locationBreadcrumb)); ?>"
                         data-active="<?php echo $isActive; ?>"
                         class="<?php echo $isActive ? '' : 'row-inactive'; ?>">
+                        <td class="row-counter" data-label="#"></td>
                         <td data-label="Photo">
                             <?php if ($emp['photoPath']): ?>
                                 <img src="uploads/<?php echo htmlspecialchars($emp['photoPath']); ?>" class="employee-photo-thumb">
@@ -230,6 +232,7 @@ $jobOrderCount  = count(array_filter($employees, fn($e) => $e['employmentStatus'
             <table id="archivedTable">
                 <thead>
                     <tr>
+                        <th>#</th>
                         <th class="col-photo">Photo</th>
                         <th>ID</th>
                         <th>Full Name</th>
@@ -252,6 +255,7 @@ $jobOrderCount  = count(array_filter($employees, fn($e) => $e['employmentStatus'
                     <tr data-name="<?php echo strtolower(htmlspecialchars($fullName)); ?>"
                         data-empid="<?php echo htmlspecialchars($emp['employeeId']); ?>"
                         class="row-archived">
+                        <td class="row-counter" data-label="#"></td>
                         <td data-label="Photo">
                             <?php if ($emp['photoPath']): ?>
                                 <img src="uploads/<?php echo htmlspecialchars($emp['photoPath']); ?>" class="employee-photo-thumb">

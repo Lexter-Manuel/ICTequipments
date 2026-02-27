@@ -497,7 +497,7 @@ function saveTemplate() {
     .then(data => {
         if(data.success) {
             alert("Saved successfully!");
-            location.reload();
+            reloadCurrentPage();
         } else {
             alert("Error: " + data.message);
         }
@@ -595,7 +595,7 @@ function deleteTemplate(id) {
             .then(data => {
                 if (data.success) {
                     alert("Template deleted successfully.");
-                    location.reload();
+                    reloadCurrentPage();
                 } else {
                     alert("Error: " + data.message);
                 }

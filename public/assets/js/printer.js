@@ -66,6 +66,7 @@ function applyTableState() {
     }
 
     renderPaginationControls('paginationControls', currentPage, totalPages, 'goToPage');
+    updateRowCounters('printerTableBody', total === 0 ? 0 : start + 1);
 }
 
 function goToPage(page) {
@@ -137,7 +138,7 @@ function savePrinter() {
         if (data.success) {
             alert(data.message);
             bootstrap.Modal.getInstance(document.getElementById('printerModal')).hide();
-            location.reload();
+            reloadCurrentPage();
         } else {
             alert('Error: ' + data.message);
         }
@@ -163,7 +164,7 @@ function deletePrinter(id) {
     .then(data => {
         if (data.success) {
             alert(data.message);
-            location.reload();
+            reloadCurrentPage();
         } else {
             alert('Error: ' + data.message);
         }

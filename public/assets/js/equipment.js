@@ -4,6 +4,9 @@
  * Shared utils (escapeHtml, getPaginationRange, renderPaginationControls) loaded from utils.js
  */
 
+var equipmentTypesCache = [];       // Cached list from registry
+var typeDropdownActiveIdx = -1;     // Keyboard nav index
+
 // ============================================================
 // CATEGORY & SUB-TAB SWITCHING
 // ============================================================
@@ -103,7 +106,7 @@ function editSystemUnit(id) {
                 document.getElementById('suStorage').value = s.specificationStorage;
                 document.getElementById('suSerial').value = s.systemUnitSerial;
                 document.getElementById('suYear').value = s.yearAcquired;
-                document.getElementById('suEmployee').value = s.employeeId || '';
+                empSearch.set('suEmployeeSearch', 'suEmployee', s.employeeId || '');
                 new bootstrap.Modal(document.getElementById('systemunitModal')).show();
             } else {
                 alert('Error: ' + data.message);
@@ -219,7 +222,7 @@ function editMonitor(id) {
                 document.getElementById('monSize').value = m.monitorSize;
                 document.getElementById('monSerial').value = m.monitorSerial;
                 document.getElementById('monYear').value = m.yearAcquired;
-                document.getElementById('monEmployee').value = m.employeeId || '';
+                empSearch.set('monEmployeeSearch', 'monEmployee', m.employeeId || '');
                 new bootstrap.Modal(document.getElementById('monitorModal')).show();
             } else { alert('Error: ' + data.message); }
         })
@@ -328,7 +331,7 @@ function editAllInOne(id) {
                 document.getElementById('aioGPU').value = a.specificationGPU;
                 document.getElementById('aioStorage').value = a.specificationStorage;
                 document.getElementById('aioYear').value = a.yearAcquired || '';
-                document.getElementById('aioEmployee').value = a.employeeId || '';
+                empSearch.set('aioEmployeeSearch', 'aioEmployee', a.employeeId || '');
                 new bootstrap.Modal(document.getElementById('allinoneModal')).show();
             } else { alert('Error: ' + data.message); }
         })
@@ -394,13 +397,17 @@ function changePerPageSU() {
 
 function applySystemUnitTableState() {
     var searchTerm = (document.getElementById('systemunitSearch') ? document.getElementById('systemunitSearch').value.toLowerCase() : '');
+    var statusFilter = (document.getElementById('suStatusFilter') ? document.getElementById('suStatusFilter').value : '');
     var allRows = Array.from(document.querySelectorAll('#systemunitTableBody tr[data-su-id]'));
 
     suFilteredRows = allRows.filter(function(row) {
         var serial   = row.dataset.serial   || '';
         var brand    = row.dataset.brand    || '';
         var employee = row.dataset.employee || '';
-        return serial.includes(searchTerm) || brand.includes(searchTerm) || employee.includes(searchTerm);
+        var status   = row.dataset.status   || '';
+        var matchesSearch = serial.includes(searchTerm) || brand.includes(searchTerm) || employee.includes(searchTerm);
+        var matchesStatus = !statusFilter || status === statusFilter;
+        return matchesSearch && matchesStatus;
     });
 
     var total      = suFilteredRows.length;
@@ -450,13 +457,17 @@ function changePerPageMon() {
 
 function applyMonitorTableState() {
     var searchTerm = (document.getElementById('monitorSearch') ? document.getElementById('monitorSearch').value.toLowerCase() : '');
+    var statusFilter = (document.getElementById('monStatusFilter') ? document.getElementById('monStatusFilter').value : '');
     var allRows = Array.from(document.querySelectorAll('#monitorTableBody tr[data-mon-id]'));
 
     monFilteredRows = allRows.filter(function(row) {
         var serial   = row.dataset.serial   || '';
         var brand    = row.dataset.brand    || '';
         var employee = row.dataset.employee || '';
-        return serial.includes(searchTerm) || brand.includes(searchTerm) || employee.includes(searchTerm);
+        var status   = row.dataset.status   || '';
+        var matchesSearch = serial.includes(searchTerm) || brand.includes(searchTerm) || employee.includes(searchTerm);
+        var matchesStatus = !statusFilter || status === statusFilter;
+        return matchesSearch && matchesStatus;
     });
 
     var total      = monFilteredRows.length;
@@ -506,12 +517,16 @@ function changePerPageAIO() {
 
 function applyAIOTableState() {
     var searchTerm = (document.getElementById('allinoneSearch') ? document.getElementById('allinoneSearch').value.toLowerCase() : '');
+    var statusFilter = (document.getElementById('aioStatusFilter') ? document.getElementById('aioStatusFilter').value : '');
     var allRows = Array.from(document.querySelectorAll('#allinoneTableBody tr[data-aio-id]'));
 
     aioFilteredRows = allRows.filter(function(row) {
         var brand    = row.dataset.brand    || '';
         var employee = row.dataset.employee || '';
-        return brand.includes(searchTerm) || employee.includes(searchTerm);
+        var status   = row.dataset.status   || '';
+        var matchesSearch = brand.includes(searchTerm) || employee.includes(searchTerm);
+        var matchesStatus = !statusFilter || status === statusFilter;
+        return matchesSearch && matchesStatus;
     });
 
     var total      = aioFilteredRows.length;
@@ -623,7 +638,7 @@ function editPrinter(id) {
                 document.getElementById('printerModel').value  = p.model || p.printerModel || '';
                 document.getElementById('printerSerial').value = p.serial_number || p.printerSerial || '';
                 document.getElementById('printerYear').value   = p.year_acquired || p.yearAcquired || '';
-                document.getElementById('printerEmployee').value = p.employee_id || p.employeeId || '';
+                empSearch.set('printerEmployeeSearch', 'printerEmployee', p.employee_id || p.employeeId || '');
                 new bootstrap.Modal(document.getElementById('printerModal')).show();
             } else { alert('Error: ' + data.message); }
         })
@@ -752,6 +767,14 @@ function openAddOtherEquipment() {
         toggleAssignmentType();
     }
 
+    // Reset type autocomplete state
+    var dd = document.getElementById('typeDropdown');
+    var sb = document.getElementById('typeSuggestionBanner');
+    if (dd) dd.style.display = 'none';
+    if (sb) sb.style.display = 'none';
+    typeDropdownActiveIdx = -1;
+    loadEquipmentTypesCache();
+
     new bootstrap.Modal(document.getElementById('otherModal')).show();
 }
 
@@ -772,7 +795,7 @@ function editOtherEquipment(id) {
                 document.getElementById('otherYear').value = o.yearAcquired;
                 document.getElementById('otherStatus').value = o.status;
                 document.getElementById('otherLocation').value = o.location_id || '';
-                document.getElementById('otherEmployee').value = o.employeeId || '';
+                empSearch.set('otherEmployeeSearch', 'otherEmployee', o.employeeId || '');
                 document.getElementById('otherDetails').value = o.details;
 
                 if (data.data.location_id) {
@@ -948,7 +971,7 @@ function toggleAssignmentType() {
     if (isEmployee) {
         document.getElementById('otherLocation').value = '';
     } else {
-        document.getElementById('otherEmployee').value = '';
+        empSearch.clear('otherEmployeeSearch', 'otherEmployee');
         calculateFinalLocation();
     }
 }
@@ -1088,3 +1111,127 @@ function setLocationHierarchy(locationId) {
         applyOtherTableState();
     }
 })();
+
+// ==============================================
+// EQUIPMENT TYPE AUTOCOMPLETE / COMBOBOX
+// ==============================================
+
+function loadEquipmentTypesCache() {
+    return fetch('../ajax/get_equipment_types.php')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.success) equipmentTypesCache = data.data;
+            return equipmentTypesCache;
+        })
+        .catch(function() { return equipmentTypesCache; });
+}
+loadEquipmentTypesCache();
+
+function fuzzyScore(query, target) {
+    var q = query.toLowerCase(), t = target.toLowerCase();
+    if (t === q) return 0;
+    if (t.startsWith(q)) return 1;
+    if (t.includes(q)) return 2;
+    var words = q.split(/\s+/);
+    if (words.every(function(w) { return t.includes(w); })) return 3;
+    var tWords = t.split(/[\s()\-\/]+/);
+    if (words.some(function(w) { return tWords.some(function(tw) { return tw.startsWith(w) || w.startsWith(tw); }); })) return 4;
+    return -1;
+}
+
+function highlightMatch(text, query) {
+    if (!query) return escapeHtml(text);
+    var idx = text.toLowerCase().indexOf(query.toLowerCase());
+    if (idx === -1) return escapeHtml(text);
+    return escapeHtml(text.substring(0, idx)) + '<span class="type-match">' + escapeHtml(text.substring(idx, idx + query.length)) + '</span>' + escapeHtml(text.substring(idx + query.length));
+}
+
+function onEquipmentTypeInput(input) {
+    var query = input.value.trim();
+    var dropdown = document.getElementById('typeDropdown');
+    var banner = document.getElementById('typeSuggestionBanner');
+    typeDropdownActiveIdx = -1;
+    if (banner) banner.style.display = 'none';
+    if (!dropdown) return;
+    if (!query) { showTypeDropdown(equipmentTypesCache, '', dropdown); return; }
+    var scored = equipmentTypesCache.map(function(t) { return Object.assign({}, t, { score: fuzzyScore(query, t.typeName) }); }).filter(function(t) { return t.score >= 0; }).sort(function(a, b) { return a.score - b.score; });
+    showTypeDropdown(scored, query, dropdown);
+    var exactMatch = scored.find(function(t) { return t.typeName.toLowerCase() === query.toLowerCase(); });
+    if (!exactMatch && scored.length > 0 && scored[0].score <= 4 && banner) {
+        showSuggestionBanner(query, scored[0].typeName, banner, input);
+    }
+}
+
+function onEquipmentTypeFocus(input) {
+    var query = input.value.trim();
+    var dropdown = document.getElementById('typeDropdown');
+    if (!dropdown) return;
+    if (equipmentTypesCache.length === 0) {
+        loadEquipmentTypesCache().then(function() {
+            var scored = equipmentTypesCache.map(function(t) { return Object.assign({}, t, { score: query ? fuzzyScore(query, t.typeName) : 5 }); }).filter(function(t) { return !query || t.score >= 0; }).sort(function(a, b) { return a.score - b.score; });
+            showTypeDropdown(scored, query, dropdown);
+        });
+    } else {
+        var scored = equipmentTypesCache.map(function(t) { return Object.assign({}, t, { score: query ? fuzzyScore(query, t.typeName) : 5 }); }).filter(function(t) { return !query || t.score >= 0; }).sort(function(a, b) { return a.score - b.score; });
+        showTypeDropdown(scored, query, dropdown);
+    }
+}
+
+function showTypeDropdown(items, query, dropdown) {
+    if (items.length === 0 && !query) { dropdown.style.display = 'none'; return; }
+    var html = '';
+    if (items.length === 0) {
+        html += '<div class="type-no-match"><i class="fas fa-info-circle"></i> No existing type found</div>';
+    } else {
+        items.forEach(function(item, idx) {
+            var safe = item.typeName.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            html += '<div class="type-item" data-index="' + idx + '" data-typename="' + item.typeName.replace(/"/g, '&quot;') + '" onmousedown="selectEquipmentType(\'' + safe + '\')" onmouseenter="typeDropdownActiveIdx=' + idx + ';highlightDropdownItem()"><i class="fas fa-tag"></i><span>' + highlightMatch(item.typeName, query) + '</span><span class="type-context">' + (item.context || '') + '</span></div>';
+        });
+    }
+    if (query && !items.find(function(t) { return t.typeName.toLowerCase() === query.toLowerCase(); })) {
+        var sq = query.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        html += '<div class="type-new-label" onmousedown="selectEquipmentType(\'' + sq + '\')"><i class="fas fa-plus-circle"></i> Add "<strong>' + escapeHtml(query) + '</strong>" as new type</div>';
+    }
+    dropdown.innerHTML = html;
+    dropdown.style.display = 'block';
+}
+
+function selectEquipmentType(typeName) {
+    var input = document.getElementById('otherType');
+    if (input) input.value = typeName;
+    var dd = document.getElementById('typeDropdown');
+    var sb = document.getElementById('typeSuggestionBanner');
+    if (dd) dd.style.display = 'none';
+    if (sb) sb.style.display = 'none';
+    typeDropdownActiveIdx = -1;
+}
+
+function showSuggestionBanner(typed, suggested, banner) {
+    var safe = suggested.replace(/'/g, "\\'");
+    banner.innerHTML = '<i class="fas fa-lightbulb"></i><span>Did you mean <span class="suggestion-use" onclick="selectEquipmentType(\'' + safe + '\')">' + escapeHtml(suggested) + '</span>? This type already exists in the registry.</span>';
+    banner.style.display = 'flex';
+}
+
+function highlightDropdownItem() {
+    var items = document.querySelectorAll('#typeDropdown .type-item');
+    items.forEach(function(el, i) { el.classList.toggle('active', i === typeDropdownActiveIdx); });
+}
+
+document.addEventListener('keydown', function(e) {
+    var dropdown = document.getElementById('typeDropdown');
+    if (!dropdown || dropdown.style.display === 'none') return;
+    var input = document.getElementById('otherType');
+    if (document.activeElement !== input) return;
+    var items = dropdown.querySelectorAll('.type-item');
+    var maxIdx = items.length - 1;
+    if (e.key === 'ArrowDown') { e.preventDefault(); typeDropdownActiveIdx = Math.min(typeDropdownActiveIdx + 1, maxIdx); highlightDropdownItem(); if (items[typeDropdownActiveIdx]) items[typeDropdownActiveIdx].scrollIntoView({ block: 'nearest' }); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); typeDropdownActiveIdx = Math.max(typeDropdownActiveIdx - 1, 0); highlightDropdownItem(); if (items[typeDropdownActiveIdx]) items[typeDropdownActiveIdx].scrollIntoView({ block: 'nearest' }); }
+    else if (e.key === 'Enter' && typeDropdownActiveIdx >= 0 && items[typeDropdownActiveIdx]) { e.preventDefault(); selectEquipmentType(items[typeDropdownActiveIdx].getAttribute('data-typename') || items[typeDropdownActiveIdx].textContent.trim()); }
+    else if (e.key === 'Escape') { dropdown.style.display = 'none'; typeDropdownActiveIdx = -1; }
+});
+
+document.addEventListener('click', function(e) {
+    var wrapper = document.querySelector('.equipment-type-wrapper');
+    var dropdown = document.getElementById('typeDropdown');
+    if (wrapper && dropdown && !wrapper.contains(e.target)) { dropdown.style.display = 'none'; typeDropdownActiveIdx = -1; }
+});

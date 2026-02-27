@@ -380,7 +380,7 @@ employeeForm.addEventListener('submit', function(e) {
                 if (window.dashboardApp) {
                     window.dashboardApp.loadPage('employees', false);
                 } else {
-                    location.reload();
+                    reloadCurrentPage();
                 }
             }, 2000);
         } else {
@@ -469,6 +469,7 @@ if (searchInput) {
             const text = row.textContent.toLowerCase();
             row.style.display = text.includes(searchTerm) ? '' : 'none';
         });
+        updateRowCounters('employeeTableBody', 1);
     });
 }
 

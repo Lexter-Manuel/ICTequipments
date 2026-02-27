@@ -33,19 +33,27 @@ switch ($action) {
             jsonResponse(['success' => false, 'message' => 'No settings provided']);
         }
 
-        // Validate the group exists
-        $validGroups = ['organization', 'security', 'maintenance', 'system'];
-        if (!in_array($group, $validGroups)) {
+        // Hardcoded whitelist so saves work even when the table is empty
+        $keysByGroup = [
+            'organization' => ['org_name', 'org_short_name', 'org_address', 'org_contact_email', 'org_contact_phone'],
+            'security'     => ['session_timeout', 'max_login_attempts', 'lockout_duration', 'password_min_length', 'enforce_2fa'],
+            'maintenance'  => ['maint_default_frequency', 'maint_overdue_threshold_days', 'maint_reminder_days_before', 'maint_auto_schedule'],
+            'system'       => ['date_format', 'items_per_page', 'enable_activity_log', 'backup_retention_days'],
+        ];
+
+        if (!isset($keysByGroup[$group])) {
             jsonResponse(['success' => false, 'message' => 'Invalid settings group']);
         }
 
-        // Get valid keys for this group
-        $stmt = $db->prepare("SELECT setting_key FROM system_settings WHERE setting_group = ?");
-        $stmt->execute([$group]);
-        $validKeys = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        $validKeys = $keysByGroup[$group];
 
+        // Upsert: works whether the row already exists or the table was truncated
         $updated = 0;
-        $stmt = $db->prepare("UPDATE system_settings SET setting_value = ?, updated_at = NOW(), updated_by = ? WHERE setting_key = ? AND setting_group = ?");
+        $stmt = $db->prepare("
+            INSERT INTO system_settings (setting_key, setting_value, setting_group, updated_at, updated_by)
+            VALUES (?, ?, ?, NOW(), ?)
+            ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value), updated_at = NOW(), updated_by = VALUES(updated_by)
+        ");
 
         foreach ($settings as $key => $value) {
             $key = sanitizeInput($key);
@@ -87,7 +95,7 @@ switch ($action) {
                     break;
             }
 
-            $stmt->execute([(string)$value, $_SESSION['user_id'], $key, $group]);
+            $stmt->execute([$key, (string)$value, $group, $_SESSION['user_id']]);
             $updated++;
         }
 

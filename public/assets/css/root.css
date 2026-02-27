@@ -775,6 +775,27 @@ textarea.form-control {
 .data-table tbody tr:hover { background: var(--bg-light); }
 .data-table tbody tr:last-child td { border-bottom: none; }
 
+/* Row counter column (#) */
+.data-table td.row-counter {
+    width: 42px;
+    min-width: 42px;
+    max-width: 42px;
+    text-align: center;
+    padding-left: 8px;
+    padding-right: 8px;
+    color: var(--text-light, #999);
+    font-size: var(--text-sm);
+    font-variant-numeric: tabular-nums;
+    user-select: none;
+}
+.data-table th:first-child {
+    width: 42px;
+    min-width: 42px;
+    text-align: center;
+    padding-left: 8px;
+    padding-right: 8px;
+}
+
 /* Table footer */
 .table-footer {
     padding: 12px var(--space-6);

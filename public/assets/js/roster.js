@@ -603,7 +603,7 @@ function saveEmployee() {
     .then(data => {
         if(data.success) {
             showAlert('success', 'Employee updated successfully!');
-            setTimeout(() => window.location.reload(), 1000);
+            setTimeout(() => reloadCurrentPage(), 1000);
         } else {
             showAlert('danger', data.message);
         }
@@ -797,6 +797,7 @@ function applyTableState() {
     });
     document.getElementById('recordCount').innerHTML = 'Showing <strong>' + Math.min(start+1, total) + '&ndash;' + end + '</strong> of <strong>' + total + '</strong> employee(s)';
     renderPagination(total);
+    updateRowCounters('rosterTableBody', total === 0 ? 0 : start + 1);
 }
 
 function renderPagination(total) {
@@ -1070,7 +1071,7 @@ function archiveEmployee(employeeId, fullName) {
         if (data.success) {
             showAlert('success', data.message);
             // Reload page to reflect changes
-            setTimeout(function() { location.reload(); }, 800);
+            setTimeout(function() { reloadCurrentPage(); }, 800);
         } else {
             showAlert('danger', data.message || 'Failed to archive employee.');
         }
@@ -1098,7 +1099,7 @@ function restoreEmployee(employeeId, fullName) {
     .then(function(data) {
         if (data.success) {
             showAlert('success', data.message);
-            setTimeout(function() { location.reload(); }, 800);
+            setTimeout(function() { reloadCurrentPage(); }, 800);
         } else {
             showAlert('danger', data.message || 'Failed to restore employee.');
         }
@@ -1115,10 +1116,15 @@ function restoreEmployee(employeeId, fullName) {
 function filterArchivedTable() {
     var searchTerm = (document.getElementById('archivedSearch') ? document.getElementById('archivedSearch').value : '').toLowerCase();
     var rows = document.querySelectorAll('#archivedTableBody tr');
+    var counter = 1;
     rows.forEach(function(row) {
         var name = row.dataset.name || '';
         var empid = row.dataset.empid || '';
         var match = name.includes(searchTerm) || empid.includes(searchTerm);
         row.style.display = match ? '' : 'none';
+        var counterCell = row.querySelector('td.row-counter');
+        if (counterCell && match) {
+            counterCell.textContent = counter++;
+        }
     });
 }

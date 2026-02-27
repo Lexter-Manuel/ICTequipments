@@ -120,6 +120,7 @@ $employees = $stmtEmployees->fetchAll();
         <table id="softwareTable">
             <thead>
                 <tr>
+                    <th>#</th>
                     <th>Software Name</th>
                     <th>License Details</th>
                     <th>Type</th>
@@ -131,7 +132,7 @@ $employees = $stmtEmployees->fetchAll();
             </thead>
             <tbody id="softwareTableBody">
                 <?php if (empty($softwareList)): ?>
-                <tr><td colspan="7" class="empty-state"><i class="fas fa-inbox"></i><p>No software license records found</p></td></tr>
+                <tr><td colspan="8" class="empty-state"><i class="fas fa-inbox"></i><p>No software license records found</p></td></tr>
                 <?php else: ?>
                     <?php foreach ($softwareList as $s): ?>
                     <tr data-software-id="<?php echo $s['softwareId']; ?>"
@@ -140,6 +141,7 @@ $employees = $stmtEmployees->fetchAll();
                         data-type="<?php echo $s['licenseType'] ?? ''; ?>"
                         data-status="<?php echo $s['status']; ?>"
                         data-employee="<?php echo strtolower($s['employeeName'] ?? ''); ?>">
+                        <td class="row-counter"></td>
                         <td>
                             <div class="software-name">
                                 <div class="software-icon"><i class="fas fa-compact-disc"></i></div>

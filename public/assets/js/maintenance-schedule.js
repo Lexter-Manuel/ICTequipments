@@ -88,7 +88,7 @@ async function loadSectionUnitFilter() {
 async function loadDetailedSchedule(page) {
     schedCurrentPage = page || 1;
     var tbody = document.getElementById('schedDetailedBody');
-    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4"><span class="spinner-border spinner-border-sm me-2"></span> Loading schedule…</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4"><span class="spinner-border spinner-border-sm me-2"></span> Loading schedule…</td></tr>';
 
     var search      = (document.getElementById('schedSearchInput')?.value || '').trim();
     var sectionUnit  = document.getElementById('schedSectionUnitFilter')?.value || '';
@@ -107,14 +107,15 @@ async function loadDetailedSchedule(page) {
         var r = await fetch(`${SCHED_API}?${params}`);
         var j = await r.json();
         if (!j.success || !j.data.length) {
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4" style="color:var(--text-light); font-style:italic;">No scheduled maintenance found.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4" style="color:var(--text-light); font-style:italic;">No scheduled maintenance found.</td></tr>';
             document.getElementById('schedRecordCount').textContent = '';
             document.getElementById('schedPagination').innerHTML = '';
             return;
         }
 
         tbody.innerHTML = '';
-        j.data.forEach(a => {
+        var rowStart = (j.pagination.page - 1) * j.pagination.limit;
+        j.data.forEach((a, idx) => {
             var icon     = ICON_MAP[a.type_name] || 'fa-desktop';
             var typeCls  = TYPE_CLASS[a.type_name] || '';
             var dateCls  = a.status === 'overdue' ? 'overdue' : a.status === 'due_soon' ? 'due-soon' : 'scheduled';
@@ -135,6 +136,7 @@ async function loadDetailedSchedule(page) {
 
             tbody.innerHTML += `
                 <tr>
+                    <td class="row-counter">${rowStart + idx + 1}</td>
                     <td>
                         <div class="mnt-date-primary">${dateLabel}</div>
                         <div class="mnt-date-sub"><i class="fas ${daysIcon}"></i> ${a.daysLabel}</div>
@@ -165,7 +167,7 @@ async function loadDetailedSchedule(page) {
         renderPagination(p);
     } catch (e) {
         console.error('loadDetailedSchedule', e);
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-danger">Failed to load schedule.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-danger">Failed to load schedule.</td></tr>';
     }
 }
 
@@ -502,7 +504,7 @@ function renderSchedAll(assets) {
     var tbody = document.getElementById('dvSchedAllBody');
 
     if (!assets.length) {
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4" style="color:var(--text-light); font-style:italic;">No equipment matches the selected filter.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4" style="color:var(--text-light); font-style:italic;">No equipment matches the selected filter.</td></tr>';
         return;
     }
 
@@ -510,7 +512,7 @@ function renderSchedAll(assets) {
     var sorted = [...assets].sort((a, b) => a.nextDueDate.localeCompare(b.nextDueDate));
 
     tbody.innerHTML = '';
-    sorted.forEach(a => {
+    sorted.forEach((a, idx) => {
         var icon    = ICON_MAP[a.type_name] || 'fa-desktop';
         var typeCls = TYPE_CLASS[a.type_name] || '';
         var dateCls = a.status === 'overdue' ? 'overdue' : a.status === 'due_soon' ? 'due-soon' : 'scheduled';
@@ -528,6 +530,7 @@ function renderSchedAll(assets) {
 
         tbody.innerHTML += `
             <tr>
+                <td class="row-counter">${idx + 1}</td>
                 <td>
                     <div class="mnt-equip-cell">
                         <div class="mnt-equip-icon ${typeCls}"><i class="fas ${icon}"></i></div>

@@ -274,3 +274,7 @@
     .equip-toggle-nav, .equip-subtoggle-nav, .filters-bar .btn { display: none !important; }
     .category-content, .sub-tab-content { display: block !important; border: none; padding: 0; }
 }
+
+.form-section {
+    padding-bottom: var(--space-5) !important;
+}

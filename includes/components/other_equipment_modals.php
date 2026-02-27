@@ -1,4 +1,3 @@
-
 <!-- Add/Edit Equipment Modal -->
 <div class="modal fade" id="otherModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
@@ -24,7 +23,15 @@
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label class="form-label">Equipment Type <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="otherType" required placeholder="e.g. Projector, Switch, UPS">
+                                <div class="equipment-type-wrapper" style="position:relative;">
+                                    <input type="text" class="form-control" id="otherType" required 
+                                           placeholder="e.g. Projector, Switch, UPS" 
+                                           autocomplete="off"
+                                           oninput="onEquipmentTypeInput(this)"
+                                           onfocus="onEquipmentTypeFocus(this)">
+                                    <div id="typeDropdown" class="type-autocomplete-dropdown" style="display:none;"></div>
+                                    <div id="typeSuggestionBanner" class="type-suggestion-banner" style="display:none;"></div>
+                                </div>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Serial Number <span class="text-danger">*</span></label>
@@ -97,14 +104,8 @@
                         <div id="employeeContainer" style="display:none;">
                             <div class="mb-3">
                                 <label class="form-label">Select Employee <span class="text-danger">*</span></label>
-                                <select class="form-select" id="otherEmployee">
-                                    <option value="">-- Select Employee --</option>
-                                    <?php foreach ($employees as $emp): ?>
-                                        <option value="<?php echo $emp['employeeId']; ?>">
-                                            <?php echo htmlspecialchars($emp['fullName']); ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
+                                <input type="text" class="form-control" id="otherEmployeeSearch" data-emp-search="otherEmployee" placeholder="Type to search employee..." autocomplete="off">
+                                <input type="hidden" id="otherEmployee">
                                 <small class="text-muted">Location will be cleared if assigned to an employee.</small>
                             </div>
                         </div>

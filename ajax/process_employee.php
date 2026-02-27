@@ -257,17 +257,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                             $employeeId
                                           ]);
                                         $newEqId = (int)$db->lastInsertId();
-                                        scheduleMaintenanceForEquipment($db, $newEqId, 1); // typeId 1 = System Unit
+                                        scheduleMaintenanceForEquipment($db, $newEqId, 1);
                                         $equipmentSaved++;
                                         break;
 
                                     case 'allinone':
                                         $db->prepare("INSERT INTO tbl_allinone
-                                            (allinoneBrand, specificationProcessor, specificationMemory,
+                                            (allinoneBrand, allinoneSerial, specificationProcessor, specificationMemory,
                                              specificationGPU, specificationStorage, yearAcquired,employeeId)
-                                            VALUES (?,?,?,?,?,?,?)")
+                                            VALUES (?,?,?,?,?,?,?,?)")
                                           ->execute([
                                             trim($item['brand']    ?? ''),
+                                            trim($item['serial']   ?? ''),
                                             trim($item['processor']?? ''),
                                             trim($item['memory']   ?? ''),
                                             trim($item['gpu']      ?? ''),
@@ -276,7 +277,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                             $employeeId
                                           ]);
                                         $newEqId = (int)$db->lastInsertId();
-                                        scheduleMaintenanceForEquipment($db, $newEqId, 2); // typeId 2 = All-in-One
+                                        scheduleMaintenanceForEquipment($db, $newEqId, 2);
                                         $equipmentSaved++;
                                         break;
 
@@ -292,7 +293,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                             $employeeId
                                           ]);
                                         $newEqId = (int)$db->lastInsertId();
-                                        scheduleMaintenanceForEquipment($db, $newEqId, 3); // typeId 3 = Monitor
+                                        scheduleMaintenanceForEquipment($db, $newEqId, 3);
                                         $equipmentSaved++;
                                         break;
 

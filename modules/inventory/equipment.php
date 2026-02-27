@@ -63,7 +63,7 @@ $stmtOther = $db->query("
 $otherEquipment = $stmtOther->fetchAll();
 
 // ── Fetch Employees ──
-$stmtEmployees = $db->query("SELECT employeeId, CONCAT_WS(' ', firstName, middleName, lastName) as fullName FROM tbl_employee ORDER BY firstName, lastName");
+$stmtEmployees = $db->query("SELECT employeeId, CONCAT_WS(' ', firstName, middleName, lastName) as fullName FROM tbl_employee WHERE is_archive = '0' ORDER BY firstName, lastName");
 $employees = $stmtEmployees->fetchAll();
 
 // ── Fetch Locations ──
@@ -86,6 +86,8 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
 <link rel="stylesheet" href="assets/css/tabs.css?v=<?php echo time()?>">
 <link rel="stylesheet" href="assets/css/inventory.css?v=<?php echo time()?>">
 <link rel="stylesheet" href="assets/css/equipment.css?v=<?php echo time()?>">
+<link rel="stylesheet" href="assets/css/autocomplete.css?v=<?php echo time()?>">
+<link rel="stylesheet" href="assets/css/other_equipment.css?v=<?php echo time()?>">
 
 <!-- Page Header -->
 <div class="page-header">
@@ -150,15 +152,27 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
             </div>
         </div>
 
-        <div class="filters-bar">
-            <div class="filter-group" style="flex:1">
-                <label><i class="fas fa-search"></i> Search:</label>
-                <input type="text" id="systemunitSearch" placeholder="Serial, brand, processor..." oninput="filterSystemUnits()">
+        <div class="data-table-container">
+            <div class="table-header">
+                <h2 class="table-title"><i class="fas fa-list"></i> System Unit Inventory</h2>
+                <div class="table-controls">
+                    <div class="filter-group">
+                        <!-- <select id="suStatusFilter" onchange="filterSystemUnits()">
+                            <option value="">All Statuses</option>
+                            <option value="Operational">Operational</option>
+                            <option value="For Replacement">For Replacement</option>
+                            <option value="Disposed">Disposed</option>
+                        </select> -->
+                    </div>
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="systemunitSearch" placeholder="Search serial, brand, processor..." oninput="filterSystemUnits()">
+                    </div>
+                    <button class="btn btn-primary" onclick="openAddSystemUnit()">
+                        <i class="fas fa-plus"></i> Add System Unit
+                    </button>
+                </div>
             </div>
-            <button class="btn btn-primary" onclick="openAddSystemUnit()">
-                <i class="fas fa-plus"></i> Add System Unit
-            </button>
-        </div>
 
         <div class="data-table">
             <table>
@@ -220,6 +234,7 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                 </tbody>
             </table>
         </div>
+
         <div class="table-footer">
             <div class="footer-info"><span id="suRecordCount"></span></div>
             <div class="pagination-controls" id="suPaginationControls"></div>
@@ -231,6 +246,7 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                     </select>
                 </label>
             </div>
+        </div>
         </div>
     </div>
 
@@ -251,15 +267,27 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
             </div>
         </div>
 
-        <div class="filters-bar">
-            <div class="filter-group" style="flex:1">
-                <label><i class="fas fa-search"></i> Search:</label>
-                <input type="text" id="monitorSearch" placeholder="Serial, brand, size..." oninput="filterMonitors()">
+        <div class="data-table-container">
+            <div class="table-header">
+                <h2 class="table-title"><i class="fas fa-list"></i> Monitor Inventory</h2>
+                <div class="table-controls">
+                    <div class="filter-group">
+                        <!-- <select id="monStatusFilter" onchange="filterMonitors()">
+                            <option value="">All Statuses</option>
+                            <option value="Operational">Operational</option>
+                            <option value="For Replacement">For Replacement</option>
+                            <option value="Disposed">Disposed</option>
+                        </select> -->
+                    </div>
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="monitorSearch" placeholder="Search serial, brand, size..." oninput="filterMonitors()">
+                    </div>
+                    <button class="btn btn-primary" onclick="openAddMonitor()">
+                        <i class="fas fa-plus"></i> Add Monitor
+                    </button>
+                </div>
             </div>
-            <button class="btn btn-primary" onclick="openAddMonitor()">
-                <i class="fas fa-plus"></i> Add Monitor
-            </button>
-        </div>
 
         <div class="data-table">
             <table>
@@ -314,6 +342,7 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                 </tbody>
             </table>
         </div>
+
         <div class="table-footer">
             <div class="footer-info"><span id="monRecordCount"></span></div>
             <div class="pagination-controls" id="monPaginationControls"></div>
@@ -325,6 +354,7 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                     </select>
                 </label>
             </div>
+        </div>
         </div>
     </div>
 
@@ -345,15 +375,27 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
             </div>
         </div>
 
-        <div class="filters-bar">
-            <div class="filter-group" style="flex:1">
-                <label><i class="fas fa-search"></i> Search:</label>
-                <input type="text" id="allinoneSearch" placeholder="Brand, processor..." oninput="filterAllInOnes()">
+        <div class="data-table-container">
+            <div class="table-header">
+                <h2 class="table-title"><i class="fas fa-list"></i> All-in-One Inventory</h2>
+                <div class="table-controls">
+                    <div class="filter-group">
+                        <!-- <select id="aioStatusFilter" onchange="filterAllInOnes()">
+                            <option value="">All Statuses</option>
+                            <option value="Operational">Operational</option>
+                            <option value="For Replacement">For Replacement</option>
+                            <option value="Disposed">Disposed</option>
+                        </select> -->
+                    </div>
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="allinoneSearch" placeholder="Search brand, processor..." oninput="filterAllInOnes()">
+                    </div>
+                    <button class="btn btn-primary" onclick="openAddAllInOne()">
+                        <i class="fas fa-plus"></i> Add All-in-One
+                    </button>
+                </div>
             </div>
-            <button class="btn btn-primary" onclick="openAddAllInOne()">
-                <i class="fas fa-plus"></i> Add All-in-One
-            </button>
-        </div>
 
         <div class="data-table">
             <table>
@@ -409,6 +451,7 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                 </tbody>
             </table>
         </div>
+
         <div class="table-footer">
             <div class="footer-info"><span id="aioRecordCount"></span></div>
             <div class="pagination-controls" id="aioPaginationControls"></div>
@@ -420,6 +463,7 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                     </select>
                 </label>
             </div>
+        </div>
         </div>
     </div>
 </div>
@@ -448,11 +492,12 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
             <h2 class="table-title"><i class="fas fa-list"></i> Printer Inventory</h2>
             <div class="table-controls">
                 <div class="filter-group">
-                    <select id="printerStatusFilter" onchange="filterPrinters()">
+                    <!-- <select id="printerStatusFilter" onchange="filterPrinters()">
                         <option value="">All Statuses</option>
-                        <option value="Working">Working</option>
-                        <option value="Available">Available</option>
-                    </select>
+                        <option value="Operational">Operational</option>
+                        <option value="For Replacement">For Replacement</option>
+                        <option value="Disposed">Disposed</option>
+                    </select> -->
                 </div>
                 <div class="search-box">
                     <i class="fas fa-search"></i>
@@ -569,12 +614,12 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
             <h2 class="table-title"><i class="fas fa-list"></i> Equipment Inventory</h2>
             <div class="table-controls">
                 <div class="filter-group">
-                    <select id="otherStatusFilter" onchange="filterOtherEquipment()">
+                    <!-- <select id="otherStatusFilter" onchange="filterOtherEquipment()">
                         <option value="">All Statuses</option>
-                        <?php foreach (['Available', 'In Use', 'Under Maintenance', 'Disposed'] as $status): ?>
-                        <option value="<?php echo $status; ?>"><?php echo $status; ?></option>
-                        <?php endforeach; ?>
-                    </select>
+                        <option value="Operational">Operational</option>
+                        <option value="For Replacement">For Replacement</option>
+                        <option value="Disposed">Disposed</option>
+                    </select> -->
                 </div>
                 <div class="search-box">
                     <i class="fas fa-search"></i>
@@ -747,13 +792,9 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                         <h6 class="form-section-title"><i class="fas fa-user"></i> Assignment</h6>
                         <div class="row mb-0">
                             <div class="col-md-12">
-                                <label for="suEmployee" class="form-label">Assigned Employee</label>
-                                <select class="form-select" id="suEmployee">
-                                    <option value="">Unassigned</option>
-                                    <?php foreach ($employees as $emp): ?>
-                                        <option value="<?php echo $emp['employeeId']; ?>"><?php echo htmlspecialchars($emp['fullName']); ?></option>
-                                    <?php endforeach; ?>
-                                </select>
+                                <label for="suEmployeeSearch" class="form-label">Assigned Employee</label>
+                                <input type="text" class="form-control" id="suEmployeeSearch" data-emp-search="suEmployee" placeholder="Type to search employee..." autocomplete="off">
+                                <input type="hidden" id="suEmployee">
                             </div>
                         </div>
                     </div>
@@ -802,13 +843,9 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                     </div>
                     <div class="form-section">
                         <h6 class="form-section-title"><i class="fas fa-user"></i> Assignment</h6>
-                        <label for="monEmployee" class="form-label">Assigned Employee</label>
-                        <select class="form-select" id="monEmployee">
-                            <option value="">Unassigned</option>
-                            <?php foreach ($employees as $emp): ?>
-                                <option value="<?php echo $emp['employeeId']; ?>"><?php echo htmlspecialchars($emp['fullName']); ?></option>
-                            <?php endforeach; ?>
-                        </select>
+                        <label for="monEmployeeSearch" class="form-label">Assigned Employee</label>
+                        <input type="text" class="form-control" id="monEmployeeSearch" data-emp-search="monEmployee" placeholder="Type to search employee..." autocomplete="off">
+                        <input type="hidden" id="monEmployee">
                     </div>
                 </form>
             </div>
@@ -865,13 +902,9 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                     </div>
                     <div class="form-section">
                         <h6 class="form-section-title"><i class="fas fa-user"></i> Assignment</h6>
-                        <label for="aioEmployee" class="form-label">Assigned Employee</label>
-                        <select class="form-select" id="aioEmployee">
-                            <option value="">Unassigned</option>
-                            <?php foreach ($employees as $emp): ?>
-                                <option value="<?php echo $emp['employeeId']; ?>"><?php echo htmlspecialchars($emp['fullName']); ?></option>
-                            <?php endforeach; ?>
-                        </select>
+                        <label for="aioEmployeeSearch" class="form-label">Assigned Employee</label>
+                        <input type="text" class="form-control" id="aioEmployeeSearch" data-emp-search="aioEmployee" placeholder="Type to search employee..." autocomplete="off">
+                        <input type="hidden" id="aioEmployee">
                     </div>
                 </form>
             </div>
@@ -919,12 +952,8 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                     <div class="form-section">
                         <h6 class="form-section-title"><i class="fas fa-user"></i> Assignment</h6>
                         <label class="form-label">Assigned Employee <small class="text-muted">(Optional)</small></label>
-                        <select class="form-select" id="printerEmployee">
-                            <option value="">Unassigned</option>
-                            <?php foreach ($employees as $emp): ?>
-                                <option value="<?php echo $emp['employeeId']; ?>"><?php echo htmlspecialchars($emp['fullName']); ?></option>
-                            <?php endforeach; ?>
-                        </select>
+                        <input type="text" class="form-control" id="printerEmployeeSearch" data-emp-search="printerEmployee" placeholder="Type to search employee..." autocomplete="off">
+                        <input type="hidden" id="printerEmployee">
                         <small class="form-text"><i class="fas fa-info-circle"></i> If assigned, status automatically becomes "Working"</small>
                     </div>
                 </form>
@@ -940,13 +969,17 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
 <!-- Other Equipment Modals -->
 <?php include '../../includes/components/other_equipment_modals.php'; ?>
 
+
 <!-- Pass data to JS -->
 <script>
-    var defaultPerPage    = <?php echo $defaultPerPage; ?>;
-    var printerData       = <?php echo json_encode($printers); ?>;
+    var defaultPerPage     = <?php echo $defaultPerPage; ?>;
+    var printerData        = <?php echo json_encode($printers); ?>;
     var otherEquipmentData = <?php echo json_encode($otherEquipment); ?>;
     var locationsData      = <?php echo json_encode($locations); ?>;
-    var employeesData      = <?php echo json_encode($employees); ?>;
+    // Use window.employeesData so it's accessible even when loaded as a dashboard module
+    window.employeesData   = <?php echo json_encode($employees); ?>;
 </script>
+
 <script src="assets/js/location_manager.js?v=<?php echo time()?>"></script>
+<script src="assets/js/autocomplete.js?v=<?php echo time()?>"></script>
 <script src="assets/js/equipment.js?v=<?php echo time()?>"></script>

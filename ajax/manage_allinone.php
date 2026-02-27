@@ -18,6 +18,23 @@ function sanitizeString($input) {
 }
 
 /**
+ * Validate serial number format
+ */
+function validateSerial($serial) {
+    $serial = sanitizeString($serial);
+    if (empty($serial)) {
+        throw new Exception("Serial number cannot be empty");
+    }
+    if (strlen($serial) < 3 || strlen($serial) > 100) {
+        throw new Exception("Serial number must be between 3 and 100 characters");
+    }
+    if (!preg_match('/^[a-zA-Z0-9\-_]+$/', $serial)) {
+        throw new Exception("Serial number can only contain letters, numbers, hyphens, and underscores");
+    }
+    return $serial;
+}
+
+/**
  * Validate brand name
  */
 function validateBrand($brand) {
@@ -94,6 +111,7 @@ try {
 
 function listAllInOnes($db) {
     $search = $_GET['search'] ?? '';
+    $status = $_GET['status'] ?? '';
 
     $sql = "
         SELECT 
@@ -105,16 +123,27 @@ function listAllInOnes($db) {
     ";
     
     $params = [];
+
+    if (!empty($status)) {
+        if ($status === 'Active') {
+            $sql .= " AND a.employeeId IS NOT NULL";
+        } elseif ($status === 'Available') {
+            $sql .= " AND a.employeeId IS NULL";
+        }
+    }
+
     if (!empty($search)) {
         $term = "%$search%";
         $sql .= " AND (
             a.allinoneBrand LIKE :search1 OR
-            a.specificationProcessor LIKE :search2 OR
-            CONCAT_WS(' ', e.firstName, e.middleName, e.lastName) LIKE :search3
+            a.allinoneSerial LIKE :search2 OR
+            a.specificationProcessor LIKE :search3 OR
+            CONCAT_WS(' ', e.firstName, e.middleName, e.lastName) LIKE :search4
         )";
         $params [':search1'] = $term;
         $params [':search2'] = $term;
         $params [':search3'] = $term;
+        $params [':search4'] = $term;
     }
     
     $sql .= " ORDER BY a.allinoneId DESC";
@@ -126,6 +155,7 @@ function listAllInOnes($db) {
         return [
             'allinoneId' => $a['allinoneId'],
             'allinoneBrand' => $a['allinoneBrand'],
+            'allinoneSerial' => $a['allinoneSerial'] ?? null,
             'specificationProcessor' => $a['specificationProcessor'],
             'specificationMemory' => $a['specificationMemory'],
             'specificationGPU' => $a['specificationGPU'],
@@ -158,6 +188,7 @@ function getAllInOne($db) {
     $formatted = [
         'allinoneId' => $unit['allinoneId'],
         'allinoneBrand' => $unit['allinoneBrand'],
+        'allinoneSerial' => $unit['allinoneSerial'] ?? null,
         'specificationProcessor' => $unit['specificationProcessor'],
         'specificationMemory' => $unit['specificationMemory'],
         'specificationGPU' => $unit['specificationGPU'],
@@ -173,6 +204,7 @@ function getAllInOne($db) {
 
 function createAllInOne($db) {
     $brand = validateBrand($_POST['brand'] ?? '');
+    $serial = validateSerial($_POST['allinoneSerial'] ?? '');
     $processor = validateSpecification($_POST['processor'] ?? '', 'Processor');
     $memory = validateSpecification($_POST['memory'] ?? '', 'Memory');
     $gpu = validateSpecification($_POST['gpu'] ?? '', 'GPU');
@@ -188,18 +220,26 @@ function createAllInOne($db) {
         }
         $yearAcquired = $yr;
     }
+
+    // Check duplicate serial
+    $stmt = $db->prepare("SELECT COUNT(*) FROM tbl_allinone WHERE allinoneSerial = :serial");
+    $stmt->execute([':serial' => $serial]);
+    if ($stmt->fetchColumn() > 0) {
+        throw new Exception('Serial number already exists');
+    }
     
     $stmt = $db->prepare("
         INSERT INTO tbl_allinone (
-            allinoneBrand, specificationProcessor, specificationMemory,
+            allinoneBrand, allinoneSerial, specificationProcessor, specificationMemory,
             specificationGPU, specificationStorage, yearAcquired, employeeId
         ) VALUES (
-            :brand, :processor, :memory, :gpu, :storage, :yearAcquired, :employeeId
+            :brand, :serial, :processor, :memory, :gpu, :storage, :yearAcquired, :employeeId
         )
     ");
     
     $stmt->execute([
         ':brand'        => $brand,
+        ':serial'       => $serial,
         ':processor'    => $processor,
         ':memory'       => $memory,
         ':gpu'          => $gpu,
@@ -211,7 +251,7 @@ function createAllInOne($db) {
     $newId = $db->lastInsertId();
 
     logActivity(ACTION_CREATE, MODULE_COMPUTERS,
-        "Added All-in-One — Brand: {$brand}, CPU: {$processor}, RAM: {$memory}, Storage: {$storage}."
+        "Added All-in-One — Brand: {$brand}, Serial: {$serial}, CPU: {$processor}, RAM: {$memory}, Storage: {$storage}."
         . ($employeeId ? " Assigned to employee ID {$employeeId}." : ""));
 
     try {
@@ -242,6 +282,7 @@ function updateAllInOne($db) {
     }
     
     $brand = validateBrand($_POST['brand'] ?? '');
+    $serial = validateSerial($_POST['allinoneSerial'] ?? '');
     $processor = validateSpecification($_POST['processor'] ?? '', 'Processor');
     $memory = validateSpecification($_POST['memory'] ?? '', 'Memory');
     $gpu = validateSpecification($_POST['gpu'] ?? '', 'GPU');
@@ -257,10 +298,18 @@ function updateAllInOne($db) {
         }
         $yearAcquired = $yr;
     }
+
+    // Check duplicate serial (exclude self)
+    $stmt = $db->prepare("SELECT COUNT(*) FROM tbl_allinone WHERE allinoneSerial = :serial AND allinoneId != :id");
+    $stmt->execute([':serial' => $serial, ':id' => $id]);
+    if ($stmt->fetchColumn() > 0) {
+        throw new Exception('Serial number already exists');
+    }
     
     $stmt = $db->prepare("
         UPDATE tbl_allinone SET
             allinoneBrand = :brand,
+            allinoneSerial = :serial,
             specificationProcessor = :processor,
             specificationMemory = :memory,
             specificationGPU = :gpu,
@@ -272,6 +321,7 @@ function updateAllInOne($db) {
     
     $stmt->execute([
         ':brand'        => $brand,
+        ':serial'       => $serial,
         ':processor'    => $processor,
         ':memory'       => $memory,
         ':gpu'          => $gpu,
@@ -282,7 +332,7 @@ function updateAllInOne($db) {
     ]);
     
     logActivity(ACTION_UPDATE, MODULE_COMPUTERS,
-        "Updated All-in-One (ID: {$id}) — Brand: {$brand}."
+        "Updated All-in-One (ID: {$id}) — Brand: {$brand}, Serial: {$serial}."
         . ($employeeId ? " Assigned to employee ID {$employeeId}." : " Unassigned."));
 
     echo json_encode(['success' => true, 'message' => 'All-in-One updated successfully']);
@@ -293,7 +343,7 @@ function deleteAllInOne($db) {
     if (!$id) throw new Exception('All-in-One ID is required');
     
     // Fetch details before deleting so we can log them
-    $row = $db->prepare("SELECT allinoneBrand FROM tbl_allinone WHERE allinoneId = :id");
+    $row = $db->prepare("SELECT allinoneBrand, allinoneSerial FROM tbl_allinone WHERE allinoneId = :id");
     $row->execute([':id' => $id]);
     $item = $row->fetch();
 
@@ -305,7 +355,8 @@ function deleteAllInOne($db) {
     }
 
     logActivity(ACTION_DELETE, MODULE_COMPUTERS,
-        "Deleted All-in-One (ID: {$id}) — Brand: " . ($item['allinoneBrand'] ?? 'Unknown') . ".");
+        "Deleted All-in-One (ID: {$id}) — Brand: " . ($item['allinoneBrand'] ?? 'Unknown')
+        . ", Serial: " . ($item['allinoneSerial'] ?? 'Unknown') . ".");
     
     echo json_encode(['success' => true, 'message' => 'All-in-One deleted successfully']);
 }

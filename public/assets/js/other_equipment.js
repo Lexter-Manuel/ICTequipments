@@ -2,6 +2,8 @@
 
 var currentOtherId = null;
 var locationManager;
+var equipmentTypesCache = [];       // Cached list from registry
+var typeDropdownActiveIdx = -1;     // Keyboard nav index
 
 function filterOtherEquipment() {
     currentPage = 1;
@@ -64,6 +66,7 @@ function applyTableState() {
     }
 
     renderPaginationControls('paginationControls', currentPage, totalPages, 'goToPage');
+    updateRowCounters('otherTableBody', total === 0 ? 0 : start + 1);
 }
 
 function goToPage(page) {
@@ -88,6 +91,14 @@ function openAddOtherEquipment() {
         document.getElementById('typeLocation').checked = true;
         toggleAssignmentType();
     }
+
+    // Reset type autocomplete state
+    document.getElementById('typeDropdown').style.display = 'none';
+    document.getElementById('typeSuggestionBanner').style.display = 'none';
+    typeDropdownActiveIdx = -1;
+
+    // Refresh type cache in case new types were added
+    loadEquipmentTypesCache();
 
     new bootstrap.Modal(document.getElementById('otherModal')).show();
 }
@@ -182,7 +193,9 @@ function saveOtherEquipment() {
         if (data.success) {
             alert(data.message);
             bootstrap.Modal.getInstance(document.getElementById('otherModal')).hide();
-            location.reload(); 
+            // Refresh type cache so newly registered types appear immediately
+            loadEquipmentTypesCache();
+            reloadCurrentPage(); 
         } else {
             alert('Error: ' + data.message);
         }
@@ -205,7 +218,7 @@ function deleteOtherEquipment(id) {
     .then(data => {
         if (data.success) {
             alert(data.message);
-            location.reload(); // Reload page to update table
+            reloadCurrentPage(); // Reload page to update table
         } else {
             alert(data.message);
         }
@@ -465,4 +478,238 @@ function setLocationHierarchy(locationId) {
             }
         });
 }
+
+// ==============================================
+// EQUIPMENT TYPE AUTOCOMPLETE / COMBOBOX
+// ==============================================
+
+/**
+ * Load all equipment types from registry (cached)
+ */
+function loadEquipmentTypesCache() {
+    return fetch('../ajax/get_equipment_types.php')
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                equipmentTypesCache = data.data;
+            }
+            return equipmentTypesCache;
+        })
+        .catch(() => equipmentTypesCache);
+}
+
+// Load on page init
+loadEquipmentTypesCache();
+
+/**
+ * Fuzzy scoring — returns a score (lower = better match). -1 = no match.
+ */
+function fuzzyScore(query, target) {
+    var q = query.toLowerCase();
+    var t = target.toLowerCase();
+
+    // Exact match
+    if (t === q) return 0;
+    // Starts with
+    if (t.startsWith(q)) return 1;
+    // Contains
+    if (t.includes(q)) return 2;
+    // Check if query words appear in target
+    var words = q.split(/\s+/);
+    var allFound = words.every(w => t.includes(w));
+    if (allFound) return 3;
+    // Partial token overlap (e.g. "cctv" matches "CCTV System")
+    var tWords = t.split(/[\s()\-\/]+/);
+    var anyTokenMatch = words.some(w => tWords.some(tw => tw.startsWith(w) || w.startsWith(tw)));
+    if (anyTokenMatch) return 4;
+
+    return -1; // No match
+}
+
+/**
+ * Highlight matched portion in text
+ */
+function highlightMatch(text, query) {
+    if (!query) return escapeHtml(text);
+    var idx = text.toLowerCase().indexOf(query.toLowerCase());
+    if (idx === -1) return escapeHtml(text);
+    var before = text.substring(0, idx);
+    var match = text.substring(idx, idx + query.length);
+    var after = text.substring(idx + query.length);
+    return escapeHtml(before) + '<span class="type-match">' + escapeHtml(match) + '</span>' + escapeHtml(after);
+}
+
+/**
+ * Called on every keystroke in the Equipment Type input
+ */
+function onEquipmentTypeInput(input) {
+    var query = input.value.trim();
+    var dropdown = document.getElementById('typeDropdown');
+    var banner = document.getElementById('typeSuggestionBanner');
+    
+    typeDropdownActiveIdx = -1;
+    banner.style.display = 'none';
+
+    if (!query) {
+        // Show all types when field has text cleared
+        showTypeDropdown(equipmentTypesCache, '', dropdown);
+        return;
+    }
+
+    // Filter and score
+    var scored = equipmentTypesCache
+        .map(t => ({ ...t, score: fuzzyScore(query, t.typeName) }))
+        .filter(t => t.score >= 0)
+        .sort((a, b) => a.score - b.score);
+
+    showTypeDropdown(scored, query, dropdown);
+
+    // Check for close match suggestion (when typed value isn't exact but similar)
+    var exactMatch = scored.find(t => t.typeName.toLowerCase() === query.toLowerCase());
+    if (!exactMatch && scored.length > 0 && scored[0].score <= 4) {
+        showSuggestionBanner(query, scored[0].typeName, banner, input);
+    }
+}
+
+/**
+ * Show dropdown on focus (all types)
+ */
+function onEquipmentTypeFocus(input) {
+    var query = input.value.trim();
+    var dropdown = document.getElementById('typeDropdown');
+
+    if (equipmentTypesCache.length === 0) {
+        // Reload cache if empty
+        loadEquipmentTypesCache().then(() => {
+            var scored = equipmentTypesCache.map(t => ({
+                ...t,
+                score: query ? fuzzyScore(query, t.typeName) : 5
+            })).filter(t => !query || t.score >= 0).sort((a, b) => a.score - b.score);
+            showTypeDropdown(scored, query, dropdown);
+        });
+    } else {
+        var scored = equipmentTypesCache.map(t => ({
+            ...t,
+            score: query ? fuzzyScore(query, t.typeName) : 5
+        })).filter(t => !query || t.score >= 0).sort((a, b) => a.score - b.score);
+        showTypeDropdown(scored, query, dropdown);
+    }
+}
+
+/**
+ * Render the dropdown
+ */
+function showTypeDropdown(items, query, dropdown) {
+    if (items.length === 0 && !query) {
+        dropdown.style.display = 'none';
+        return;
+    }
+
+    var html = '';
+
+    if (items.length === 0) {
+        html += '<div class="type-no-match"><i class="fas fa-info-circle"></i> No existing type found</div>';
+    } else {
+        items.forEach((item, idx) => {
+            var safeTypeName = item.typeName.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            html += `<div class="type-item" data-index="${idx}" data-typename="${item.typeName.replace(/"/g, '&quot;')}"
+                          onmousedown="selectEquipmentType('${safeTypeName}')"
+                          onmouseenter="typeDropdownActiveIdx=${idx};highlightDropdownItem()">
+                        <i class="fas fa-tag"></i>
+                        <span>${highlightMatch(item.typeName, query)}</span>
+                        <span class="type-context">${item.context || ''}</span>
+                     </div>`;
+        });
+    }
+
+    // "Add as new type" option when query doesn't exactly match any existing entry
+    if (query && !items.find(t => t.typeName.toLowerCase() === query.toLowerCase())) {
+        var safeQuery = query.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        html += `<div class="type-new-label" onmousedown="selectEquipmentType('${safeQuery}')">
+                    <i class="fas fa-plus-circle"></i>
+                    Add "<strong>${escapeHtml(query)}</strong>" as new type
+                 </div>`;
+    }
+
+    dropdown.innerHTML = html;
+    dropdown.style.display = 'block';
+}
+
+/**
+ * Select an equipment type from dropdown
+ */
+function selectEquipmentType(typeName) {
+    var input = document.getElementById('otherType');
+    input.value = typeName;
+    
+    document.getElementById('typeDropdown').style.display = 'none';
+    document.getElementById('typeSuggestionBanner').style.display = 'none';
+    typeDropdownActiveIdx = -1;
+}
+
+/**
+ * Show suggestion banner for close matches
+ */
+function showSuggestionBanner(typed, suggested, banner, input) {
+    var safeSuggested = suggested.replace(/'/g, "\\'");
+    banner.innerHTML = `
+        <i class="fas fa-lightbulb"></i>
+        <span>
+            Did you mean 
+            <span class="suggestion-use" onclick="selectEquipmentType('${safeSuggested}')">${escapeHtml(suggested)}</span>?
+            This type already exists in the registry.
+        </span>
+    `;
+    banner.style.display = 'flex';
+}
+
+/**
+ * Keyboard navigation for dropdown
+ */
+function highlightDropdownItem() {
+    var items = document.querySelectorAll('#typeDropdown .type-item');
+    items.forEach((el, i) => el.classList.toggle('active', i === typeDropdownActiveIdx));
+}
+
+// Keyboard handler for arrow keys / enter / escape
+document.addEventListener('keydown', function(e) {
+    var dropdown = document.getElementById('typeDropdown');
+    if (!dropdown || dropdown.style.display === 'none') return;
+    
+    var input = document.getElementById('otherType');
+    if (document.activeElement !== input) return;
+
+    var items = dropdown.querySelectorAll('.type-item');
+    var maxIdx = items.length - 1;
+
+    if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        typeDropdownActiveIdx = Math.min(typeDropdownActiveIdx + 1, maxIdx);
+        highlightDropdownItem();
+        if (items[typeDropdownActiveIdx]) items[typeDropdownActiveIdx].scrollIntoView({ block: 'nearest' });
+    } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        typeDropdownActiveIdx = Math.max(typeDropdownActiveIdx - 1, 0);
+        highlightDropdownItem();
+        if (items[typeDropdownActiveIdx]) items[typeDropdownActiveIdx].scrollIntoView({ block: 'nearest' });
+    } else if (e.key === 'Enter' && typeDropdownActiveIdx >= 0 && items[typeDropdownActiveIdx]) {
+        e.preventDefault();
+        var selectedType = items[typeDropdownActiveIdx].getAttribute('data-typename') 
+                           || items[typeDropdownActiveIdx].textContent.trim();
+        selectEquipmentType(selectedType);
+    } else if (e.key === 'Escape') {
+        dropdown.style.display = 'none';
+        typeDropdownActiveIdx = -1;
+    }
+});
+
+// Close dropdown on click outside
+document.addEventListener('click', function(e) {
+    var wrapper = document.querySelector('.equipment-type-wrapper');
+    var dropdown = document.getElementById('typeDropdown');
+    if (wrapper && dropdown && !wrapper.contains(e.target)) {
+        dropdown.style.display = 'none';
+        typeDropdownActiveIdx = -1;
+    }
+});
 

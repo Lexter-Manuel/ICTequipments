@@ -22,7 +22,10 @@ if (!isLoggedIn()) {
 if (isset($_SESSION['last_activity'])) {
     $inactive = time() - $_SESSION['last_activity'];
     
-    if ($inactive > SESSION_LIFETIME) {
+    // Use DB session_timeout setting; fall back to hardcoded constant
+    $sessionTimeout = (int) getSystemSetting('session_timeout', SESSION_LIFETIME);
+    if ($sessionTimeout < 300) $sessionTimeout = SESSION_LIFETIME; // safety floor
+    if ($inactive > $sessionTimeout) {
         // Session timed out – try "Remember Me" before kicking to login
         if (!empty($_COOKIE['remember_me'])) {
             session_unset();

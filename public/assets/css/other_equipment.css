@@ -128,3 +128,125 @@
     .detail-value { font-size: 13px; }
     .assigned-employee { font-size: var(--text-xs); }
 }
+
+/* ===========================================
+   Equipment Type Autocomplete / Combobox
+   =========================================== */
+.equipment-type-wrapper {
+    position: relative;
+}
+
+.type-autocomplete-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 1060;
+    background: #fff;
+    border: 1px solid var(--border-color, #dee2e6);
+    border-top: none;
+    border-radius: 0 0 var(--radius-md, 6px) var(--radius-md, 6px);
+    max-height: 220px;
+    overflow-y: auto;
+    box-shadow: 0 6px 16px rgba(0,0,0,.12);
+}
+
+.type-autocomplete-dropdown .type-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 14px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #333;
+    transition: background .15s;
+}
+
+.type-autocomplete-dropdown .type-item:hover,
+.type-autocomplete-dropdown .type-item.active {
+    background: var(--primary-xlight, #e8f5e9);
+}
+
+.type-autocomplete-dropdown .type-item i {
+    color: var(--primary-green, #2e7d32);
+    font-size: 12px;
+    flex-shrink: 0;
+}
+
+.type-autocomplete-dropdown .type-item .type-match {
+    font-weight: 700;
+    color: var(--primary-dark, #1b5e20);
+}
+
+.type-autocomplete-dropdown .type-item .type-context {
+    margin-left: auto;
+    font-size: 11px;
+    color: #999;
+    text-transform: uppercase;
+    letter-spacing: .3px;
+}
+
+.type-autocomplete-dropdown .type-no-match {
+    padding: 10px 14px;
+    font-size: 13px;
+    color: #888;
+    text-align: center;
+}
+
+.type-autocomplete-dropdown .type-new-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 14px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--primary-green, #2e7d32);
+    font-weight: 600;
+    border-top: 1px solid var(--border-color, #dee2e6);
+    transition: background .15s;
+}
+
+.type-autocomplete-dropdown .type-new-label:hover {
+    background: var(--primary-xlight, #e8f5e9);
+}
+
+.type-autocomplete-dropdown .type-new-label i {
+    font-size: 11px;
+}
+
+/* Suggestion Banner — appears when close match found */
+.type-suggestion-banner {
+    margin-top: 6px;
+    padding: 8px 12px;
+    font-size: 13px;
+    border-radius: var(--radius-sm, 4px);
+    background: #fff8e1;
+    border: 1px solid #ffe082;
+    color: #6d4c00;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    animation: fadeSlideIn .2s ease;
+}
+
+.type-suggestion-banner i {
+    color: #f9a825;
+    flex-shrink: 0;
+}
+
+.type-suggestion-banner .suggestion-use {
+    color: var(--primary-green, #2e7d32);
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: underline;
+    margin-left: 2px;
+}
+
+.type-suggestion-banner .suggestion-use:hover {
+    color: var(--primary-dark, #1b5e20);
+}
+
+@keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}

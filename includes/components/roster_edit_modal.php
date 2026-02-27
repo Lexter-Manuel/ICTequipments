@@ -107,22 +107,22 @@
                         <div class="col-md-4">
                             <div class="form-section">
                                 <h6 class="form-section-title"><i class="fas fa-camera"></i> Employee Photo</h6>
-                                <div class="photo-upload-container">
-                                    <div class="photo-upload-box" id="edit_photoUploadBox">
-                                        <input type="file" id="edit_photoInput" accept="image/*" hidden>
-                                        <div class="upload-placeholder" id="edit_uploadPlaceholder">
-                                            <i class="fas fa-cloud-upload-alt"></i>
-                                            <p>Click to upload photo</p>
-                                            <small>JPG, PNG (Max 5MB)</small>
+                                    <div class="photo-upload-container">
+                                        <div class="photo-upload-box" id="edit_photoUploadBox">
+                                            <input type="file" id="edit_photoInput" name="photo" accept="image/*" hidden>
+                                            <div class="upload-placeholder" id="edit_uploadPlaceholder">
+                                                <i class="fas fa-cloud-upload-alt"></i>
+                                                <p>Click to upload photo</p>
+                                                <small>JPG, PNG (Max 5MB)</small>
+                                            </div>
+                                            <div class="photo-preview" id="edit_photoPreview">
+                                                <img id="edit_previewImage" src="" alt="Preview">
+                                            </div>
                                         </div>
-                                        <div class="photo-preview" id="edit_photoPreview">
-                                            <img id="edit_previewImage" src="" alt="Preview">
-                                        </div>
+                                        <button type="button" class="btn-change-photo" id="edit_changePhotoBtn" style="display:none">
+                                            <i class="fas fa-sync-alt"></i> Change Photo
+                                        </button>
                                     </div>
-                                    <button type="button" class="btn-change-photo" id="edit_changePhotoBtn" style="display: none;">
-                                        <i class="fas fa-sync-alt"></i> Change Photo
-                                    </button>
-                                </div>
                             </div>
                         </div>
                     </div>

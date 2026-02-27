@@ -14,13 +14,13 @@ try {
     // Load all queries from shared include
     require_once __DIR__ . '/../../includes/queries/maintenance_summary_queries.php';
 
-    // Build query string for print URL
-    $printParams = [];
-    if ($filterDivision !== '') $printParams['division'] = $filterDivision;
-    if ($filterEqType   !== '') $printParams['eq_type']  = $filterEqType;
-    if ($filterDateFrom !== '') $printParams['date_from'] = $filterDateFrom;
-    if ($filterDateTo   !== '') $printParams['date_to']   = $filterDateTo;
-    $printQuery = !empty($printParams) ? '?' . http_build_query($printParams) : '';
+    // Build query string for export URL
+    $exportParams = [];
+    if ($filterDivision !== '') $exportParams['division'] = $filterDivision;
+    if ($filterEqType   !== '') $exportParams['eq_type']  = $filterEqType;
+    if ($filterDateFrom !== '') $exportParams['date_from'] = $filterDateFrom;
+    if ($filterDateTo   !== '') $exportParams['date_to']   = $filterDateTo;
+    $exportQuery = !empty($exportParams) ? '?' . http_build_query($exportParams) : '';
 
 } catch (PDOException $e) {
     error_log("Maintenance summary error: " . $e->getMessage());
@@ -34,7 +34,7 @@ try {
         <h2><i class="fas fa-tools"></i> Maintenance Summary Report</h2>
         <div style="display: flex; gap: 0.5rem; align-items: center;">
             <button class="print-btn" id="toggleMsFilters" onclick="document.getElementById('msFilterPanel').classList.toggle('open')"><i class="fas fa-filter"></i> Filters</button>
-            <button class="print-btn" id="printMsBtn" onclick="window.open('../includes/generative/generate_maintenance_summary.php<?= $printQuery ?>', '_blank')"><i class="fas fa-print"></i> Print Report</button>
+            <button class="print-btn" id="exportMsCsvBtn" onclick="window.open('../includes/generative/export_maintenance_summary_csv.php<?= $exportQuery ?>', '_blank')"><i class="fas fa-file-excel"></i> Export Excel</button>
         </div>
     </div>
 
@@ -169,16 +169,17 @@ try {
             <div class="ms-panel-hdr"><h3><i class="fas fa-clipboard-list"></i> Records by Maintenance Type</h3></div>
             <div class="ms-panel-body" style="padding: 0;">
                 <table class="ms-table">
-                    <thead><tr><th>Maintenance Type</th><th>Records</th></tr></thead>
+                    <thead><tr><th>#</th><th>Maintenance Type</th><th>Records</th></tr></thead>
                     <tbody>
-                        <?php foreach ($byType as $t): ?>
+                        <?php foreach ($byType as $typeIdx => $t): ?>
                         <tr>
+                            <td style="font-family: var(--font-mono);"><?= $typeIdx + 1 ?></td>
                             <td style="font-weight: 600;"><?= htmlspecialchars($t['templateName'] ?? 'Unspecified') ?></td>
                             <td style="font-family: var(--font-mono); font-weight: 700;"><?= $t['cnt'] ?></td>
                         </tr>
                         <?php endforeach; ?>
                         <?php if (empty($byType)): ?>
-                        <tr><td colspan="2" style="text-align: center; color: var(--text-light); padding: 1rem;">No records found.</td></tr>
+                        <tr><td colspan="3" style="text-align: center; color: var(--text-light); padding: 1rem;">No records found.</td></tr>
                         <?php endif; ?>
                     </tbody>
                 </table>
@@ -229,10 +230,11 @@ try {
         <div class="ms-panel-body" style="padding: 0; max-height: 400px; overflow-y: auto;">
             <div class="ms-table-scroll">
             <table class="ms-table">
-                <thead><tr><th>Equipment</th><th>Type</th><th>Maintenance</th><th>Due Date</th><th>Days Overdue</th></tr></thead>
+                <thead><tr><th>#</th><th>Equipment</th><th>Type</th><th>Maintenance</th><th>Due Date</th><th>Days Overdue</th></tr></thead>
                 <tbody>
-                    <?php foreach ($overdueList as $od): ?>
+                    <?php foreach ($overdueList as $odIdx => $od): ?>
                     <tr>
+                        <td style="font-family: var(--font-mono);"><?= $odIdx + 1 ?></td>
                         <td style="font-weight: 600;"><?= htmlspecialchars($od['equipment_name'] ?? 'Unknown') ?></td>
                         <td><?= htmlspecialchars($od['equipment_type'] ?? '') ?></td>
                         <td><?= htmlspecialchars($od['maintenanceFrequency'] ?? '') ?></td>

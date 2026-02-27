@@ -10,6 +10,7 @@ require_once '../config/session-check.php';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="/ictequipment/public/">
     <title>Admin Dashboard - NIA UPRIIS</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
@@ -263,6 +264,7 @@ require_once '../config/session-check.php';
     <script src="assets/bootstrap/bootstrap.bundle.min.js"></script>
     <script src="../vendor/node_modules/cropperjs/dist/cropper.min.js"></script>
     <script src="assets/js/utils.js?v=<?php echo time()?>"></script>
+    <script src="assets/js/realtime.js?v=<?php echo time()?>"></script>
     <script src="assets/js/dashboard.js?v=<?php echo time()?>"></script>
     <script src="assets/js/maintenance-conductor.js?v=<?php echo time(); ?>"></script>
 

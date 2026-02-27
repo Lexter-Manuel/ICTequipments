@@ -13,7 +13,17 @@ $db = Database::getInstance()->getConnection();
 $action = $_POST['action'] ?? '';
 $superAdminId = $_SESSION['user_id'] ?? null;
 
+function isAjaxRequest() {
+    return !empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&
+           strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+}
+
 function redirectWithMessage($msg, $type = 'success') {
+    if (isAjaxRequest()) {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => $type !== 'error', 'message' => $msg]);
+        exit;
+    }
     $_SESSION['account_message'] = $msg;
     $_SESSION['account_message_type'] = $type;
     // Redirect back to the page the form was submitted from
@@ -41,8 +51,10 @@ switch ($action) {
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             redirectWithMessage('Please enter a valid email address.', 'error');
         }
-        if (strlen($password) < 8) {
-            redirectWithMessage('Password must be at least 8 characters long.', 'error');
+        $minPwLen = (int) getSystemSetting('password_min_length', 8);
+        if ($minPwLen < 6) $minPwLen = 8;
+        if (strlen($password) < $minPwLen) {
+            redirectWithMessage("Password must be at least {$minPwLen} characters long.", 'error');
         }
         if ($password !== $confirm) {
             redirectWithMessage('Passwords do not match.', 'error');
@@ -110,8 +122,10 @@ switch ($action) {
 
         // Build update query
         if ($password) {
-            if (strlen($password) < 8) {
-                redirectWithMessage('Password must be at least 8 characters long.', 'error');
+            $minPwLen = (int) getSystemSetting('password_min_length', 8);
+            if ($minPwLen < 6) $minPwLen = 8;
+            if (strlen($password) < $minPwLen) {
+                redirectWithMessage("Password must be at least {$minPwLen} characters long.", 'error');
             }
             if ($password !== $confirm) {
                 redirectWithMessage('Passwords do not match.', 'error');

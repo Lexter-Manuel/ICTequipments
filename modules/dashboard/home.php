@@ -431,6 +431,7 @@ try {
             <table class="mini-table">
                 <thead>
                     <tr>
+                        <th>#</th>
                         <th>Type</th>
                         <th>Date</th>
                         <th>Status</th>
@@ -439,8 +440,9 @@ try {
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($recentMaintenance as $maint): ?>
+                    <?php foreach ($recentMaintenance as $maintIdx => $maint): ?>
                     <tr>
+                        <td class="row-counter"><?= $maintIdx + 1 ?></td>
                         <td><strong><?= htmlspecialchars($maint['typeName'] ?? 'N/A') ?></strong></td>
                         <td style="font-family: var(--font-mono); font-size: 0.75rem;"><?= date('M j, Y', strtotime($maint['maintenanceDate'])) ?></td>
                         <td>

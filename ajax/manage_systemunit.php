@@ -139,6 +139,7 @@ try {
 
 function listSystemUnits($db) {
     $search = $_GET['search'] ?? '';
+    $status = $_GET['status'] ?? '';
 
     $sql = "SELECT s.*, CONCAT_WS(' ', e.firstName, e.lastName) as employeeName 
                 FROM tbl_systemunit s 
@@ -146,6 +147,14 @@ function listSystemUnits($db) {
                 where 1=1";
     
     $params = [];
+
+    if (!empty($status)) {
+        if ($status === 'Active') {
+            $sql .= " AND s.employeeId IS NOT NULL";
+        } elseif ($status === 'Available') {
+            $sql .= " AND s.employeeId IS NULL";
+        }
+    }
 
     if (!empty($search)) {
         $term = "%$search%";

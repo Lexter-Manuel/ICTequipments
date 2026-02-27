@@ -152,7 +152,27 @@ function createEquipment($db) {
         "Added {$type} — {$brand} {$model}, Serial: {$serial}, Status: {$status}, Year: {$year}."
         . ($employeeId ? " Assigned to employee ID {$employeeId}." : ""));
 
-    // 3. MAINTENANCE HOOK (Dynamic Type Lookup)
+    // 3. AUTO-REGISTER TYPE if not in registry
+    try {
+        $regCheck = $db->prepare("SELECT typeId FROM tbl_equipment_type_registry WHERE typeName = ?");
+        $regCheck->execute([$type]);
+        if (!$regCheck->fetch()) {
+            // Determine context based on assignment
+            $context = $employeeId ? 'Employee' : 'Location';
+            $filterClause = "equipmentType = '" . addslashes($type) . "'";
+            $regInsert = $db->prepare("
+                INSERT INTO tbl_equipment_type_registry 
+                (typeName, tableName, pkColumn, filterClause, defaultFrequency, context) 
+                VALUES (?, 'tbl_otherequipment', 'otherEquipmentId', ?, 180, ?)
+            ");
+            $regInsert->execute([$type, $filterClause, $context]);
+            error_log("Auto-registered new equipment type: {$type}");
+        }
+    } catch (Exception $e) {
+        error_log("Type Registry Error: " . $e->getMessage());
+    }
+
+    // 4. MAINTENANCE HOOK (Dynamic Type Lookup)
     try {
         $maint = new MaintenanceHelper($db);
         $maint->initScheduleByType($type, $newId); 

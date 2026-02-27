@@ -70,7 +70,7 @@ try {
 
     // ---- All-in-One ----
     $aioStmt = $db->prepare("
-        SELECT allinoneId, allinoneBrand,
+        SELECT allinoneId, allinoneBrand, allinoneSerial,
                specificationProcessor, specificationMemory,
                specificationGPU, specificationStorage
         FROM tbl_allinone

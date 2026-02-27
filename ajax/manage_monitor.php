@@ -128,6 +128,7 @@ try {
 
 function listMonitors($db) {
     $search = $_GET['search'] ?? '';
+    $status = $_GET['status'] ?? '';
 
     $sql = "SELECT m.*, CONCAT_WS(' ', e.firstName, e.middleName, e.lastName) as employeeName
         FROM tbl_monitor m
@@ -135,6 +136,15 @@ function listMonitors($db) {
         where 1=1";
     
     $params = [];
+
+    if (!empty($status)) {
+        if ($status === 'Active') {
+            $sql .= " AND m.employeeId IS NOT NULL";
+        } elseif ($status === 'Available') {
+            $sql .= " AND m.employeeId IS NULL";
+        }
+    }
+
     if (!empty($search)) {
         $term = "%$search%";
         $sql .= " AND (

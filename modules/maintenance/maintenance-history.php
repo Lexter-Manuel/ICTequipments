@@ -168,6 +168,7 @@
                 <table class="mnt-table">
                     <thead>
                         <tr>
+                            <th>#</th>
                             <th>Date Completed</th>
                             <th>Equipment</th>
                             <th>Location</th>
@@ -178,7 +179,7 @@
                     </thead>
                     <tbody id="histDetailedBody">
                         <tr>
-                            <td colspan="6" style="text-align:center; padding:60px; color:var(--text-light);">
+                            <td colspan="7" style="text-align:center; padding:60px; color:var(--text-light);">
                                 <i class="fas fa-spinner fa-spin" style="font-size:1.5rem;"></i>
                                 <div style="margin-top:10px;">Loading maintenance records…</div>
                             </td>
@@ -284,6 +285,7 @@
                                 <table class="dv-group-table" id="dvHistAllTable">
                                     <thead>
                                         <tr>
+                                            <th>#</th>
                                             <th>Equipment</th>
                                             <th>Unit / Section</th>
                                             <th>Technician</th>

@@ -22,7 +22,8 @@ var currentSystemUnitId = null;
 
 function filterSystemUnits() {
     var search = document.getElementById('systemunitSearch').value;
-    fetch(`../ajax/manage_systemunit.php?action=list&search=${encodeURIComponent(search)}`)
+    var status = document.getElementById('suStatusFilter') ? document.getElementById('suStatusFilter').value : '';
+    fetch(`../ajax/manage_systemunit.php?action=list&search=${encodeURIComponent(search)}&status=${encodeURIComponent(status)}`)
         .then(response => response.json())
         .then(data => {
             if (data.success) {
@@ -39,14 +40,15 @@ function renderSystemUnits(units) {
     tbody.innerHTML = '';
     
     if (units.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-medium);padding:20px">No system units found</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text-medium);padding:20px">No system units found</td></tr>';
         return;
     }
     
-    units.forEach(s => {
+    units.forEach((s, idx) => {
         var cls = s.status.toLowerCase();
         var tr = document.createElement('tr');
         tr.innerHTML = `
+            <td class="row-counter">${idx + 1}</td>
             <td><strong style="color:var(--primary-green)">${escapeHtml(s.systemUnitSerial)}</strong></td>
             <td><div style="font-weight:600">${escapeHtml(s.systemUnitBrand)}</div><div style="font-size:12px;color:var(--text-light)"><i class="fas fa-tag"></i> ${escapeHtml(s.systemUnitCategory)}</div></td>
             <td>
@@ -158,7 +160,8 @@ var currentMonitorId = null;
 
 function filterMonitors() {
     var search = document.getElementById('monitorSearch').value;
-    fetch(`../ajax/manage_monitor.php?action=list&search=${encodeURIComponent(search)}`)
+    var status = document.getElementById('monStatusFilter') ? document.getElementById('monStatusFilter').value : '';
+    fetch(`../ajax/manage_monitor.php?action=list&search=${encodeURIComponent(search)}&status=${encodeURIComponent(status)}`)
         .then(response => response.json())
         .then(data => {
             if (data.success) {
@@ -175,14 +178,15 @@ function renderMonitors(monitors) {
     tbody.innerHTML = '';
     
     if (monitors.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-medium);padding:20px">No monitors found</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text-medium);padding:20px">No monitors found</td></tr>';
         return;
     }
     
-    monitors.forEach(m => {
+    monitors.forEach((m, idx) => {
         var cls = m.status.toLowerCase();
         var tr = document.createElement('tr');
         tr.innerHTML = `
+            <td class="row-counter">${idx + 1}</td>
             <td><strong style="color:var(--primary-green)">${escapeHtml(m.monitorSerial)}</strong></td>
             <td><div style="font-weight:600">${escapeHtml(m.monitorBrand)}</div></td>
             <td>${escapeHtml(m.monitorSize)}</td>
@@ -282,7 +286,8 @@ var currentAllInOneId = null;
 
 function filterAllInOnes() {
     var search = document.getElementById('allinoneSearch').value;
-    fetch(`../ajax/manage_allinone.php?action=list&search=${encodeURIComponent(search)}`)
+    var status = document.getElementById('aioStatusFilter') ? document.getElementById('aioStatusFilter').value : '';
+    fetch(`../ajax/manage_allinone.php?action=list&search=${encodeURIComponent(search)}&status=${encodeURIComponent(status)}`)
         .then(response => response.json())
         .then(data => {
             if (data.success) {
@@ -299,14 +304,16 @@ function renderAllInOnes(units) {
     tbody.innerHTML = '';
     
     if (units.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-medium);padding:20px">No all-in-one PCs found</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-medium);padding:20px">No all-in-one PCs found</td></tr>';
         return;
     }
     
-    units.forEach(a => {
+    units.forEach((a, idx) => {
         var cls = a.status.toLowerCase();
         var tr = document.createElement('tr');
         tr.innerHTML = `
+            <td class="row-counter">${idx + 1}</td>
+            <td><span class="serial-number">${escapeHtml(a.allinoneSerial || 'N/A')}</span></td>
             <td><div style="font-weight:600">${escapeHtml(a.allinoneBrand)}</div></td>
             <td>
                 <div class="spec-item"><i class="fas fa-microchip"></i><span class="spec-value">${escapeHtml(a.specificationProcessor)}</span></div>
@@ -338,6 +345,7 @@ function editAllInOne(id) {
                 var a = data.data;
                 document.getElementById('allinoneModalTitle').textContent = 'Edit All-in-One';
                 document.getElementById('aioBrand').value = a.allinoneBrand;
+                document.getElementById('aioSerial').value = a.allinoneSerial || '';
                 document.getElementById('aioProcessor').value = a.specificationProcessor;
                 document.getElementById('aioMemory').value = a.specificationMemory;
                 document.getElementById('aioGPU').value = a.specificationGPU;
@@ -357,6 +365,7 @@ function saveAllInOne() {
     formData.append('action', currentAllInOneId ? 'update' : 'create');
     if (currentAllInOneId) formData.append('allinone_id', currentAllInOneId);
     formData.append('brand', document.getElementById('aioBrand').value);
+    formData.append('allinoneSerial', document.getElementById('aioSerial').value);
     formData.append('processor', document.getElementById('aioProcessor').value);
     formData.append('memory', document.getElementById('aioMemory').value);
     formData.append('gpu', document.getElementById('aioGPU').value);
@@ -403,9 +412,6 @@ function deleteAllInOne(id) {
     .catch(error => alert('Error deleting all-in-one: ' + error));
 }
 
-// ========================================
-// UTILITY FUNCTIONS
-// ========================================
 function refreshCurrentTab() {
     var suTab = document.getElementById('systemunits-tab');
     var monTab = document.getElementById('monitors-tab');
@@ -426,5 +432,3 @@ function refreshCurrentTab() {
     // fallback: refresh system units
     if (typeof filterSystemUnits === 'function') filterSystemUnits();
 }
-
-// escapeHtml provided by shared utils.js

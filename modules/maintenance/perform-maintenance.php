@@ -80,7 +80,7 @@
 
     <!-- Checklist Stage (hidden initially) -->
     <div id="checklist-stage" class="d-none">
-        <button class="pm-back-btn" onclick="location.reload()">
+        <button class="pm-back-btn" onclick="reloadCurrentPage()">
             <i class="fas fa-arrow-left"></i>
             Back to Selection
         </button>

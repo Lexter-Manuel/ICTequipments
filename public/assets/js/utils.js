@@ -142,6 +142,7 @@ function createTableController(config) {
 
             updateRecordCount(config.recordCountId, total === 0 ? 0 : start + 1, end, total, config.recordLabel);
             renderPaginationControls(config.paginationId, state.currentPage, totalPages, goToFnName);
+            updateRowCounters(config.tableBodyId, total === 0 ? 0 : start + 1);
         },
 
         filter: function() {
@@ -196,6 +197,31 @@ function switchToggle(activeId, clickedBtn, btnContainerSelector, contentPrefix)
 }
 
 // ============================================================
+// ROW COUNTER HELPER
+// ============================================================
+
+/**
+ * Update the sequential row counter (#) for visible rows in a table body.
+ * Call this after filtering/pagination to renumber the visible rows.
+ * @param {string} tbodyId - ID of the tbody element
+ * @param {number} [startIndex=1] - The starting number (use pagination offset + 1)
+ */
+function updateRowCounters(tbodyId, startIndex) {
+    startIndex = startIndex || 1;
+    var tbody = document.getElementById(tbodyId);
+    if (!tbody) return;
+    var visibleRows = Array.from(tbody.querySelectorAll('tr')).filter(function(r) {
+        return r.style.display !== 'none' && !r.querySelector('.empty-state') && !r.querySelector('.fa-spinner');
+    });
+    visibleRows.forEach(function(row, idx) {
+        var counterCell = row.querySelector('td.row-counter');
+        if (counterCell) {
+            counterCell.textContent = startIndex + idx;
+        }
+    });
+}
+
+// ============================================================
 // RELOAD HELPERS
 // ============================================================
 
@@ -204,12 +230,12 @@ function switchToggle(activeId, clickedBtn, btnContainerSelector, contentPrefix)
  * @param {string} [pageName] - Optional page name to load
  */
 function reloadCurrentPage(pageName) {
-    if (window.dashboard) {
-        window.dashboard.pageCache = {};
+    if (window.dashboardApp) {
+        window.dashboardApp.pageCache = {};
         if (pageName) {
-            window.dashboard.loadPage(pageName);
-        } else if (window.dashboard.currentPage) {
-            window.dashboard.loadPage(window.dashboard.currentPage);
+            window.dashboardApp.loadPage(pageName);
+        } else if (window.dashboardApp.currentPage) {
+            window.dashboardApp.loadPage(window.dashboardApp.currentPage, false);
         } else {
             location.reload();
         }

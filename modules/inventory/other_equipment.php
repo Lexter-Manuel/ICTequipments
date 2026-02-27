@@ -30,6 +30,7 @@ $maintenanceCount = count(array_filter($equipment, fn($o) => $o['status'] == 'Un
 <?php include '../../includes/components/location_loader.php'; ?>
 
 <link rel="stylesheet" href="assets/css/inventory.css?v=<?php echo time()?>">
+<link rel="stylesheet" href="assets/css/autocomplete.css?v=<?php echo time()?>">
 <link rel="stylesheet" href="assets/css/other_equipment.css?v=<?php echo time()?>">
 
 <!-- Page Header -->
@@ -75,9 +76,9 @@ $maintenanceCount = count(array_filter($equipment, fn($o) => $o['status'] == 'Un
             <div class="filter-group">
                 <select id="statusFilter" onchange="filterOtherEquipment()">
                     <option value="">All Statuses</option>
-                    <?php foreach (['Available', 'In Use', 'Under Maintenance', 'Disposed'] as $status): ?>
-                    <option value="<?php echo $status; ?>"><?php echo $status; ?></option>
-                    <?php endforeach; ?>
+                    <option value="Operational">Operational</option>
+                    <option value="For Replacement">For Replacement</option>
+                    <option value="Disposed">Disposed</option>
                 </select>
             </div>
             <div class="search-box">
@@ -94,6 +95,7 @@ $maintenanceCount = count(array_filter($equipment, fn($o) => $o['status'] == 'Un
         <table id="otherTable">
             <thead>
                 <tr>
+                    <th>#</th>
                     <th>Serial Number</th>
                     <th>Equipment Type</th>
                     <th>Brand &amp; Model</th>
@@ -106,7 +108,7 @@ $maintenanceCount = count(array_filter($equipment, fn($o) => $o['status'] == 'Un
             </thead>
             <tbody id="otherTableBody">
                 <?php if (empty($equipment)): ?>
-                <tr><td colspan="8" class="empty-state"><i class="fas fa-inbox"></i><p>No equipment records found</p></td></tr>
+                <tr><td colspan="9" class="empty-state"><i class="fas fa-inbox"></i><p>No equipment records found</p></td></tr>
                 <?php else: ?>
                     <?php foreach ($equipment as $o):
                         $displayStatus = $o['employeeId'] ? 'In Use' : $o['status'];
@@ -126,6 +128,7 @@ $maintenanceCount = count(array_filter($equipment, fn($o) => $o['status'] == 'Un
                         data-employee="<?php echo strtolower($o['employeeName'] ?? ''); ?>"
                         data-status="<?php echo $displayStatus; ?>"
                         data-year="<?php echo $o['yearAcquired']; ?>">
+                        <td class="row-counter"></td>
                         <td><span class="serial-number"><?php echo htmlspecialchars($o['serialNumber']); ?></span></td>
                         <td>
                             <div class="equipment-type">
@@ -193,4 +196,5 @@ $maintenanceCount = count(array_filter($equipment, fn($o) => $o['status'] == 'Un
     var employeesData      = <?php echo json_encode($employees); ?>;
 </script>
 <script src="assets/js/location_manager.js?v=<?php echo time()?>"></script>
+<script src="assets/js/autocomplete.js?v=<?php echo time()?>"></script>
 <script src="assets/js/other_equipment.js?v=<?php echo time()?>"></script>

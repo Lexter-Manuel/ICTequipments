@@ -262,6 +262,7 @@ $initials = strtoupper(substr($parts[0], 0, 1) . (isset($parts[1]) ? substr($par
                         <table class="ps-table">
                             <thead>
                                 <tr>
+                                    <th>#</th>
                                     <th>Status</th>
                                     <th>IP Address</th>
                                     <th>Browser</th>
@@ -270,10 +271,11 @@ $initials = strtoupper(substr($parts[0], 0, 1) . (isset($parts[1]) ? substr($par
                             </thead>
                             <tbody>
                                 <?php if (empty($loginHistory)): ?>
-                                    <tr><td colspan="4" class="ps-empty-cell" data-label="">No login records found</td></tr>
+                                    <tr><td colspan="5" class="ps-empty-cell" data-label="">No login records found</td></tr>
                                 <?php else: ?>
-                                    <?php foreach ($loginHistory as $login): ?>
+                                    <?php foreach ($loginHistory as $loginIdx => $login): ?>
                                         <tr>
+                                            <td data-label="#"><?php echo $loginIdx + 1; ?></td>
                                             <td data-label="Status">
                                                 <?php if ($login['success']): ?>
                                                     <span class="ps-badge ps-badge-success"><i class="fas fa-check-circle"></i> Success</span>

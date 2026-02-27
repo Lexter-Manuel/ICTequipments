@@ -1,0 +1,127 @@
+/* =============================================
+   Employee Autocomplete — Enhanced Combobox
+   ============================================= */
+
+/* Wrapper */
+.emp-autocomplete-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+/* Dropdown */
+.emp-autocomplete-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 1060;
+    background: #fff;
+    border: 1px solid var(--border-color, #dee2e6);
+    border-top: none;
+    border-radius: 0 0 var(--radius-md, 6px) var(--radius-md, 6px);
+    max-height: 240px;
+    overflow-y: auto;
+    display: none;
+    box-shadow: 0 6px 16px rgba(0,0,0,.12);
+}
+
+/* Item rows */
+.emp-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 14px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #333;
+    transition: background .15s;
+    border-bottom: 1px solid #f5f5f5;
+}
+.emp-item:last-child { border-bottom: none; }
+
+.emp-item:hover,
+.emp-item.active {
+    background: var(--primary-xlight, #e8f5e9);
+    color: var(--primary-dark, #1b5e20);
+}
+
+.emp-item i {
+    color: var(--primary-green, #2e7d32);
+    font-size: 13px;
+    flex-shrink: 0;
+    width: 16px;
+    text-align: center;
+}
+
+.emp-item i.fa-user-slash { color: #999; }
+
+.emp-item-name { font-weight: 500; }
+
+/* Highlight matched text */
+.emp-match {
+    font-weight: 700;
+    color: var(--primary-dark, #1b5e20);
+    background: transparent;
+}
+
+/* No results */
+.emp-no-match {
+    padding: 12px 14px;
+    font-size: 13px;
+    color: #888;
+    text-align: center;
+}
+.emp-no-match i { margin-right: 6px; }
+
+/* Suggestion Banner */
+.emp-suggestion-banner {
+    margin-top: 6px;
+    padding: 8px 12px;
+    font-size: 13px;
+    border-radius: var(--radius-sm, 4px);
+    background: #fff8e1;
+    border: 1px solid #ffe082;
+    color: #6d4c00;
+    display: none;
+    align-items: center;
+    gap: 8px;
+    animation: empFadeIn .2s ease;
+}
+
+.emp-suggestion-banner i {
+    color: #f9a825;
+    flex-shrink: 0;
+}
+
+.emp-suggestion-use {
+    color: var(--primary-green, #2e7d32);
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: underline;
+}
+.emp-suggestion-use:hover {
+    color: var(--primary-dark, #1b5e20);
+}
+
+@keyframes empFadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Error state */
+.emp-error input.form-control {
+    border-color: #dc3545;
+}
+.emp-error input.form-control:focus {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
+}
+
+/* Legacy compat — keep old mark class working if any leftover usage */
+mark.ac-mark {
+    background: #fff3cd;
+    color: #664d03;
+    padding: 0 1px;
+    border-radius: 2px;
+    font-weight: 600;
+}

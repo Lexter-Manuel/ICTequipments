@@ -213,7 +213,7 @@ $lockedCount  = count(array_filter($accounts, fn($a) => $a['status'] === 'Locked
                 <?php else: ?>
                 <?php foreach ($accounts as $i => $acc): ?>
                 <tr data-status="<?php echo $acc['status']; ?>">
-                    <td><?php echo $i + 1; ?></td>
+                    <td class="row-counter"><?php echo $i + 1; ?></td>
                     <td>
                         <div class="account-info">
                             <div class="account-avatar">
