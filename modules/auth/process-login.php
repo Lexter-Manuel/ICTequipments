@@ -47,12 +47,12 @@ try {
     }
     
     // Validate email format
-    if (!validateEmail($email)) {
-        jsonResponse([
-            'success' => false,
-            'message' => 'Please enter a valid email address'
-        ], 400);
-    }
+    // if (!validateEmail($email)) {
+    //     jsonResponse([
+    //         'success' => false,
+    //         'message' => 'Please enter a valid email address'
+    //     ], 400);
+    // }
     
     // Check for too many failed attempts
     $ipAddress = getClientIP();

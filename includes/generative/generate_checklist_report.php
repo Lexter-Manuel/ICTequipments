@@ -179,11 +179,11 @@ if (!empty($rec['signatories_json'])) {
 $fmtShort = fn($d) => $d ? date('M d, Y', strtotime($d)) : '';
 
 $assetDir    = __DIR__ . '/../../public/assets/letterhead/';
-$bgWavePath  = $assetDir . 'bg_wave.png';
-$sealPath    = $assetDir . 'logo_president.png';
-$niaLogoPath = $assetDir . 'logo_nia.png';
-$bagongPath  = $assetDir . 'logo_bagong.png';
-$isoCertPath = $assetDir . 'iso_cert-with-qr.png';
+$bgWavePath  = $assetDir . 'bg_wave.jpeg';
+$sealPath    = $assetDir . 'logo_president.jpeg';
+$niaLogoPath = $assetDir . 'logo_nia.jpeg';
+$bagongPath  = $assetDir . 'logo_bagong.jpeg';
+$isoCertPath = $assetDir . 'iso_cert-with-qr.jpeg';
 
 // ─── PDF class ────────────────────────────────────────────────────────────────
 class NIAChecklistPDF extends TCPDF {
@@ -207,17 +207,17 @@ class NIAChecklistPDF extends TCPDF {
         $logoX    = 10;
 
         if ($this->sealPath && file_exists($this->sealPath)) {
-            $this->Image($this->sealPath, $logoX, 11, $logoSize, $logoSize, 'PNG');
+            $this->Image($this->sealPath, $logoX, 11, $logoSize, $logoSize, 'JPEG');
         }
 
         if ($this->niaLogoPath && file_exists($this->niaLogoPath)) {
-            $this->Image($this->niaLogoPath, $logoX + $logoSize + 2, 11, $logoSize, $logoSize, 'PNG');
+            $this->Image($this->niaLogoPath, $logoX + $logoSize + 2, 11, $logoSize, $logoSize, 'JPEG');
         }
 
         if ($this->bagongPath && file_exists($this->bagongPath)) {   
             $logoSize = 20;
             $logoY    = 5;
-            $this->Image($this->bagongPath, $pageW - 10 - $logoSize, 9, $logoSize, $logoSize, 'PNG');
+            $this->Image($this->bagongPath, $pageW - 10 - $logoSize, 9, $logoSize, $logoSize, 'JPEG');
         }
 
         $textX = (2 * $logoSize) + 7;
@@ -258,10 +258,10 @@ class NIAChecklistPDF extends TCPDF {
         $isoY = $footerY + 1;
 
         if ($this->bgWavePath && file_exists($this->bgWavePath)) {
-            $this->Image($this->bgWavePath, 0, $footerY - 30, $pageW, 0, 'PNG');
+            $this->Image($this->bgWavePath, 0, $footerY - 30, $pageW, 0, 'JPEG');
         }
         if ($this->isoCertPath && file_exists($this->isoCertPath)) {
-            $this->Image($this->isoCertPath, $isoX, $isoY, $isoW, $isoH, 'PNG');
+            $this->Image($this->isoCertPath, $isoX, $isoY, $isoW, $isoH, 'JPEG');
         }
 
         $textW = $contentW - $isoW - 4;

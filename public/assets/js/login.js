@@ -29,11 +29,6 @@ function validateEmail() {
         return false;
     }
     
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-        showFieldError(emailInput, emailError, 'Please enter a valid email address');
-        return false;
-    }
     
     clearFieldError(emailInput, emailError);
     return true;

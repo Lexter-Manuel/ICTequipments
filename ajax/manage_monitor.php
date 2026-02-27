@@ -173,7 +173,7 @@ function listMonitors($db) {
 }
 
 function getMonitor($db) {
-    $id = $_GET['monitorId'] ?? null;
+    $id = $_GET['monitorId'] ?? $_GET['monitor_id'] ?? null;
     if (!$id) throw new Exception('Monitor ID is required');
     
     $stmt = $db->prepare("
@@ -190,10 +190,8 @@ function getMonitor($db) {
     $formatted = [
         'monitorId' => $monitor['monitorId'],
         'monitorBrand' => $monitor['monitorBrand'],
-        'monitorSize' => $monitor['monitorSize'],
+        'monitorSize' => $monitor['monitorSize'],   
         'monitorSerial' => $monitor['monitorSerial'],
-        'resolution' => '1920x1080 (Full HD)',
-        'panelType' => 'IPS',
         'yearAcquired' => $monitor['yearAcquired'],
         'employeeId' => $monitor['employeeId'],
         'employeeName' => $monitor['employeeName'],
@@ -255,7 +253,7 @@ function createMonitor($db) {
 }
 
 function updateMonitor($db) {
-    $id = filter_var($_POST['monitorId'] ?? null, FILTER_VALIDATE_INT);
+    $id = filter_var($_POST['monitorId'] ?? $_POST['monitor_id'] ?? null, FILTER_VALIDATE_INT);
     if (!$id || $id < 1) {
         throw new Exception('Valid monitor ID is required');
     }
@@ -311,7 +309,7 @@ function updateMonitor($db) {
 }
 
 function deleteMonitor($db) {
-    $id = $_POST['monitorId'] ?? null;
+    $id = $_POST['monitorId'] ?? $_POST['monitor_id'] ?? null;
     if (!$id) throw new Exception('Monitor ID is required');
 
     // Fetch details before deleting

@@ -338,7 +338,7 @@ $jobOrderCount  = count(array_filter($employees, fn($e) => $e['employmentStatus'
         </div>
 
         <div class="form-footer">
-            <button type="button" class="btn-cancel"><i class="fas fa-times"></i> Cancel</button>
+            <button type="button" class="btn-cancel" onclick="toggleForm()"><i class="fas fa-times"></i> Cancel</button>
             <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Add Employee</button>
         </div>
     </form>

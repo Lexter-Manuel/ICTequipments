@@ -586,6 +586,9 @@ function saveEmployee() {
     var form = document.getElementById('editEmployeeForm');
     var formData = new FormData(form);
     
+    // Required by process_employee.php switch statement
+    formData.append('action', 'update');
+
     // Get final location using hierarchy manager
     var finalLoc = LocationHierarchy.getFinalLocationId();
                    
@@ -595,7 +598,7 @@ function saveEmployee() {
     }
     formData.set('locationId', finalLoc);
 
-    fetch(`${BASE_URL}ajax/update_employee.php`, { method: 'POST', body: formData })
+    fetch(`${BASE_URL}ajax/process_employee.php`, { method: 'POST', body: formData })
     .then(r => r.json())
     .then(data => {
         if(data.success) {

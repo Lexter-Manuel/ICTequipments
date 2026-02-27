@@ -142,14 +142,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         switch ($action) {
             case 'add':
                 // Validate required fields
-                $employeeId = filter_input(INPUT_POST, 'employeeId', FILTER_VALIDATE_INT);
-                $firstName = trim($_POST['firstName'] ?? '');
-                $lastName = trim($_POST['lastName'] ?? '');
-                $position = trim($_POST['position'] ?? '');
-                $birthDate = $_POST['birthDate'] ?? '';
-                $sex = $_POST['sex'] ?? '';
+                // intval() strips leading zeros correctly: "001245" → 1245 stored in int(11)
+                // FILTER_VALIDATE_INT would reject "001245" entirely, causing false validation failures
+                $employeeId       = intval($_POST['employeeId'] ?? 0);
+                $firstName        = trim($_POST['firstName'] ?? '');
+                $lastName         = trim($_POST['lastName'] ?? '');
+                $position         = trim($_POST['position'] ?? '');
+                $birthDate        = $_POST['birthDate'] ?? '';
+                $sex              = $_POST['sex'] ?? '';
                 $employmentStatus = $_POST['employmentStatus'] ?? '';
-                $locationId = filter_input(INPUT_POST, 'locationId', FILTER_VALIDATE_INT);
+                // FILTER_VALIDATE_INT returns false for '' or non-numeric — use intval fallback
+                $locationId = !empty($_POST['locationId']) ? (int)$_POST['locationId'] : 0;
                 
                 // Validate required fields
                 if (!$employeeId || empty($firstName) || empty($lastName) || empty($position) || 
@@ -370,11 +373,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
 
-                // If at least 1 equipment was saved, mark the employee as Active (is_active = 1)
-                if ($equipmentSaved > 0) {
-                    $db->prepare("UPDATE tbl_employee SET is_active = 1 WHERE employeeId = ?")
-                       ->execute([$employeeId]);
-                }
+                // Active/Inactive status is derived at query time in roster.php
+                // by counting equipment rows — no column write needed here.
 
                 $msg = 'Employee added successfully!';
                 if ($equipmentSaved > 0) {
@@ -392,9 +392,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 break;
                 
             case 'update':
-                // Get employee ID
-                $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
-                if (!$id) {
+                // employeeId IS the primary key — use intval so leading-zero IDs like "001245" work
+                $employeeId = intval($_POST['employeeId'] ?? 0);
+                if (!$employeeId) {
                     echo json_encode([
                         'success' => false,
                         'message' => 'Invalid employee ID.'
@@ -403,16 +403,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 
                 // Validate required fields
-                $employeeId = filter_input(INPUT_POST, 'employeeId', FILTER_VALIDATE_INT);
-                $firstName = trim($_POST['firstName'] ?? '');
-                $lastName = trim($_POST['lastName'] ?? '');
-                $position = trim($_POST['position'] ?? '');
-                $birthDate = $_POST['birthDate'] ?? '';
-                $sex = $_POST['sex'] ?? '';
+                $firstName        = trim($_POST['firstName'] ?? '');
+                $lastName         = trim($_POST['lastName'] ?? '');
+                $position         = trim($_POST['position'] ?? '');
+                $birthDate        = $_POST['birthDate'] ?? '';
+                $sex              = $_POST['sex'] ?? '';
                 $employmentStatus = $_POST['employmentStatus'] ?? '';
-                $locationId = filter_input(INPUT_POST, 'locationId', FILTER_VALIDATE_INT);
+                $locationId       = !empty($_POST['locationId']) ? (int)$_POST['locationId'] : 0;
                 
-                if (!$employeeId || empty($firstName) || empty($lastName) || empty($position) || 
+                if (empty($firstName) || empty($lastName) || empty($position) || 
                     empty($birthDate) || empty($sex) || empty($employmentStatus) || !$locationId) {
                     echo json_encode([
                         'success' => false,
@@ -421,38 +420,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     exit;
                 }
                 
-                // Check if employee ID exists for another record
-                $checkStmt = $db->prepare("SELECT id, photoPath FROM tbl_employee WHERE employeeId = ? AND id != ?");
-                $checkStmt->execute([$employeeId, $id]);
-                if ($checkStmt->fetch()) {
-                    echo json_encode([
-                        'success' => false,
-                        'message' => 'Employee ID already exists for another employee.'
-                    ]);
+                // Get current photo path
+                $currentStmt = $db->prepare("SELECT photoPath FROM tbl_employee WHERE employeeId = ?");
+                $currentStmt->execute([$employeeId]);
+                $currentEmployee = $currentStmt->fetch(PDO::FETCH_ASSOC);
+                if (!$currentEmployee) {
+                    echo json_encode(['success' => false, 'message' => 'Employee not found.']);
                     exit;
                 }
-                
-                // Get current employee data for photo path
-                $currentStmt = $db->prepare("SELECT photoPath FROM tbl_employee WHERE id = ?");
-                $currentStmt->execute([$id]);
-                $currentEmployee = $currentStmt->fetch(PDO::FETCH_ASSOC);
                 $photoPath = $currentEmployee['photoPath'];
                 
                 // Handle cropped image if provided
                 if (!empty($_POST['croppedImage'])) {
-                    // Delete old photo if exists
-                    if ($photoPath) {
-                        deleteOldPhoto($photoPath);
-                    }
-                    
+                    if ($photoPath) deleteOldPhoto($photoPath);
                     $imageResult = handleCroppedImage($_POST['croppedImage'], $employeeId);
                     if ($imageResult['success']) {
                         $photoPath = $imageResult['path'];
                     } else {
-                        echo json_encode([
-                            'success' => false,
-                            'message' => $imageResult['message']
-                        ]);
+                        echo json_encode(['success' => false, 'message' => $imageResult['message']]);
                         exit;
                     }
                 }
@@ -461,9 +446,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $middleName = trim($_POST['middleName'] ?? '');
                 $suffixName = $_POST['suffixName'] ?? null;
                 
-                // Update employee in database
+                // Update employee — WHERE employeeId (PK), no 'id' column exists
                 $sql = "UPDATE tbl_employee SET
-                    employeeId = ?,
                     firstName = ?,
                     middleName = ?,
                     lastName = ?,
@@ -474,23 +458,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     employmentStatus = ?,
                     location_id = ?,
                     photoPath = ?,
-                    updated_at = NOW()
-                    WHERE id = ?";
+                    updatedAt = NOW()
+                WHERE employeeId = ?";
                 
                 $stmt = $db->prepare($sql);
                 $stmt->execute([
-                    $employeeId,
                     $firstName,
                     $middleName ?: null,
                     $lastName,
-                    $suffixName,
+                    $suffixName ?: null,
                     $position,
                     $birthDate,
                     $sex,
                     $employmentStatus,
                     $locationId,
                     $photoPath,
-                    $id
+                    $employeeId
                 ]);
                 
                 $_SESSION['employee_message'] = 'Employee updated successfully!';
@@ -506,9 +489,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 break;
                 
             case 'delete':
-                // Get employee ID
-                $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
-                if (!$id) {
+                $employeeId = intval($_POST['employeeId'] ?? 0);
+                // Also accept legacy 'id' field name from older callers
+                if (!$employeeId) {
+                    $employeeId = intval($_POST['id'] ?? 0);
+                }
+                if (!$employeeId) {
                     echo json_encode([
                         'success' => false,
                         'message' => 'Invalid employee ID.'
@@ -517,13 +503,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 
                 // Get employee photo path before deletion
-                $stmt = $db->prepare("SELECT photoPath FROM tbl_employee WHERE id = ?");
-                $stmt->execute([$id]);
+                $stmt = $db->prepare("SELECT photoPath FROM tbl_employee WHERE employeeId = ?");
+                $stmt->execute([$employeeId]);
                 $employee = $stmt->fetch(PDO::FETCH_ASSOC);
                 
                 // Delete employee from database
-                $deleteStmt = $db->prepare("DELETE FROM tbl_employee WHERE id = ?");
-                $deleteStmt->execute([$id]);
+                $deleteStmt = $db->prepare("DELETE FROM tbl_employee WHERE employeeId = ?");
+                $deleteStmt->execute([$employeeId]);
                 
                 // Delete photo file if exists
                 if ($employee && $employee['photoPath']) {
@@ -534,7 +520,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['employee_message_type'] = 'success';
 
                 logActivity(ACTION_DELETE, MODULE_EMPLOYEES,
-                    "Deleted employee (ID: {$id}).");
+                    "Deleted employee (ID: {$employeeId}).");
                 
                 echo json_encode([
                     'success' => true,

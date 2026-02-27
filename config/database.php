@@ -89,7 +89,7 @@ class DatabaseSeeder {
         $stmt = $this->db->prepare($sql);
         $stmt->execute([
             ':user_name'  => 'SystemSuperAdmin',
-            ':email'      => 'inventory@upriis.local',
+            ':email'      => 'superadmin',
             ':password'   => $hashedPassword,
             ':role'       => 'Super Admin',
             ':status'     => 'Active',

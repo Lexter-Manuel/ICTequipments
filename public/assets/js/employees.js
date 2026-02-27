@@ -76,8 +76,8 @@ photoInput.addEventListener('change', function(e) {
         }
         
         // Validate file size (5MB max)
-        if (file.size > 5 * 1024 * 1024) {
-            alert('Image file size must not exceed 5MB.');
+        if (file.size > 20 * 1024 * 1024) {
+            alert('Image file size must not exceed 20MB.');
             photoInput.value = '';
             return;
         }
