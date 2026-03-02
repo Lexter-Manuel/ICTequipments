@@ -139,7 +139,7 @@ $activeTemplates = $db->query("SELECT COUNT(*) FROM tbl_maintenance_template WHE
                     </div>
 
                     <div class="text-center py-3 builder-controls mb-4" style="border: 2px dashed var(--border-color);">
-                        <button class="btn btn-outline-primary btn-sm" onclick="addCategory()">
+                        <button class="btn btn-outline-primary btn-sm addSection" onclick="addCategory()">
                             <i class="fas fa-folder-plus"></i> Add New Section
                         </button>
                     </div>

@@ -506,7 +506,7 @@ function createEquipmentCard(type, brand, serial, icon, id, equipmentType) {
             <div class="eq-footer">
                 <div class="row g-2">
                     <div class="col-6">
-                        <button class="btn btn-sm btn-light w-100 border" 
+                        <button class="btn btn-sm btn-light w-100 border viewEquipmentDetails" 
                                 onclick="viewEquipmentDetails('${safeType}', ${id}, '${icon}')">
                             <i class="fas fa-eye text-secondary"></i> View
                         </button>

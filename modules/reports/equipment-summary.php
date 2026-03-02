@@ -210,19 +210,19 @@ try {
             <div class="rpt-panel-header"><h3><i class="fas fa-key"></i> Software License Summary</h3></div>
             <div class="rpt-panel-body">
                 <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem;">
-                    <div style="background: #f0fdf4; border-radius: var(--radius-md); padding: 1rem; text-align: center;">
+                    <div style="border-radius: var(--radius-md); padding: 1rem; text-align: center;" class="soft-card">
                         <div style="font-size: 1.5rem; font-weight: 800; font-family: var(--font-mono); color: #16a34a;"><?= $softTotal ?></div>
                         <div style="font-size: 0.7rem; font-weight: 600; color: #16a34a; text-transform: uppercase;">Total</div>
                     </div>
-                    <div style="background: #f0f9ff; border-radius: var(--radius-md); padding: 1rem; text-align: center;">
+                    <div style="border-radius: var(--radius-md); padding: 1rem; text-align: center;" class="soft-card">
                         <div style="font-size: 1.5rem; font-weight: 800; font-family: var(--font-mono); color: #2563eb;"><?= $softPerpetual ?></div>
                         <div style="font-size: 0.7rem; font-weight: 600; color: #2563eb; text-transform: uppercase;">Perpetual</div>
                     </div>
-                    <div style="background: #fffbeb; border-radius: var(--radius-md); padding: 1rem; text-align: center;">
+                    <div style="border-radius: var(--radius-md); padding: 1rem; text-align: center;" class="soft-card">
                         <div style="font-size: 1.5rem; font-weight: 800; font-family: var(--font-mono); color: #d97706;"><?= $softExpiring ?></div>
                         <div style="font-size: 0.7rem; font-weight: 600; color: #d97706; text-transform: uppercase;">Expiring (90d)</div>
                     </div>
-                    <div style="background: #fef2f2; border-radius: var(--radius-md); padding: 1rem; text-align: center;">
+                    <div style="border-radius: var(--radius-md); padding: 1rem; text-align: center;" class="soft-card">
                         <div style="font-size: 1.5rem; font-weight: 800; font-family: var(--font-mono); color: #dc2626;"><?= $softExpired ?></div>
                         <div style="font-size: 0.7rem; font-weight: 600; color: #dc2626; text-transform: uppercase;">Expired</div>
                     </div>

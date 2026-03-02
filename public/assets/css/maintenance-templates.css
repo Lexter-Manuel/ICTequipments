@@ -445,6 +445,21 @@
     outline: none;
 }
 
+.builder-controls:hover {
+    opacity: 1;
+} 
+
+button.builder-controls {
+    background-color: white;
+}
+
+button.builder-controls:hover {
+    background-color: var(--primary-xlight);
+}
+
+[data-theme="dark"] button.builder-controls {
+    background-color: var(--bg-white);
+}
 
 /* ============================================================
    8. SIGNATORY BOX
@@ -578,7 +593,7 @@
     max-height: calc(100vh - 160px) !important;
 }
 
-.modal-fullscreen .modal-dialog {
+.modal-dialog.modal-fullscreen {
     left: var(--sidebar-width) !important;
     top: 0 !important;
     transform: none !important;
@@ -610,7 +625,7 @@
 }
 
 /* Fullscreen modal content fills height */
-.modal-fullscreen .modal-content {
+.modal-dialog.modal-fullscreen .modal-content {
     max-height: 100vh;
     height: 100vh;
     border-radius: 0;
@@ -640,7 +655,7 @@
         left: 0 !important;
         width: 100vw !important;
     }
-    .modal-fullscreen .modal-dialog {
+    .modal-dialog.modal-fullscreen {
         left: 0 !important;
         width: 100vw !important;
         max-width: 100vw !important;
@@ -692,4 +707,17 @@
     .checklist-row { padding: 6px 8px; font-size: 12px; }
     .sig-line { font-size: 12px; margin-top: 20px; }
     .sig-role { font-size: 10px; }
+}
+
+.btn-sm {
+    padding: var(--space-3);
+    border-radius: var(--bs-border-radius);
+    background: var(--primary-green);
+    color: #fff;
+}
+
+.btn-sm:hover {
+        border-color: var(--primary-green);
+    color: var(--bg-light);
+    background: var(--accent-green);
 }

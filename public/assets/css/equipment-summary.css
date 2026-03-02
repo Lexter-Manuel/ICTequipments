@@ -44,6 +44,7 @@
     font-weight: 700; color: var(--text-medium); background: #f9fafb;
     border-bottom: 2px solid var(--border-color); text-align: left;
 }
+
 .rpt-table tbody td { padding: 0.6rem 0.75rem; font-size: 0.825rem; border-bottom: 1px solid #f3f4f6; }
 .rpt-table tbody tr:last-child td { border-bottom: none; }
 .rpt-table tfoot td { padding: 0.65rem 0.75rem; font-weight: 700; border-top: 2px solid var(--border-color); background: #f9fafb; }
@@ -146,3 +147,5 @@
     .report-header button, .print-btn, .summary-filter-panel { display: none !important; }
     .rpt-panel, .rpt-stat { box-shadow: none; border: 1px solid #ddd; }
 }
+
+[data-theme="dark"] .soft-card { background-color: var(--neutral-300);}

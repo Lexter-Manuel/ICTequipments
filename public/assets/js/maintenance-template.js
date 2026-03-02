@@ -202,7 +202,7 @@ function addItem(btn) {
     itemsContainer.appendChild(newItem);
 }
 
-function removeSection(btn) {
+function removeSection(btn) {   
     Alerts.confirmAction({
         title: 'Remove Section?',
         message: 'This entire section will be removed.',
