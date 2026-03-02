@@ -54,10 +54,10 @@ function filterSystemUnits() {
             if (data.success) {
                 renderSystemUnits(data.data);
             } else {
-                Alerts.error(data.message);
+                alert('Error: ' + data.message);
             }
         })
-        .catch(function(error) { Alerts.error('Error loading system units: ' + error); });
+        .catch(function(error) { alert('Error loading system units: ' + error); });
 }
 
 function renderSystemUnits(units) {
@@ -110,10 +110,10 @@ function editSystemUnit(id) {
                 empSearch.set('suEmployeeSearch', 'suEmployee', s.employeeId || '');
                 new bootstrap.Modal(document.getElementById('systemunitModal')).show();
             } else {
-                Alerts.error(data.message);
+                alert('Error: ' + data.message);
             }
         })
-        .catch(function(error) { Alerts.error('Error loading system unit: ' + error); });
+        .catch(function(error) { alert('Error loading system unit: ' + error); });
 }
 
 function saveSystemUnit() {
@@ -134,30 +134,29 @@ function saveSystemUnit() {
         .then(function(response) { return response.json(); })
         .then(function(data) {
             if (data.success) {
-                Alerts.success(data.message);
+                alert(data.message);
                 bootstrap.Modal.getInstance(document.getElementById('systemunitModal')).hide();
                 reloadEquipmentPage();
             } else {
-                Alerts.error(data.message);
+                alert('Error: ' + data.message);
             }
         })
-        .catch(function(error) { Alerts.error('Error saving system unit: ' + error); });
+        .catch(function(error) { alert('Error saving system unit: ' + error); });
 }
 
 function deleteSystemUnit(id) {
-    Alerts.confirmDelete('this system unit', function() {
-        var formData = new FormData();
-        formData.append('action', 'delete');
-        formData.append('systemunit_id', id);
+    if (!confirm('Are you sure you want to delete this system unit?')) return;
+    var formData = new FormData();
+    formData.append('action', 'delete');
+    formData.append('systemunit_id', id);
 
-        fetch('../ajax/manage_systemunit.php', { method: 'POST', body: formData })
-            .then(function(response) { return response.json(); })
-            .then(function(data) {
-                if (data.success) { Alerts.success(data.message); reloadEquipmentPage(); }
-                else { Alerts.error(data.message); }
-            })
-            .catch(function(error) { Alerts.error('Error deleting system unit: ' + error); });
-    });
+    fetch('../ajax/manage_systemunit.php', { method: 'POST', body: formData })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            if (data.success) { alert(data.message); reloadEquipmentPage(); }
+            else { alert('Error: ' + data.message); }
+        })
+        .catch(function(error) { alert('Error deleting system unit: ' + error); });
 }
 
 // ============================================================
@@ -177,9 +176,9 @@ function filterMonitors() {
         .then(function(response) { return response.json(); })
         .then(function(data) {
             if (data.success) { renderMonitors(data.data); }
-            else { Alerts.error(data.message); }
+            else { alert('Error: ' + data.message); }
         })
-        .catch(function(error) { Alerts.error('Error loading monitors: ' + error); });
+        .catch(function(error) { alert('Error loading monitors: ' + error); });
 }
 
 function renderMonitors(monitors) {
@@ -227,9 +226,9 @@ function editMonitor(id) {
                 document.getElementById('monYear').value = m.yearAcquired;
                 empSearch.set('monEmployeeSearch', 'monEmployee', m.employeeId || '');
                 new bootstrap.Modal(document.getElementById('monitorModal')).show();
-            } else { Alerts.error(data.message); }
+            } else { alert('Error: ' + data.message); }
         })
-        .catch(function(error) { Alerts.error('Error loading monitor: ' + error); });
+        .catch(function(error) { alert('Error loading monitor: ' + error); });
 }
 
 function saveMonitor() {
@@ -246,28 +245,27 @@ function saveMonitor() {
         .then(function(response) { return response.json(); })
         .then(function(data) {
             if (data.success) {
-                Alerts.success(data.message);
+                alert(data.message);
                 bootstrap.Modal.getInstance(document.getElementById('monitorModal')).hide();
                 reloadEquipmentPage();
-            } else { Alerts.error(data.message); }
+            } else { alert('Error: ' + data.message); }
         })
-        .catch(function(error) { Alerts.error('Error saving monitor: ' + error); });
+        .catch(function(error) { alert('Error saving monitor: ' + error); });
 }
 
 function deleteMonitor(id) {
-    Alerts.confirmDelete('this monitor', function() {
-        var formData = new FormData();
-        formData.append('action', 'delete');
-        formData.append('monitor_id', id);
+    if (!confirm('Are you sure you want to delete this monitor?')) return;
+    var formData = new FormData();
+    formData.append('action', 'delete');
+    formData.append('monitor_id', id);
 
-        fetch('../ajax/manage_monitor.php', { method: 'POST', body: formData })
-            .then(function(response) { return response.json(); })
-            .then(function(data) {
-                if (data.success) { Alerts.success(data.message); reloadEquipmentPage(); }
-                else { Alerts.error(data.message); }
-            })
-            .catch(function(error) { Alerts.error('Error deleting monitor: ' + error); });
-    });
+    fetch('../ajax/manage_monitor.php', { method: 'POST', body: formData })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            if (data.success) { alert(data.message); reloadEquipmentPage(); }
+            else { alert('Error: ' + data.message); }
+        })
+        .catch(function(error) { alert('Error deleting monitor: ' + error); });
 }
 
 // ============================================================
@@ -287,9 +285,9 @@ function filterAllInOnes() {
         .then(function(response) { return response.json(); })
         .then(function(data) {
             if (data.success) { renderAllInOnes(data.data); }
-            else { Alerts.error(data.message); }
+            else { alert('Error: ' + data.message); }
         })
-        .catch(function(error) { Alerts.error('Error loading all-in-ones: ' + error); });
+        .catch(function(error) { alert('Error loading all-in-ones: ' + error); });
 }
 
 function renderAllInOnes(units) {
@@ -340,9 +338,9 @@ function editAllInOne(id) {
                 document.getElementById('aioYear').value = a.yearAcquired || '';
                 empSearch.set('aioEmployeeSearch', 'aioEmployee', a.employeeId || '');
                 new bootstrap.Modal(document.getElementById('allinoneModal')).show();
-            } else { Alerts.error(data.message); }
+            } else { alert('Error: ' + data.message); }
         })
-        .catch(function(error) { Alerts.error('Error loading all-in-one: ' + error); });
+        .catch(function(error) { alert('Error loading all-in-one: ' + error); });
 }
 
 function saveAllInOne() {
@@ -362,28 +360,27 @@ function saveAllInOne() {
         .then(function(response) { return response.json(); })
         .then(function(data) {
             if (data.success) {
-                Alerts.success(data.message);
+                alert(data.message);
                 bootstrap.Modal.getInstance(document.getElementById('allinoneModal')).hide();
                 reloadEquipmentPage();
-            } else { Alerts.error(data.message); }
+            } else { alert('Error: ' + data.message); }
         })
-        .catch(function(error) { Alerts.error('Error saving all-in-one: ' + error); });
+        .catch(function(error) { alert('Error saving all-in-one: ' + error); });
 }
 
 function deleteAllInOne(id) {
-    Alerts.confirmDelete('this all-in-one PC', function() {
-        var formData = new FormData();
-        formData.append('action', 'delete');
-        formData.append('allinone_id', id);
+    if (!confirm('Are you sure you want to delete this all-in-one PC?')) return;
+    var formData = new FormData();
+    formData.append('action', 'delete');
+    formData.append('allinone_id', id);
 
-        fetch('../ajax/manage_allinone.php', { method: 'POST', body: formData })
-            .then(function(response) { return response.json(); })
-            .then(function(data) {
-                if (data.success) { Alerts.success(data.message); reloadEquipmentPage(); }
-                else { Alerts.error(data.message); }
-            })
-            .catch(function(error) { Alerts.error('Error deleting all-in-one: ' + error); });
-    });
+    fetch('../ajax/manage_allinone.php', { method: 'POST', body: formData })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            if (data.success) { alert(data.message); reloadEquipmentPage(); }
+            else { alert('Error: ' + data.message); }
+        })
+        .catch(function(error) { alert('Error deleting all-in-one: ' + error); });
 }
 
 // ============================================================
@@ -653,16 +650,16 @@ function editPrinter(id) {
                 document.getElementById('printerYear').value   = p.year_acquired || p.yearAcquired || '';
                 empSearch.set('printerEmployeeSearch', 'printerEmployee', p.employee_id || p.employeeId || '');
                 new bootstrap.Modal(document.getElementById('printerModal')).show();
-            } else { Alerts.error(data.message); }
+            } else { alert('Error: ' + data.message); }
         })
-        .catch(function(error) { Alerts.error('Error loading printer: ' + error); });
+        .catch(function(error) { alert('Error loading printer: ' + error); });
 }
 
 function savePrinter() {
     var requiredIds = ['printerBrand', 'printerModel', 'printerSerial', 'printerYear'];
     for (var i = 0; i < requiredIds.length; i++) {
         if (!document.getElementById(requiredIds[i]).value.trim()) {
-            Alerts.warning('Please fill in all required fields marked with *');
+            alert('Please fill in all required fields marked with *');
             return;
         }
     }
@@ -680,28 +677,28 @@ function savePrinter() {
         .then(function(response) { return response.json(); })
         .then(function(data) {
             if (data.success) {
-                Alerts.success(data.message);
+                alert(data.message);
                 bootstrap.Modal.getInstance(document.getElementById('printerModal')).hide();
                 reloadEquipmentPage();
-            } else { Alerts.error(data.message); }
+            } else { alert('Error: ' + data.message); }
         })
-        .catch(function(error) { Alerts.error('Error saving printer: ' + error); });
+        .catch(function(error) { alert('Error saving printer: ' + error); });
 }
 
 function deletePrinter(id) {
-    Alerts.confirmDelete('this printer', function() {
-        var formData = new FormData();
-        formData.append('action', 'delete');
-        formData.append('printer_id', id);
+    if (!confirm('Are you sure you want to delete this printer? This action cannot be undone.')) return;
 
-        fetch('../ajax/manage_printer.php', { method: 'POST', body: formData })
-            .then(function(response) { return response.json(); })
-            .then(function(data) {
-                if (data.success) { Alerts.success(data.message); reloadEquipmentPage(); }
-                else { Alerts.error(data.message); }
-            })
-            .catch(function(error) { Alerts.error('Error deleting printer: ' + error); });
-    });
+    var formData = new FormData();
+    formData.append('action', 'delete');
+    formData.append('printer_id', id);
+
+    fetch('../ajax/manage_printer.php', { method: 'POST', body: formData })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            if (data.success) { alert(data.message); reloadEquipmentPage(); }
+            else { alert('Error: ' + data.message); }
+        })
+        .catch(function(error) { alert('Error deleting printer: ' + error); });
 }
 
 // ============================================================
@@ -821,15 +818,15 @@ function editOtherEquipment(id) {
                 }
 
                 new bootstrap.Modal(document.getElementById('otherModal')).show();
-            } else { Alerts.error(data.message); }
+            } else { alert('Error: ' + data.message); }
         })
-        .catch(function(error) { Alerts.error('Error loading equipment details: ' + error); });
+        .catch(function(error) { alert('Error loading equipment details: ' + error); });
 }
 
 function saveOtherEquipment() {
     var typeInput = document.getElementById('otherType');
     if (!typeInput || !typeInput.value.trim()) {
-        Alerts.warning('Please enter equipment type');
+        alert('Please enter equipment type');
         return;
     }
 
@@ -862,27 +859,27 @@ function saveOtherEquipment() {
         .then(function(r) { return r.json(); })
         .then(function(data) {
             if (data.success) {
-                Alerts.success(data.message);
+                alert(data.message);
                 bootstrap.Modal.getInstance(document.getElementById('otherModal')).hide();
                 reloadEquipmentPage();
-            } else { Alerts.error(data.message); }
+            } else { alert('Error: ' + data.message); }
         })
-        .catch(function(error) { console.error(error); Alerts.error('System Error: ' + error); });
+        .catch(function(error) { console.error(error); alert('System Error: ' + error); });
 }
 
 function deleteOtherEquipment(id) {
-    Alerts.confirmDelete('this equipment', function() {
-        var formData = new FormData();
-        formData.append('action', 'delete');
-        formData.append('id', id);
+    if (!confirm('Delete this equipment?')) return;
 
-        fetch('../ajax/manage_otherequipment.php', { method: 'POST', body: formData })
-            .then(function(r) { return r.json(); })
-            .then(function(data) {
-                if (data.success) { Alerts.success(data.message); reloadEquipmentPage(); }
-                else { Alerts.error(data.message); }
-            });
-    });
+    var formData = new FormData();
+    formData.append('action', 'delete');
+    formData.append('id', id);
+
+    fetch('../ajax/manage_otherequipment.php', { method: 'POST', body: formData })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.success) { alert(data.message); reloadEquipmentPage(); }
+            else { alert(data.message); }
+        });
 }
 
 // ============================================================

@@ -29,10 +29,10 @@ function filterSystemUnits() {
             if (data.success) {
                 renderSystemUnits(data.data);
             } else {
-                Alerts.error(data.message);
+                alert('Error: ' + data.message);
             }
         })
-        .catch(error => Alerts.error('Error loading system units: ' + error));
+        .catch(error => alert('Error loading system units: ' + error));
 }
 
 function renderSystemUnits(units) {
@@ -93,10 +93,10 @@ function editSystemUnit(id) {
                 var modal = new bootstrap.Modal(document.getElementById('systemunitModal'));
                 modal.show();
             } else {
-                Alerts.error(data.message);
+                alert('Error: ' + data.message);
             }
         })
-        .catch(error => Alerts.error('Error loading system unit: ' + error));
+        .catch(error => alert('Error loading system unit: ' + error));
 }
 
 function saveSystemUnit() {
@@ -120,37 +120,37 @@ function saveSystemUnit() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            Alerts.success(data.message);
+            alert(data.message);
             bootstrap.Modal.getInstance(document.getElementById('systemunitModal')).hide();
             refreshCurrentTab();
         } else {
-            Alerts.error(data.message);
+            alert('Error: ' + data.message);
         }
     })
-    .catch(error => Alerts.error('Error saving system unit: ' + error));
+    .catch(error => alert('Error saving system unit: ' + error));
 }
 
 function deleteSystemUnit(id) {
-    Alerts.confirmDelete('this system unit', function() {
-        var formData = new FormData();
-        formData.append('action', 'delete');
-        formData.append('systemunit_id', id);
-        
-        fetch('../ajax/manage_systemunit.php', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                Alerts.success(data.message);
-                refreshCurrentTab();
-            } else {
-                Alerts.error(data.message);
-            }
-        })
-        .catch(error => Alerts.error('Error deleting system unit: ' + error));
-    });
+    if (!confirm('Are you sure you want to delete this system unit?')) return;
+    
+    var formData = new FormData();
+    formData.append('action', 'delete');
+    formData.append('systemunit_id', id);
+    
+    fetch('../ajax/manage_systemunit.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            refreshCurrentTab();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => alert('Error deleting system unit: ' + error));
 }
 
 // ========================================
@@ -167,10 +167,10 @@ function filterMonitors() {
             if (data.success) {
                 renderMonitors(data.data);
             } else {
-                Alerts.error(data.message);
+                alert('Error: ' + data.message);
             }
         })
-        .catch(error => Alerts.error('Error loading monitors: ' + error));
+        .catch(error => alert('Error loading monitors: ' + error));
 }
 
 function renderMonitors(monitors) {
@@ -223,10 +223,10 @@ function editMonitor(id) {
                 var modal = new bootstrap.Modal(document.getElementById('monitorModal'));
                 modal.show();
             } else {
-                Alerts.error(data.message);
+                alert('Error: ' + data.message);
             }
         })
-        .catch(error => Alerts.error('Error loading monitor: ' + error));
+        .catch(error => alert('Error loading monitor: ' + error));
 }
 
 function saveMonitor() {
@@ -246,37 +246,37 @@ function saveMonitor() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            Alerts.success(data.message);
+            alert(data.message);
             bootstrap.Modal.getInstance(document.getElementById('monitorModal')).hide();
             refreshCurrentTab();
         } else {
-            Alerts.error(data.message);
+            alert('Error: ' + data.message);
         }
     })
-    .catch(error => Alerts.error('Error saving monitor: ' + error));
+    .catch(error => alert('Error saving monitor: ' + error));
 }
 
 function deleteMonitor(id) {
-    Alerts.confirmDelete('this monitor', function() {
-        var formData = new FormData();
-        formData.append('action', 'delete');
-        formData.append('monitor_id', id);
-        
-        fetch('../ajax/manage_monitor.php', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                Alerts.success(data.message);
-                refreshCurrentTab();
-            } else {
-                Alerts.error(data.message);
-            }
-        })
-        .catch(error => Alerts.error('Error deleting monitor: ' + error));
-    });
+    if (!confirm('Are you sure you want to delete this monitor?')) return;
+    
+    var formData = new FormData();
+    formData.append('action', 'delete');
+    formData.append('monitor_id', id);
+    
+    fetch('../ajax/manage_monitor.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            refreshCurrentTab();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => alert('Error deleting monitor: ' + error));
 }
 
 // ========================================
@@ -293,10 +293,10 @@ function filterAllInOnes() {
             if (data.success) {
                 renderAllInOnes(data.data);
             } else {
-                Alerts.error(data.message);
+                alert('Error: ' + data.message);
             }
         })
-        .catch(error => Alerts.error('Error loading all-in-ones: ' + error));
+        .catch(error => alert('Error loading all-in-ones: ' + error));
 }
 
 function renderAllInOnes(units) {
@@ -355,10 +355,10 @@ function editAllInOne(id) {
                 var modal = new bootstrap.Modal(document.getElementById('allinoneModal'));
                 modal.show();
             } else {
-                Alerts.error(data.message);
+                alert('Error: ' + data.message);
             }
         })
-        .catch(error => Alerts.error('Error loading all-in-one: ' + error));
+        .catch(error => alert('Error loading all-in-one: ' + error));
 }
 
 function saveAllInOne() {
@@ -381,37 +381,37 @@ function saveAllInOne() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            Alerts.success(data.message);
+            alert(data.message);
             bootstrap.Modal.getInstance(document.getElementById('allinoneModal')).hide();
             refreshCurrentTab();
         } else {
-            Alerts.error(data.message);
+            alert('Error: ' + data.message);
         }
     })
-    .catch(error => Alerts.error('Error saving all-in-one: ' + error));
+    .catch(error => alert('Error saving all-in-one: ' + error));
 }
 
 function deleteAllInOne(id) {
-    Alerts.confirmDelete('this all-in-one PC', function() {
-        var formData = new FormData();
-        formData.append('action', 'delete');
-        formData.append('allinone_id', id);
-        
-        fetch('../ajax/manage_allinone.php', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                Alerts.success(data.message);
-                refreshCurrentTab();
-            } else {
-                Alerts.error(data.message);
-            }
-        })
-        .catch(error => Alerts.error('Error deleting all-in-one: ' + error));
-    });
+    if (!confirm('Are you sure you want to delete this all-in-one PC?')) return;
+    
+    var formData = new FormData();
+    formData.append('action', 'delete');
+    formData.append('allinone_id', id);
+    
+    fetch('../ajax/manage_allinone.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            refreshCurrentTab();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => alert('Error deleting all-in-one: ' + error));
 }
 
 function refreshCurrentTab() {

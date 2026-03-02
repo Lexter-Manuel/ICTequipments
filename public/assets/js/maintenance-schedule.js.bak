@@ -1151,7 +1151,7 @@ async function executeBatchInit() {
     var frequency = document.getElementById('batchFrequency').value;
 
     if (!startDate) {
-        Alerts.warning('Please select a start date.');
+        alert('Please select a start date.');
         return;
     }
 

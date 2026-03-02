@@ -13,6 +13,8 @@ class DashboardApp {
         
         this.currentPage = 'home';
         this.pageCache = {}; // Cache loaded pages
+        this._pendingRefresh = false; // True when a refresh is deferred
+        this._pendingCategories = new Set(); // Categories queued while user is interacting
         
         this.init();
     }
@@ -62,7 +64,8 @@ class DashboardApp {
 
     /**
      * Handle a data-change event from the RealtimeManager
-     * Invalidates relevant page caches and reloads the current page if affected
+     * Invalidates relevant page caches and reloads the current page if affected.
+     * Defers the refresh when the user is actively interacting (modal open, form focused).
      */
     _handleDataChange(category) {
         const affectedPages = DashboardApp.CATEGORY_PAGE_MAP[category] || [];
@@ -72,11 +75,98 @@ class DashboardApp {
             delete this.pageCache[page];
         });
 
-        // If the user is currently viewing an affected page, silently refresh it
+        // If the user is currently viewing an affected page, refresh it
         if (affectedPages.includes(this.currentPage)) {
+            // Defer the refresh when user is busy (modal open, input focused, etc.)
+            if (this._isUserInteracting()) {
+                console.log(`[Realtime] "${category}" changed but user is interacting → deferring refresh`);
+                this._pendingCategories.add(category);
+                if (!this._pendingRefresh) {
+                    this._pendingRefresh = true;
+                    this._setupDeferredRefreshListeners();
+                }
+                return;
+            }
+
             console.log(`[Realtime] "${category}" changed → refreshing "${this.currentPage}"`);
             this.reloadPage();
         }
+    }
+
+    /**
+     * Check whether the user is actively interacting with the page
+     * (modal open, input/textarea/select focused, etc.)
+     */
+    _isUserInteracting() {
+        // Bootstrap / custom modal visible
+        const openModal = document.querySelector('.modal.show, .modal.in, .modal[style*="display: block"]');
+        if (openModal) return true;
+
+        // Any modal backdrop present (covers the page)
+        if (document.querySelector('.modal-backdrop')) return true;
+
+        // User has focus inside a form input
+        const active = document.activeElement;
+        if (active) {
+            const tag = active.tagName.toLowerCase();
+            if (['input', 'textarea', 'select'].includes(tag)) return true;
+            if (active.isContentEditable) return true;
+        }
+
+        // SweetAlert2 dialog open
+        if (document.querySelector('.swal2-container')) return true;
+
+        return false;
+    }
+
+    /**
+     * Start listening for user-interaction-end events so we can apply the deferred refresh.
+     * Cleans itself up after firing once.
+     */
+    _setupDeferredRefreshListeners() {
+        // Shared handler — checks if the interaction finished, then refreshes
+        const tryFlush = () => {
+            // Small delay to let animations / cleanup finish
+            setTimeout(() => {
+                if (!this._pendingRefresh) return;
+                if (this._isUserInteracting()) return; // still busy
+
+                console.log('[Realtime] User interaction ended → applying deferred refresh');
+                this._pendingRefresh = false;
+                this._pendingCategories.clear();
+                this._teardownDeferredRefreshListeners();
+                this.reloadPage();
+            }, 300);
+        };
+
+        // Store reference so we can remove later
+        this._deferredFlush = tryFlush;
+
+        // Bootstrap 5 modal hidden event (bubbles)
+        document.addEventListener('hidden.bs.modal', tryFlush);
+        // Bootstrap 4 / jQuery
+        if (window.jQuery) {
+            jQuery(document).on('hidden.bs.modal.nia_deferred', tryFlush);
+        }
+        // SweetAlert2 close
+        document.addEventListener('click', tryFlush);  // catch overlay dismiss too
+        // Blur from inputs
+        document.addEventListener('focusout', tryFlush);
+    }
+
+    /**
+     * Remove the deferred-refresh listeners
+     */
+    _teardownDeferredRefreshListeners() {
+        const fn = this._deferredFlush;
+        if (!fn) return;
+        document.removeEventListener('hidden.bs.modal', fn);
+        document.removeEventListener('click', fn);
+        document.removeEventListener('focusout', fn);
+        if (window.jQuery) {
+            jQuery(document).off('hidden.bs.modal.nia_deferred');
+        }
+        this._deferredFlush = null;
     }
     
     /**
@@ -492,9 +582,25 @@ class DashboardApp {
     }
     
     /**
-     * Reload current page (refresh) while preserving sub-tab state
+     * Reload current page (refresh) while preserving sub-tab state.
+     * Also cleans up any stale modal backdrops to prevent "stuck" overlays.
      */
     reloadPage() {
+        // ── Clean up modal backdrops that would otherwise stay stuck ──
+        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        document.querySelectorAll('.modal.show, .modal.in').forEach(el => {
+            el.classList.remove('show', 'in');
+            el.style.display = 'none';
+        });
+        document.body.classList.remove('modal-open');
+        document.body.style.removeProperty('overflow');
+        document.body.style.removeProperty('padding-right');
+
+        // ── Cancel any pending deferred refresh (we're refreshing now) ──
+        this._pendingRefresh = false;
+        this._pendingCategories.clear();
+        this._teardownDeferredRefreshListeners();
+
         this.saveSubTabState();
         this.loadPage(this.currentPage, false);
     }

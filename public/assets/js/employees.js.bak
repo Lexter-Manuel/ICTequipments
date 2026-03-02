@@ -70,14 +70,14 @@ photoInput.addEventListener('change', function(e) {
         // Validate file type
         var validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
         if (!validTypes.includes(file.type)) {
-            Alerts.warning('Please select a valid image file (JPG or PNG).');
+            alert('Please select a valid image file (JPG or PNG).');
             photoInput.value = '';
             return;
         }
         
         // Validate file size (5MB max)
         if (file.size > 20 * 1024 * 1024) {
-            Alerts.warning('Image file size must not exceed 20MB.');
+            alert('Image file size must not exceed 20MB.');
             photoInput.value = '';
             return;
         }
@@ -99,7 +99,7 @@ photoInput.addEventListener('change', function(e) {
  */
 cropButton.addEventListener('click', function() {
     if (!cropper) {
-        Alerts.warning('No image to crop');
+        alert('No image to crop');
         return;
     }
     
@@ -261,62 +261,62 @@ employeeForm.addEventListener('submit', function(e) {
     
     // Validate Employee ID
     if (!employeeId || employeeId < 1) {
-        Alerts.warning('Please enter a valid Employee ID.');
+        alert('Please enter a valid Employee ID.');
         this.employeeId.focus();
         return;
     }
     
     // Validate First Name
     if (!firstName) {
-        Alerts.warning('First Name is required.');
+        alert('First Name is required.');
         this.firstName.focus();
         return;
     }
     
     // Validate Last Name
     if (!lastName) {
-        Alerts.warning('Last Name is required.');
+        alert('Last Name is required.');
         this.lastName.focus();
         return;
     }
     
     // Validate Position
     if (!position) {
-        Alerts.warning('Position is required.');
+        alert('Position is required.');
         this.position.focus();
         return;
     }
     
     // Validate Sex
     if (!sex) {
-        Alerts.warning('Please select Sex.');
+        alert('Please select Sex.');
         this.sex.focus();
         return;
     }
     
     // Validate Employment Status
     if (!employmentStatus) {
-        Alerts.warning('Please select Employment Status.');
+        alert('Please select Employment Status.');
         this.employmentStatus.focus();
         return;
     }
     
     // Validate Birth Date
     if (!this.birthDate.value) {
-        Alerts.warning('Birth Date is required.');
+        alert('Birth Date is required.');
         this.birthDate.focus();
         return;
     }
     
     if (isNaN(birthDate.getTime())) {
-        Alerts.warning('Please enter a valid Birth Date.');
+        alert('Please enter a valid Birth Date.');
         this.birthDate.focus();
         return;
     }
     
     // Check if birth date is in the future
     if (birthDate > today) {
-        Alerts.warning('Birth Date cannot be in the future.');
+        alert('Birth Date cannot be in the future.');
         this.birthDate.focus();
         return;
     }
@@ -330,21 +330,21 @@ employeeForm.addEventListener('submit', function(e) {
     
     // Validate minimum age
     if (age < 18) {
-        Alerts.warning('Employee must be at least 18 years old. Current age: ' + age + ' years.');
+        alert('Employee must be at least 18 years old. Current age: ' + age + ' years.');
         this.birthDate.focus();
         return;
     }
     
     // Validate maximum age
     if (age > 100) {
-        Alerts.warning('Invalid birth date. Please check the date entered.');
+        alert('Invalid birth date. Please check the date entered.');
         this.birthDate.focus();
         return;
     }
     
     // Validate location is selected
     if (!locationId) {
-        Alerts.warning('Please select at least a Division for the employee.');
+        alert('Please select at least a Division for the employee.');
         divisionSelect.focus();
         return;
     }

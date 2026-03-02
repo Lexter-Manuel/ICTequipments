@@ -1138,68 +1138,59 @@ document.addEventListener('click', function(e) {
 // ========================================
 
 function archiveEmployee(employeeId, fullName) {
-    Alerts.confirmAction({
-        title: 'Archive ' + fullName + '?',
-        message: 'All assigned equipment will be unassigned.',
-        confirmText: 'Yes, Archive',
-        type: 'warning',
-        icon: 'fa-box-archive',
-        onConfirm: function() {
-            var formData = new FormData();
-            formData.append('action', 'archive');
-            formData.append('employeeId', employeeId);
+    if (!confirm('Archive employee "' + fullName + '"?\n\nAll assigned equipment will be unassigned.')) {
+        return;
+    }
 
-            fetch(BASE_URL + 'ajax/archive_employee.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(function(res) { return res.json(); })
-            .then(function(data) {
-                if (data.success) {
-                    Alerts.success(data.message);
-                    setTimeout(function() { reloadCurrentPage(); }, 800);
-                } else {
-                    Alerts.error(data.message || 'Failed to archive employee.');
-                }
-            })
-            .catch(function(err) {
-                console.error('Archive error:', err);
-                Alerts.error('An error occurred while archiving the employee.');
-            });
+    var formData = new FormData();
+    formData.append('action', 'archive');
+    formData.append('employeeId', employeeId);
+
+    fetch(BASE_URL + 'ajax/archive_employee.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+        if (data.success) {
+            showAlert('success', data.message);
+            // Reload page to reflect changes
+            setTimeout(function() { reloadCurrentPage(); }, 800);
+        } else {
+            showAlert('danger', data.message || 'Failed to archive employee.');
         }
+    })
+    .catch(function(err) {
+        console.error('Archive error:', err);
+        showAlert('danger', 'An error occurred while archiving the employee.');
     });
 }
 
 function restoreEmployee(employeeId, fullName) {
-    Alerts.confirmAction({
-        title: 'Restore ' + fullName + '?',
-        message: 'This employee will be restored from the archive.',
-        confirmText: 'Yes, Restore',
-        type: 'primary',
-        icon: 'fa-rotate-left',
-        onConfirm: function() {
-            var formData = new FormData();
-            formData.append('action', 'restore');
-            formData.append('employeeId', employeeId);
+    if (!confirm('Restore employee "' + fullName + '" from archive?')) {
+        return;
+    }
 
-            fetch(BASE_URL + 'ajax/archive_employee.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(function(res) { return res.json(); })
-            .then(function(data) {
-                if (data.success) {
-                    Alerts.success(data.message);
-                    setTimeout(function() { reloadCurrentPage(); }, 800);
-                } else {
-                    Alerts.error(data.message || 'Failed to restore employee.');
-                }
-            })
-            .catch(function(err) {
-                console.error('Restore error:', err);
-                Alerts.error('An error occurred while restoring the employee.');
-            });
+    var formData = new FormData();
+    formData.append('action', 'restore');
+    formData.append('employeeId', employeeId);
+
+    fetch(BASE_URL + 'ajax/archive_employee.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+        if (data.success) {
+            showAlert('success', data.message);
+            setTimeout(function() { reloadCurrentPage(); }, 800);
+        } else {
+            showAlert('danger', data.message || 'Failed to restore employee.');
         }
+    })
+    .catch(function(err) {
+        console.error('Restore error:', err);
+        showAlert('danger', 'An error occurred while restoring the employee.');
     });
 }
 

@@ -1,4 +1,567 @@
+/* ============================================================
+   MAINTENANCE-TEMPLATES.CSS — NIA UPRIIS ICT Inventory System
+   Template listing, builder modal & preview styles
+   ============================================================ */
 
+
+/* ============================================================
+   1. PAGE HEADER
+   ============================================================ */
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+
+/* ============================================================
+   2. TEMPLATE CARDS
+   ============================================================ */
+.template-card {
+    transition: all var(--transition-base);
+    cursor: pointer;
+    background: var(--bg-white);
+    border: 1px solid var(--border-color) !important;
+    border-radius: var(--radius-lg);
+}
+.template-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-hover);
+    border-color: var(--primary-green) !important;
+}
+
+.template-card .card-body {
+    background: var(--bg-white);
+    color: var(--text-dark);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.template-card .card-footer {
+    background: var(--bg-light) !important;
+    border-top: 1px solid var(--border-color) !important;
+    color: var(--text-medium);
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+
+.template-card h5 {
+    color: var(--text-dark);
+}
+
+.template-icon-box {
+    width: 52px;
+    height: 52px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+}
+
+/* Color helper classes for icon boxes */
+.bg-primary-xlight { background: var(--primary-xlight); }
+.text-primary { color: var(--primary-green) !important; }
+.bg-info-xlight { background: var(--color-info-bg); }
+.bg-success-xlight { background: var(--color-success-bg); }
+.bg-warning-xlight { background: var(--color-warning-bg); }
+.bg-secondary-xlight { background: rgba(122, 143, 134, 0.1); }
+
+.template-badge {
+    position: absolute;
+    top: 14px;
+    right: 54px;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: var(--radius-full);
+}
+
+.template-stats {
+    display: flex;
+    gap: var(--space-4);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--border-color);
+}
+.template-stat {
+    flex: 1;
+}
+.template-stat .small {
+    color: var(--text-light);
+}
+
+
+/* ============================================================
+   3. CARD DROPDOWN MENU
+   ============================================================ */
+.template-card .dropdown-menu {
+    background: var(--bg-white);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-card);
+    padding: 4px;
+    min-width: 160px;
+}
+
+.template-card .dropdown-item {
+    border-radius: var(--radius-sm);
+    padding: 8px 14px;
+    font-size: var(--text-sm);
+    font-weight: 500;
+    background: transparent;
+    border: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    color: var(--text-dark);
+}
+
+.template-card .dropdown-item.text-edit {
+    color: var(--primary-green);
+}
+.template-card .dropdown-item.text-edit:hover {
+    background: var(--primary-xlight);
+    color: var(--primary-green);
+}
+
+.template-card .dropdown-item.text-danger {
+    color: var(--color-danger);
+}
+.template-card .dropdown-item.text-danger:hover {
+    background: var(--color-danger-bg);
+    color: var(--color-danger) !important;
+}
+
+.template-card .dropdown-divider {
+    border-color: var(--border-color);
+    margin: 4px 0;
+}
+
+.template-card .dropdown-toggle::after {
+    display: none;
+}
+
+.template-card .btn-light {
+    background: var(--bg-light);
+    border: 1px solid var(--border-color);
+    color: var(--text-medium);
+}
+.template-card .btn-light:hover {
+    background: var(--border-color);
+    color: var(--text-dark);
+}
+
+
+/* ============================================================
+   4. STAT CARDS (top of page)
+   ============================================================ */
+.content-wrapper > .row > [class*="col-md"] > .card {
+    background: var(--bg-white);
+    border: 1px solid var(--border-color) !important;
+    border-radius: var(--radius-lg);
+}
+.content-wrapper > .row > [class*="col-md"] > .card .card-body {
+    color: var(--text-dark);
+}
+.content-wrapper > .row > [class*="col-md"] > .card small {
+    color: var(--text-light);
+}
+
+
+/* ============================================================
+   5. BUILDER PAPER (the document canvas)
+   ============================================================ */
+.builder-paper {
+    background: #fff;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-card);
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px;
+    min-height: 800px;
+    border-radius: var(--radius-lg);
+}
+
+[data-theme="dark"] .builder-paper {
+    background: var(--bg-white);
+}
+
+.paper-header {
+    text-align: center;
+    border-bottom: 2px solid var(--text-dark);
+    padding-bottom: 20px;
+    margin-bottom: 30px;
+}
+
+.paper-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 20px;
+    color: var(--text-dark);
+    margin-bottom: 5px;
+}
+
+.paper-subtitle {
+    font-size: 14px;
+    color: var(--text-medium);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+
+/* ============================================================
+   5b. EQUIPMENT TYPE PICKER (multi-select chip dropdown)
+   ============================================================ */
+.type-picker-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.type-picker-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    background: var(--bg-light);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-full);
+    color: var(--primary-green);
+    font-weight: 600;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    text-transform: none;
+}
+.type-picker-trigger:hover {
+    border-color: var(--primary-green);
+    background: var(--primary-xlight);
+}
+.type-picker-arrow {
+    font-size: 9px;
+    transition: transform 0.2s ease;
+    opacity: 0.6;
+}
+.type-picker-dropdown.show ~ .type-picker-trigger .type-picker-arrow,
+.type-picker-wrapper .type-picker-dropdown.show + .type-picker-trigger .type-picker-arrow {
+    transform: rotate(180deg);
+}
+
+.type-picker-dropdown {
+    display: none;
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    z-index: 1060;
+    min-width: 340px;
+    max-width: 420px;
+    background: var(--bg-white);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+    padding: 16px;
+    animation: typePickerIn 0.15s ease;
+}
+.type-picker-dropdown.show {
+    display: block;
+}
+
+@keyframes typePickerIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Grid layout for chips */
+.type-picker-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+/* Individual chip */
+.type-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    background: var(--bg-light);
+    transition: all 0.15s ease;
+    position: relative;
+    user-select: none;
+    color: var(--text-medium);
+    font-size: 12px;
+    text-transform: none;
+}
+.type-chip:hover {
+    border-color: var(--primary-green);
+    background: var(--primary-xlight);
+    color: var(--text-dark);
+}
+
+.type-chip.active {
+    border-color: var(--primary-green);
+    background: var(--primary-xlight);
+    color: var(--primary-green);
+}
+
+.type-chip-icon {
+    width: 20px;
+    text-align: center;
+    font-size: 13px;
+    flex-shrink: 0;
+    opacity: 0.7;
+}
+.type-chip.active .type-chip-icon {
+    opacity: 1;
+}
+
+.type-chip-name {
+    flex: 1;
+    font-weight: 600;
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.type-chip-check {
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border-color);
+    font-size: 9px;
+    flex-shrink: 0;
+    transition: all 0.15s ease;
+    background: var(--bg-white);
+    color: transparent;
+}
+.type-chip.active .type-chip-check {
+    background: var(--primary-green);
+    border-color: var(--primary-green);
+    color: #fff;
+}
+
+/* Actions row */
+.type-picker-actions {
+    display: flex;
+    gap: 8px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-color);
+}
+.type-picker-action-btn {
+    flex: 1;
+    padding: 5px 0;
+    font-size: 11px;
+    font-weight: 600;
+    text-align: center;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--bg-light);
+    color: var(--text-medium);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+.type-picker-action-btn:hover {
+    border-color: var(--primary-green);
+    color: var(--primary-green);
+    background: var(--primary-xlight);
+}
+
+
+/* ============================================================
+   6. CHECKLIST SECTIONS & ROWS
+   ============================================================ */
+.paper-section {
+    margin-bottom: 25px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+
+.section-header {
+    background: var(--bg-light);
+    border-bottom: 1px solid var(--border-color);
+    padding: 10px 16px;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 13px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--text-dark);
+}
+
+.checklist-row {
+    display: flex;
+    border-bottom: 1px solid var(--border-color);
+    padding: 10px 16px;
+    align-items: center;
+    color: var(--text-dark);
+    background: var(--bg-white);
+    transition: background 0.15s ease;
+}
+.checklist-row:last-child {
+    border-bottom: none;
+}
+.checklist-row:hover {
+    background: var(--bg-light);
+}
+
+.checklist-row .fst-italic {
+    color: var(--text-light);
+}
+
+
+/* ============================================================
+   7. BUILDER CONTROLS
+   ============================================================ */
+.builder-controls {
+    opacity: 0.4;
+    transition: opacity var(--transition-fast);
+}
+.paper-section:hover .builder-controls,
+.signatory-box:hover .builder-controls {
+    opacity: 1;
+}
+
+/* contenteditable highlights */
+[contenteditable="true"]:hover {
+    background-color: var(--primary-xlight);
+    cursor: text;
+    border-radius: 4px;
+}
+[contenteditable="true"]:focus {
+    background-color: var(--primary-xlight);
+    border-bottom: 2px solid var(--primary-green);
+    outline: none;
+}
+
+
+/* ============================================================
+   8. SIGNATORY BOX
+   ============================================================ */
+.signatory-box {
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    margin-top: 30px;
+    background: var(--bg-white);
+    color: var(--text-dark);
+}
+
+.signatory-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+    text-align: center;
+    margin-top: 40px;
+}
+
+.sig-line {
+    border-top: 1px solid var(--text-dark);
+    margin-top: 30px;
+    padding-top: 5px;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text-dark);
+}
+
+.sig-role {
+    font-size: 12px;
+    color: var(--text-medium);
+    text-transform: uppercase;
+}
+
+
+/* ============================================================
+   9. BUILDER MODAL HEADER
+   ============================================================ */
+#templateBuilderModal .modal-content {
+    background: var(--bg-page);
+}
+#templateBuilderModal .modal-header {
+    background: var(--bg-white);
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-dark);
+}
+#templateBuilderModal .modal-header .modal-title {
+    color: var(--text-dark);
+}
+#templateBuilderModal .modal-header small {
+    color: var(--text-light);
+}
+#templateBuilderModal .modal-header label {
+    color: var(--text-medium);
+}
+
+/* "Add New Section" dashed area */
+#templateBuilderModal .builder-controls[style*="border"] {
+    border-color: var(--border-color) !important;
+}
+
+
+/* ============================================================
+   10. PREVIEW MODAL (view template)
+   ============================================================ */
+#templateViewModal .modal-content {
+    background: var(--bg-white);
+    border: 1px solid var(--border-color);
+}
+#templateViewModal .modal-header {
+    background: var(--bg-white);
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-dark);
+}
+#templateViewModal .modal-header .modal-title {
+    color: var(--text-dark);
+}
+#templateViewModal .modal-footer {
+    background: var(--bg-light);
+    border-top: 1px solid var(--border-color);
+}
+
+/* Preview paper classes (used by renderPreview JS output) */
+.preview-paper {
+    color: var(--text-dark);
+}
+.preview-subtitle {
+    color: var(--text-medium);
+}
+.preview-underline {
+    border-color: var(--text-dark) !important;
+}
+.preview-table {
+    color: var(--text-dark);
+}
+.preview-table,
+.preview-table th,
+.preview-table td {
+    border-color: var(--border-color) !important;
+}
+.preview-thead,
+.preview-thead th {
+    background: var(--bg-light) !important;
+    color: var(--text-dark);
+}
+.preview-remarks-box {
+    border: 1px solid var(--text-dark);
+    border-radius: var(--radius-md);
+}
+
+
+/* ============================================================
+   11. MODAL POSITIONING (sidebar-aware)
+   ============================================================ */
+/* Standard modals — center within the content area */
 .modal {
     position: fixed !important;
     z-index: 1050;
@@ -13,10 +576,6 @@
     width: 50vw;
     max-width: calc(100vw - var(--sidebar-width) - 80px) !important;
     max-height: calc(100vh - 160px) !important;
-}
-
-.modal-xl .modal-dialog {
-    max-width: calc(100vw - var(--sidebar-width) - 100px) !important;
 }
 
 .modal-fullscreen .modal-dialog {
@@ -50,205 +609,26 @@
     flex: 1;
 }
 
-/* Sidebar-aware modal positioning handled in RESPONSIVE section below */
-
-/* Template-specific styles */
-.template-card {
-    transition: all var(--transition-base);
-    cursor: pointer;
+/* Fullscreen modal content fills height */
+.modal-fullscreen .modal-content {
+    max-height: 100vh;
+    height: 100vh;
+    border-radius: 0;
 }
 
-.template-card:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-hover);
-}
-
-.template-icon-box {
-    width: 56px;
-    height: 56px;
-    border-radius: var(--radius-md);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-}
-
-.template-badge {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-}
-
-.dropdown-toggle::after {
-    display: none;
-}
-
-/* Template Builder/Preview Modal Styles */
-.builder-paper {
-    background: #fff;
-    border: 1px solid var(--border-color);
-    box-shadow: var(--shadow-card);
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 40px;
-    min-height: 800px;
-}
-
-.paper-header {
-    text-align: center;
-    border-bottom: 2px solid var(--text-dark);
-    padding-bottom: 20px;
-    margin-bottom: 30px;
-}
-
-.paper-title {
-    font-family: var(--font-display);
-    font-weight: 700;
-    text-transform: uppercase;
-    font-size: 20px;
-    color: var(--text-dark);
-    margin-bottom: 5px;
-}
-
-.paper-subtitle {
-    font-size: 14px;
-    color: var(--text-medium);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-.paper-section {
-    margin-bottom: 25px;
-    border: 1px solid var(--text-dark);
-}
-
-.section-header {
-    background: var(--bg-light);
-    border-bottom: 1px solid var(--text-dark);
-    padding: 8px 15px;
-    font-weight: 700;
-    text-transform: uppercase;
-    font-size: 13px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.checklist-row {
-    display: flex;
-    border-bottom: 1px solid var(--border-color);
-    padding: 10px 15px;
-    align-items: center;
-}
-
-.checklist-row:last-child {
-    border-bottom: none;
-}
-
-.signatory-box {
-    border: 1px solid var(--text-dark);
-    padding: 15px;
-    margin-top: 30px;
-}
-
-.signatory-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 20px;
-    text-align: center;
-    margin-top: 40px;
-}
-
-.sig-line {
-    border-top: 1px solid var(--text-dark);
-    margin-top: 30px;
-    padding-top: 5px;
-    font-weight: 600;
-    font-size: 14px;
-}
-
-.sig-role {
-    font-size: 12px;
-    color: var(--text-medium);
-    text-transform: uppercase;
-}
-
-.builder-controls {
-    opacity: 0.5;
-    transition: opacity var(--transition-fast);
-}
-
-.paper-section:hover .builder-controls {
-    opacity: 1;
-}
-
-.template-stats {
-    display: flex;
-    gap: var(--space-4);
-    padding-top: var(--space-3);
-    border-top: 1px solid var(--border-color);
-}
-
-.template-stat {
-    flex: 1;
-}
-
-/* Visual cue for editable text */
-[contenteditable="true"]:hover {
-    background-color: rgba(255, 255, 0, 0.1); /* Subtle yellow highlight */
-    cursor: text;
-    border-radius: 4px;
-}
-
-[contenteditable="true"]:focus {
-    background-color: rgba(255, 255, 0, 0.2);
-    border-bottom: 2px solid var(--primary-green);
-}
-
-.dropdown.show {
-    display: block !important;
-}
-
-.dropdown-menu {
-    margin: var(--space-2) var(--space-1) !important;
-}
-
-.dropdown-item {
-    padding: 8px 16px;
-    font-size: var(--text-sm);
-    background-color: var(--bg-light);
-    transition: 0.3s all;
-}
-
-.text-edit {
-    color: var(--primary-green);
-    background-color: var(--bg-light);
-}
-
-.text-edit:hover {
-    background-color: var(--primary-green);
-    color: #fff;
-}
-
-.text-danger:hover {
-    background-color: var(--color-danger);
-    color: #fff !important;
-}
-
-.header-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-}
-
-.template-badge {
-    top: 28px;
-    right: 55px;
-}
 
 /* ============================================================
-   RESPONSIVE
+   12. MISC BADGE STYLES
+   ============================================================ */
+.template-card .badge.bg-light {
+    background: var(--bg-light) !important;
+    color: var(--text-medium) !important;
+    border-color: var(--border-color) !important;
+}
+
+
+/* ============================================================
+   13. RESPONSIVE
    ============================================================ */
 @media (max-width: 1024px) {
     .modal-dialog {

@@ -136,17 +136,17 @@ function editOtherEquipment(id) {
                 var modal = new bootstrap.Modal(document.getElementById('otherModal'));
                 modal.show();
             } else {
-                Alerts.error(data.message);
+                alert('Error: ' + data.message);
             }
         })
-        .catch(error => Alerts.error('Error loading equipment details: ' + error));
+        .catch(error => alert('Error loading equipment details: ' + error));
 }
 
 function saveOtherEquipment() {
     // 1. Basic Validation
     var typeInput = document.getElementById('otherType');
     if (!typeInput || !typeInput.value.trim()) {
-        Alerts.warning('Please enter equipment type');
+        alert('Please enter equipment type');
         return;
     }
 
@@ -191,37 +191,37 @@ function saveOtherEquipment() {
     .then(r => r.json())
     .then(data => {
         if (data.success) {
-            Alerts.success(data.message);
+            alert(data.message);
             bootstrap.Modal.getInstance(document.getElementById('otherModal')).hide();
             // Refresh type cache so newly registered types appear immediately
             loadEquipmentTypesCache();
             reloadCurrentPage(); 
         } else {
-            Alerts.error(data.message);
+            alert('Error: ' + data.message);
         }
     })
     .catch(error => {
         console.error(error);
-        Alerts.error('System Error: ' + error);
+        alert('System Error: ' + error);
     });
 }
 
 function deleteOtherEquipment(id) {
-    Alerts.confirmDelete('this equipment', function() {
-        let formData = new FormData();
-        formData.append('action', 'delete');
-        formData.append('id', id);
+    if (!confirm('Delete this equipment?')) return;
 
-        fetch('../ajax/manage_otherequipment.php', { method: 'POST', body: formData })
-        .then(r => r.json())
-        .then(data => {
-            if (data.success) {
-                Alerts.success(data.message);
-                reloadCurrentPage(); // Reload page to update table
-            } else {
-                Alerts.error(data.message);
-            }
-        });
+    let formData = new FormData();
+    formData.append('action', 'delete');
+    formData.append('id', id);
+
+    fetch('../ajax/manage_otherequipment.php', { method: 'POST', body: formData })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            reloadCurrentPage(); // Reload page to update table
+        } else {
+            alert(data.message);
+        }
     });
 }
 

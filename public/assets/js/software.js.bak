@@ -100,17 +100,17 @@ function editSoftware(id) {
                 const modal = new bootstrap.Modal(document.getElementById('softwareModal'));
                 modal.show();
             } else {
-                Alerts.error(data.message);
+                alert('Error: ' + data.message);
             }
         })
-        .catch(error => Alerts.error('Error loading software license: ' + error));
+        .catch(error => alert('Error loading software license: ' + error));
 }
 
 function saveSoftware() {
     const requiredIds = ['softwareName', 'softwareDetails', 'softwareType'];
     for (var id of requiredIds) {
         if (!document.getElementById(id).value.trim()) {
-            Alerts.warning('Please fill in all required fields marked with *');
+            alert('Please fill in all required fields marked with *');
             return;
         }
     }
@@ -133,40 +133,40 @@ function saveSoftware() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            Alerts.success(data.message);
+            alert(data.message);
             bootstrap.Modal.getInstance(document.getElementById('softwareModal')).hide();
             reloadCurrentPage();
         } else {
-            Alerts.error(data.message);
+            alert('Error: ' + data.message);
         }
     })
-    .catch(error => Alerts.error('Error saving software license: ' + error));
+    .catch(error => alert('Error saving software license: ' + error));
 }
 
 // ========================================
 // DELETE
 // ========================================
 function deleteSoftware(id) {
-    Alerts.confirmDelete('this software license', function() {
-        const formData = new FormData();
-        formData.append('action', 'delete');
-        formData.append('software_id', id);
+    if (!confirm('Are you sure you want to delete this software license? This action cannot be undone.')) return;
 
-        fetch('../ajax/manage_software.php', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                Alerts.success(data.message);
-                reloadCurrentPage();
-            } else {
-                Alerts.error(data.message);
-            }
-        })
-        .catch(error => Alerts.error('Error deleting software license: ' + error));
-    });
+    const formData = new FormData();
+    formData.append('action', 'delete');
+    formData.append('software_id', id);
+
+    fetch('../ajax/manage_software.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            reloadCurrentPage();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => alert('Error deleting software license: ' + error));
 }
 
 // ============================================================

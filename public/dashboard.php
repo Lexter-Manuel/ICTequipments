@@ -30,6 +30,7 @@ require_once '../config/session-check.php';
     <link rel="stylesheet" href="assets/css/other_equipment.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="assets/css/roster.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="assets/css/audit-trail.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="assets/css/alerts.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="assets/css/dark-mode.css?v=<?php echo time(); ?>">
 </head>
 <body>
@@ -264,6 +265,7 @@ require_once '../config/session-check.php';
     </script>
     <script src="assets/bootstrap/bootstrap.bundle.min.js"></script>
     <script src="../vendor/node_modules/cropperjs/dist/cropper.min.js"></script>
+    <script src="assets/js/alerts.js?v=<?php echo time()?>"></script>
     <script src="assets/js/utils.js?v=<?php echo time()?>"></script>
     <script src="assets/js/realtime.js?v=<?php echo time()?>"></script>
     <script src="assets/js/dashboard.js?v=<?php echo time()?>"></script>

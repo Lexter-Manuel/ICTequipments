@@ -32,9 +32,9 @@ $activeTemplates = $db->query("SELECT COUNT(*) FROM tbl_maintenance_template WHE
 <!-- Template Builder Modal -->
 <div class="modal fade" id="templateBuilderModal" tabindex="-1" data-bs-backdrop="static">
     <div class="modal-dialog modal-fullscreen">
-        <div class="modal-content bg-light">
+        <div class="modal-content">
             
-            <div class="modal-header border-bottom bg-white py-2">
+            <div class="modal-header border-bottom py-2">
                 <div class="d-flex align-items-center gap-3">
                     <div>
                         <h5 class="modal-title m-0">Template Builder</h5>
@@ -70,14 +70,15 @@ $activeTemplates = $db->query("SELECT COUNT(*) FROM tbl_maintenance_template WHE
                         <div class="paper-subtitle" contenteditable="true">Procedure Checklist</div>
                         
                         <div class="row mt-4 text-start small text-uppercase align-items-center">
-                            <div class="col-6 d-flex align-items-center">
-                                <strong class="me-2">Equipment Type:</strong> 
+                            <div class="col-6 d-flex align-items-center flex-wrap gap-2">
+                                <strong class="me-1">Equipment Type:</strong> 
                                 
-                                <div class="dropdown d-inline-block" id="typeMultiSelectDropdown">
-                                    <button class="btn btn-sm bg-light fw-bold text-primary border-0 dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" style="cursor: pointer;">
+                                <div class="type-picker-wrapper" id="typeMultiSelectDropdown">
+                                    <button class="type-picker-trigger" type="button" id="typePickerBtn" onclick="toggleTypePicker()">
                                         <span id="typeMultiSelectLabel">Loading types...</span>
+                                        <i class="fas fa-chevron-down type-picker-arrow"></i>
                                     </button>
-                                    <div class="dropdown-menu p-2" style="min-width: 220px;" id="typeMultiSelectMenu">
+                                    <div class="type-picker-dropdown" id="typeMultiSelectMenu">
                                         <!-- Populated by JS -->
                                     </div>
                                 </div>
@@ -93,7 +94,7 @@ $activeTemplates = $db->query("SELECT COUNT(*) FROM tbl_maintenance_template WHE
                             <div class="section-header">
                                 <span contenteditable="true">I. Physical Inspection, Interiors and Cleaning</span>
                                 <div class="builder-controls">
-                                    <button class="btn btn-xs btn-link text-dark p-0 me-2" onclick="addItem(this)">
+                                    <button class="btn btn-xs btn-link p-0 me-2" style="color: var(--text-dark);" onclick="addItem(this)">
                                         <i class="fas fa-plus"></i> Add Item
                                     </button>
                                     <button class="btn btn-xs btn-link text-danger p-0" onclick="removeSection(this)">
@@ -119,7 +120,7 @@ $activeTemplates = $db->query("SELECT COUNT(*) FROM tbl_maintenance_template WHE
                             <div class="section-header">
                                 <span contenteditable="true">II. Hardware Performance Check</span>
                                 <div class="builder-controls">
-                                    <button class="btn btn-xs btn-link text-dark p-0 me-2" onclick="addItem(this)">
+                                    <button class="btn btn-xs btn-link p-0 me-2" style="color: var(--text-dark);" onclick="addItem(this)">
                                         <i class="fas fa-plus"></i> Add Item
                                     </button>
                                     <button class="btn btn-xs btn-link text-danger p-0" onclick="removeSection(this)">
@@ -145,8 +146,8 @@ $activeTemplates = $db->query("SELECT COUNT(*) FROM tbl_maintenance_template WHE
 
                     <div class="paper-section p-3" style="min-height: 100px;">
                         <strong class="d-block text-uppercase small mb-2">Remarks / Recommendations:</strong>
-                        <div style="border-bottom: 1px solid var(--text-dark); margin-top: 20px;"></div>
-                        <div style="border-bottom: 1px solid var(--text-dark); margin-top: 20px;"></div>
+                        <div style="border-bottom: 1px solid var(--border-color); margin-top: 20px;"></div>
+                        <div style="border-bottom: 1px solid var(--border-color); margin-top: 20px;"></div>
                     </div>
 
                     <div class="signatory-box">

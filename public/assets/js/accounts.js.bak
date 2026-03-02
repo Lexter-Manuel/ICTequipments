@@ -109,15 +109,11 @@ function postAction(data) {
     })
     .then(r => r.json())
     .then(result => {
-        if (result.success) {
-            Alerts.success(result.message);
-        } else {
-            Alerts.error(result.message);
-        }
+        alert(result.message);
         reloadCurrentPage();
     })
     .catch(err => {
-        Alerts.error(err);
+        alert('Error: ' + err);
         reloadCurrentPage();
     });
 }
@@ -245,17 +241,17 @@ document.getElementById('accountForm').addEventListener('submit', function (e) {
     var action = document.getElementById('formAction').value;
 
     if (action === 'add' && !pw) {
-        Alerts.warning('Password is required when creating a new account.');
+        alert('Password is required when creating a new account.');
         return;
     }
 
     if (pw && pw !== cpw) {
-        Alerts.warning('Passwords do not match. Please re-enter.');
+        alert('Passwords do not match. Please re-enter.');
         return;
     }
 
     if (pw && pw.length < 8) {
-        Alerts.warning('Password must be at least 8 characters long.');
+        alert('Password must be at least 8 characters long.');
         return;
     }
 
@@ -267,12 +263,10 @@ document.getElementById('accountForm').addEventListener('submit', function (e) {
     })
     .then(r => r.json())
     .then(result => {
+        alert(result.message);
         if (result.success) {
-            Alerts.success(result.message);
             reloadCurrentPage();
-        } else {
-            Alerts.error(result.message);
         }
     })
-    .catch(err => Alerts.error(err));
+    .catch(err => alert('Error: ' + err));
 });

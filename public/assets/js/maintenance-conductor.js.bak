@@ -15,7 +15,7 @@ var _typeMapLoaded = false;
 
 function ensureEquipmentTypeMap() {
     if (_typeMapLoaded) return Promise.resolve();
-    return fetch(BASE_URL + 'ajax/get_equipment_types.php?scope=all')
+    return fetch(BASE_URL + 'ajax/get_equipment_types.php')
         .then(function(r) { return r.json(); })
         .then(function(res) {
             if (res.success) {
@@ -196,7 +196,7 @@ function openMaintenanceModal(opts) {
 function loadEquipmentTypes() {
     const select = document.getElementById('selectType');
 
-    fetch(`${BASE_URL}ajax/get_equipment_types.php?scope=all`)
+    fetch(`${BASE_URL}ajax/get_equipment_types.php`)
         .then(r => r.json())
         .then(res => {
             if (res.success) {
@@ -683,10 +683,10 @@ function saveMaintenanceRecord() {
                 setTimeout(function() { fabOpenNext(); }, 400);
                 return;
             }
-            Alerts.success('Maintenance record submitted successfully!');
+            alert('Maintenance record submitted successfully!');
             reloadCurrentPage();
         } else {
-            Alerts.error(res.message);
+            alert('Error: ' + res.message);
             if (submitBtn) {
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> Submit Record';
@@ -694,7 +694,7 @@ function saveMaintenanceRecord() {
         }
     })
     .catch(err => {
-        Alerts.error('Request failed: ' + err.message);
+        alert('Request failed: ' + err.message);
         if (submitBtn) {
             submitBtn.disabled = false;
             submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> Submit Record';

@@ -17,13 +17,12 @@ class RealtimeManager {
         this._timerId       = null;
         this._paused        = false;
         this._destroyed     = false;
-        this._listeners     = {};        // { category: [fn, fn, ...] }
-        this._lastTimestamps = {};       // { category: "2026-02-27 ..." }
-        this._isFirstCheck  = true;      // Don't fire on initial load
+        this._listeners     = {};        
+        this._lastTimestamps = {};       
+        this._isFirstCheck  = true;    
         this._consecutiveErrors = 0;
-        this._maxInterval   = 30000;     // Back off to 30s max on errors
-
-        // Pause polling when tab becomes hidden to save resources
+        this._maxInterval   = 30000;  
+        
         if (this.pauseOnHidden) {
             this._visibilityHandler = () => {
                 if (document.hidden) {
@@ -117,7 +116,7 @@ class RealtimeManager {
         return this._lastTimestamps.hasOwnProperty(category);
     }
 
-    // ─── Internal ─────────────────────────────────────────
+
 
     _pauseInternal() {
         this._clearTimer();
@@ -125,7 +124,7 @@ class RealtimeManager {
 
     _resumeInternal() {
         if (!this._paused && !this._destroyed) {
-            this._scheduleNext(1000); // Small delay after tab returns
+            this._scheduleNext(1000); 
         }
     }
 
@@ -145,7 +144,7 @@ class RealtimeManager {
     }
 
     _currentInterval() {
-        // Exponential backoff on errors, capped at _maxInterval
+        
         if (this._consecutiveErrors > 0) {
             return Math.min(this.interval * Math.pow(2, this._consecutiveErrors), this._maxInterval);
         }
@@ -194,20 +193,17 @@ class RealtimeManager {
             this._lastTimestamps[category] = timestamp;
         }
 
-        // Don't fire events on the very first check (initial baseline)
         if (this._isFirstCheck) {
             this._isFirstCheck = false;
             return;
         }
 
-        // Fire category-specific listeners
         for (const cat of changedCategories) {
             const listeners = this._listeners[cat] || [];
             listeners.forEach(fn => {
                 try { fn(cat); } catch (e) { console.error('[RealtimeManager] Listener error:', e); }
             });
 
-            // Fire wildcard listeners
             const wildcards = this._listeners['*'] || [];
             wildcards.forEach(fn => {
                 try { fn(cat); } catch (e) { console.error('[RealtimeManager] Wildcard listener error:', e); }
@@ -215,7 +211,6 @@ class RealtimeManager {
         }
     }
 
-    /** Update the visual live-badge in the header */
     _updateBadge(online) {
         const badge = document.getElementById('realtimeBadge');
         if (!badge) return;
@@ -231,5 +226,4 @@ class RealtimeManager {
     }
 }
 
-// Export globally for use in inline scripts
 window.RealtimeManager = RealtimeManager;

@@ -105,17 +105,17 @@ function editPrinter(id) {
                 const modal = new bootstrap.Modal(document.getElementById('printerModal'));
                 modal.show();
             } else {
-                Alerts.error(data.message);
+                alert('Error: ' + data.message);
             }
         })
-        .catch(error => Alerts.error('Error loading printer: ' + error));
+        .catch(error => alert('Error loading printer: ' + error));
 }
 
 function savePrinter() {
     const requiredIds = ['printerBrand', 'printerModel', 'printerSerial', 'printerYear'];
     for (var id of requiredIds) {
         if (!document.getElementById(id).value.trim()) {
-            Alerts.warning('Please fill in all required fields marked with *');
+            alert('Please fill in all required fields marked with *');
             return;
         }
     }
@@ -136,40 +136,40 @@ function savePrinter() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            Alerts.success(data.message);
+            alert(data.message);
             bootstrap.Modal.getInstance(document.getElementById('printerModal')).hide();
             reloadCurrentPage();
         } else {
-            Alerts.error(data.message);
+            alert('Error: ' + data.message);
         }
     })
-    .catch(error => Alerts.error('Error saving printer: ' + error));
+    .catch(error => alert('Error saving printer: ' + error));
 }
 
 // ========================================
 // DELETE
 // ========================================
 function deletePrinter(id) {
-    Alerts.confirmDelete('this printer', function() {
-        const formData = new FormData();
-        formData.append('action', 'delete');
-        formData.append('printer_id', id);
+    if (!confirm('Are you sure you want to delete this printer? This action cannot be undone.')) return;
 
-        fetch('../ajax/manage_printer.php', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                Alerts.success(data.message);
-                reloadCurrentPage();
-            } else {
-                Alerts.error(data.message);
-            }
-        })
-        .catch(error => Alerts.error('Error deleting printer: ' + error));
-    });
+    const formData = new FormData();
+    formData.append('action', 'delete');
+    formData.append('printer_id', id);
+
+    fetch('../ajax/manage_printer.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            reloadCurrentPage();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => alert('Error deleting printer: ' + error));
 }
 
 // ========================================

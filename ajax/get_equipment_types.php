@@ -5,8 +5,17 @@ $db = getDB();
 
 try {
     $search = trim($_GET['search'] ?? '');
+    $scope  = trim($_GET['scope'] ?? '');   // 'all' = entire registry, default = otherequipment only
 
-    if (!empty($search)) {
+    if ($scope === 'all') {
+        // Return ALL equipment types from the registry (for template builder, maintenance scheduling, etc.)
+        $stmt = $db->prepare("
+            SELECT typeId, typeName, tableName, context 
+            FROM tbl_equipment_type_registry 
+            ORDER BY typeId ASC
+        ");
+        $stmt->execute();
+    } elseif (!empty($search)) {
         // Return all types for client-side fuzzy matching, but prioritize matches
         $stmt = $db->prepare("
             SELECT typeId, typeName, context,
