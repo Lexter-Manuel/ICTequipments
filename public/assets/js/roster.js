@@ -523,7 +523,7 @@ function createEquipmentCard(type, brand, serial, icon, id, equipmentType) {
     `;
 }
 
-// mula dito
+// mula dito -1
 
 function findEquipmentItem(type, id) {
     if (!currentProfileData) return null;
