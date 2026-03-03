@@ -1,0 +1,419 @@
+/* ============================================================================
+   add_equipment_to_employee.css
+   Styles for the Add Equipment to Employee modal, dropdown buttons, and forms.
+   Extracted from add_equipment_to_employee.js for easier editing and maintenance.
+   ============================================================================ */
+
+
+/* ── Section header add-button group ──────────────────────────────────────── */
+.ae-add-btn-group {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+/* inventory.css sets .table-header { flex-direction: column } at ≤768px which
+   pushes the add button onto its own line. Override to keep title + button
+   on the same row at all screen sizes. */
+.table-header:has(.ae-add-btn-group) {
+    flex-direction: row !important;
+    align-items: center !important;
+    flex-wrap: nowrap !important;
+}
+
+
+/* ── Custom dropdown ───────────────────────────────────────────────────────── */
+.ae-dropdown { position: relative; display: inline-block; }
+
+.ae-dropdown-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    background: var(--primary-green);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-md);
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    line-height: 1;
+    transition: background var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+.ae-dropdown-toggle:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(45,122,79,.30);
+}
+.ae-caret { font-size: 10px; opacity: .75; transition: transform var(--transition-fast); pointer-events: none; }
+.ae-dropdown.open .ae-caret { transform: rotate(180deg); }
+
+.ae-dropdown-menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    min-width: 215px;
+    background: var(--bg-white);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 8px 24px rgba(45,122,79,.18);
+    z-index: 99999;
+    overflow: hidden;
+}
+.ae-dropdown.open .ae-dropdown-menu { display: block; }
+.ae-dropdown-menu.show              { display: block; }
+
+.ae-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 16px;
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    font-weight: 500;
+    color: var(--text-dark);
+    cursor: pointer;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    transition: background var(--transition-fast);
+}
+.ae-dropdown-item:hover                       { background: var(--primary-xlight); color: var(--primary-dark); }
+.ae-dropdown-item i                           { width: 16px; text-align: center; color: var(--primary-green); }
+.ae-dropdown-item + .ae-dropdown-item         { border-top: 1px solid var(--border-color); }
+
+
+/* ── Single add button ─────────────────────────────────────────────────────── */
+.ae-add-single-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    background: var(--primary-green);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-md);
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    line-height: 1;
+    transition: background var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+.ae-add-single-btn:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(45,122,79,.30);
+}
+
+
+/* ── Modal ─────────────────────────────────────────────────────────────────── */
+#addEquipmentModal {
+    left: var(--sidebar-width) !important;
+    width: calc(100vw - var(--sidebar-width)) !important;
+}
+#addEquipmentModal .modal-content {
+    border: none;
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    box-shadow: 0 8px 24px rgba(45,122,79,.18);
+}
+#addEquipmentModal .modal-header {
+    background: linear-gradient(135deg, var(--primary-green) 0%, var(--primary-dark) 100%);
+    border-bottom: none;
+    padding: 20px 24px;
+}
+#addEquipmentModal .modal-title {
+    font-family: var(--font-display);
+    font-size: var(--text-lg);
+    font-weight: 700;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+}
+/* Override global rules that force fixed height/scroll on .modal-body */
+#addEquipmentModal .modal-body {
+    background: var(--bg-page) !important;
+    padding: 24px !important;
+    height: auto !important;
+    max-height: 68vh;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+}
+#addEquipmentModal .modal-footer {
+    background: var(--bg-white);
+    border-top: 1px solid var(--border-color);
+    padding: 16px 24px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+
+/* ── Mode tabs ─────────────────────────────────────────────────────────────── */
+.ae-mode-tabs {
+    display: flex;
+    background: var(--bg-white);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 4px;
+    margin-bottom: 20px;
+}
+.ae-tab-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 9px 16px;
+    border: none;
+    border-radius: var(--radius-md);
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    cursor: pointer;
+    background: transparent;
+    color: var(--text-medium);
+    line-height: 1;
+    transition: all var(--transition-fast);
+}
+.ae-tab-btn.active             { background: var(--primary-green); color: #fff; box-shadow: 0 2px 8px rgba(45,122,79,.28); }
+.ae-tab-btn:not(.active):hover { background: var(--primary-xlight); color: var(--primary-dark); }
+
+
+/* ── Hint ──────────────────────────────────────────────────────────────────── */
+.ae-hint {
+    font-size: var(--text-sm);
+    color: var(--text-medium);
+    font-style: italic;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.ae-hint i { color: var(--primary-green); font-style: normal; flex-shrink: 0; }
+
+
+/* ── Search ────────────────────────────────────────────────────────────────── */
+.ae-search-wrap { position: relative; margin-bottom: 14px; }
+.ae-search-wrap .ae-search-icon {
+    position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+    color: var(--text-medium); font-size: 13px; pointer-events: none;
+}
+.ae-search-wrap input {
+    width: 100%;
+    padding: 10px 14px 10px 35px;
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    color: var(--text-dark);
+    background: var(--bg-white);
+    box-sizing: border-box;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+.ae-search-wrap input:focus {
+    outline: none;
+    border-color: var(--primary-green);
+    box-shadow: 0 0 0 3px rgba(45,122,79,.12);
+}
+
+
+/* ── Existing list ─────────────────────────────────────────────────────────── */
+.ae-existing-list {
+    max-height: 290px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-color) transparent;
+}
+.ae-existing-list::-webkit-scrollbar       { width: 5px; }
+.ae-existing-list::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
+
+.ae-existing-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 13px;
+    background: var(--bg-white);
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition: border-color var(--transition-fast), background var(--transition-fast), transform var(--transition-fast);
+}
+.ae-existing-item:hover     { border-color: var(--primary-green); background: var(--primary-xlight); transform: translateX(2px); }
+.ae-existing-item.ae-selected {
+    border-color: var(--primary-green);
+    background: var(--primary-xlight);
+    box-shadow: 0 0 0 3px rgba(45,122,79,.12);
+}
+
+.ae-eq-icon {
+    width: 40px; height: 40px;
+    border-radius: var(--radius-md);
+    background: linear-gradient(135deg, var(--primary-green), rgba(45,122,79,.75));
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 16px; flex-shrink: 0;
+    box-shadow: 0 2px 6px rgba(45,122,79,.22);
+}
+.ae-eq-info   { flex: 1; min-width: 0; }
+.ae-eq-brand  { font-weight: 700; font-size: var(--text-base); color: var(--text-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ae-eq-serial { font-size: var(--text-sm); color: var(--text-medium); font-family: 'Courier New', monospace; margin-top: 2px; }
+.ae-eq-check  { color: var(--primary-green); font-size: 17px; opacity: 0; transition: opacity var(--transition-fast); flex-shrink: 0; }
+.ae-existing-item.ae-selected .ae-eq-check { opacity: 1; }
+
+
+/* ── Empty / loading state ─────────────────────────────────────────────────── */
+.ae-empty-state   { text-align: center; padding: 36px 20px; color: var(--text-medium); }
+.ae-empty-state i { font-size: 38px; color: var(--text-light); opacity: .4; display: block; margin-bottom: 12px; }
+.ae-empty-state p { font-size: var(--text-base); font-weight: 600; margin: 0; }
+
+
+/* ── Form ──────────────────────────────────────────────────────────────────── */
+.ae-form-wrap { background: var(--bg-white); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 20px; }
+
+#addEquipmentModal .ae-row      { display: flex; flex-wrap: wrap; margin: -6px; }
+#addEquipmentModal .ae-col-half,
+#addEquipmentModal .ae-col-full { padding: 6px; box-sizing: border-box; }
+#addEquipmentModal .ae-col-half { width: 50%; }
+#addEquipmentModal .ae-col-full { width: 100%; }
+
+#addEquipmentModal .ae-field-label         { display: block; font-size: var(--text-sm); font-weight: 600; color: var(--text-dark); margin-bottom: 5px; }
+#addEquipmentModal .ae-field-label .ae-req { color: var(--color-danger); }
+
+#addEquipmentModal .ae-input,
+#addEquipmentModal .ae-select {
+    width: 100%; padding: 9px 13px;
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    color: var(--text-dark);
+    background: var(--bg-white);
+    box-sizing: border-box;
+    -webkit-appearance: none;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+#addEquipmentModal .ae-input:focus,
+#addEquipmentModal .ae-select:focus      { outline: none; border-color: var(--primary-green); box-shadow: 0 0 0 3px rgba(45,122,79,.12); }
+#addEquipmentModal .ae-input.ae-invalid,
+#addEquipmentModal .ae-select.ae-invalid { border-color: var(--color-danger); box-shadow: 0 0 0 3px rgba(192,57,43,.10); }
+
+
+/* ── Footer buttons ────────────────────────────────────────────────────────── */
+.ae-btn-cancel {
+    padding: 9px 20px;
+    background: var(--bg-white);
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    font-weight: 600;
+    color: var(--text-dark);
+    cursor: pointer;
+    line-height: 1;
+    transition: all var(--transition-fast);
+}
+.ae-btn-cancel:hover { background: var(--bg-light); border-color: var(--primary-green); color: var(--primary-green); }
+
+.ae-btn-save {
+    padding: 9px 22px;
+    background: var(--primary-green);
+    border: none;
+    border-radius: var(--radius-md);
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    font-weight: 600;
+    color: #fff;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    line-height: 1;
+    transition: all var(--transition-fast);
+}
+.ae-btn-save:hover:not(:disabled) { background: var(--primary-dark); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(45,122,79,.35); }
+.ae-btn-save:disabled             { opacity: .5; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+
+
+/* ── Dark mode ─────────────────────────────────────────────────────────────── */
+[data-theme="dark"] .ae-dropdown-menu               { background: var(--bg-white); }
+[data-theme="dark"] .ae-existing-item               { background: var(--bg-light); }
+[data-theme="dark"] .ae-existing-item:hover,
+[data-theme="dark"] .ae-existing-item.ae-selected   { background: var(--primary-xlight); }
+[data-theme="dark"] .ae-form-wrap                   { background: var(--bg-light); }
+[data-theme="dark"] #addEquipmentModal .ae-input,
+[data-theme="dark"] #addEquipmentModal .ae-select,
+[data-theme="dark"] .ae-search-wrap input           { background: var(--bg-white); color: var(--text-dark); }
+[data-theme="dark"] .ae-mode-tabs                   { background: var(--bg-light); }
+[data-theme="dark"] .ae-btn-cancel                  { background: var(--bg-light); border-color: var(--border-color); color: var(--text-medium); }
+
+
+/* ============================================================================
+   RESPONSIVE
+   ============================================================================ */
+
+/* Tablet ≤ 768px */
+@media (max-width: 768px) {
+
+    /* Full-screen — no sidebar offset */
+    #addEquipmentModal {
+        left: 0 !important;
+        width: 100% !important;
+    }
+    #addEquipmentModal .modal-header   { padding: 14px 16px; }
+    #addEquipmentModal .modal-body     { padding: 16px !important; max-height: 72vh; }
+    #addEquipmentModal .modal-footer   { padding: 12px 16px; gap: 8px; flex-direction: column-reverse; }
+    #addEquipmentModal .modal-title    { font-size: var(--text-base); }
+
+    /* Stack all form columns */
+    #addEquipmentModal .ae-col-half    { width: 100%; }
+
+    /* Tabs */
+    .ae-tab-btn { padding: 8px 10px; font-size: 0.78rem; gap: 5px; }
+
+    /* Tighter item cards */
+    .ae-existing-item { padding: 9px 10px; gap: 9px; }
+    .ae-eq-icon       { width: 34px; height: 34px; font-size: 14px; }
+    .ae-eq-brand      { font-size: 0.82rem; }
+    .ae-eq-serial     { font-size: 0.75rem; }
+
+    /* Full-width footer buttons */
+    .ae-btn-cancel,
+    .ae-btn-save { width: 100%; justify-content: center; padding: 11px; }
+
+    /* Keep the section title from crowding the add button —
+       let it shrink and truncate rather than wrapping */
+    .table-header:has(.ae-add-btn-group) .table-title {
+        min-width: 0;
+        flex-shrink: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}
+
+/* Mobile ≤ 480px */
+@media (max-width: 480px) {
+
+    #addEquipmentModal .modal-header   { padding: 12px 14px; }
+    #addEquipmentModal .modal-body     { padding: 12px !important; max-height: 75vh; }
+
+    .ae-mode-tabs { padding: 3px; margin-bottom: 14px; }
+    .ae-tab-btn   { padding: 7px 8px; font-size: 0.74rem; }
+
+    .ae-existing-list { max-height: 220px; }
+    .ae-form-wrap     { padding: 12px; }
+
+    .ae-hint { font-size: 0.78rem; }
+}

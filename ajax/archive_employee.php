@@ -1,25 +1,20 @@
 <?php
-// ajax/archive_employee.php
-// Archive or restore an employee. Archiving also unassigns all equipment.
+/**
+ * ajax/archive_employee.php
+ * Archives an employee and unassigns all their equipment.
+ * Updated for unified tbl_equipment schema.
+ */
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
 require_once '../config/database.php';
-require_once '../config/config.php';
-
 header('Content-Type: application/json');
 
 $db = Database::getInstance()->getConnection();
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    echo json_encode(['success' => false, 'message' => 'Invalid request method.']);
-    exit;
-}
-
-$action     = $_POST['action'] ?? '';
-$employeeId = filter_input(INPUT_POST, 'employeeId', FILTER_VALIDATE_INT);
+$employeeId = filter_input(INPUT_POST, 'employee_id', FILTER_VALIDATE_INT);
 
 if (!$employeeId) {
     echo json_encode(['success' => false, 'message' => 'Invalid employee ID.']);
@@ -27,84 +22,47 @@ if (!$employeeId) {
 }
 
 try {
-    // Verify employee exists
-    $empStmt = $db->prepare("SELECT employeeId, firstName, lastName FROM tbl_employee WHERE employeeId = ?");
-    $empStmt->execute([$employeeId]);
-    $employee = $empStmt->fetch(PDO::FETCH_ASSOC);
+    $db->beginTransaction();
 
-    if (!$employee) {
+    // Unassign all equipment from this employee
+    $eqStmt = $db->prepare("UPDATE tbl_equipment SET employee_id = NULL WHERE employee_id = :id");
+    $eqStmt->execute([':id' => $employeeId]);
+    $eqCount = $eqStmt->rowCount();
+
+    // Unassign all software from this employee
+    $swStmt = $db->prepare("UPDATE tbl_software SET employeeId = NULL WHERE employeeId = :id");
+    $swStmt->execute([':id' => $employeeId]);
+    $swCount = $swStmt->rowCount();
+
+    // Archive the employee
+    $archStmt = $db->prepare("UPDATE tbl_employee SET is_archive = 1 WHERE employeeId = :id");
+    $archStmt->execute([':id' => $employeeId]);
+
+    if ($archStmt->rowCount() === 0) {
+        $db->rollBack();
         echo json_encode(['success' => false, 'message' => 'Employee not found.']);
         exit;
     }
 
-    $fullName = trim($employee['firstName'] . ' ' . $employee['lastName']);
+    // Log activity
+    $logStmt = $db->prepare("
+        INSERT INTO activity_log (user_id, action_type, action_details, entity_type, entity_id)
+        VALUES (:uid, 'archive', :details, 'employee', :eid)
+    ");
+    $userId = $_SESSION['user_id'] ?? 0;
+    $logStmt->execute([
+        ':uid'     => $userId,
+        ':details' => "Archived employee #$employeeId. Unassigned $eqCount equipment and $swCount software.",
+        ':eid'     => $employeeId,
+    ]);
 
-    if ($action === 'archive') {
-        $db->beginTransaction();
-
-        // 1) Unassign all equipment from the employee
-        $tables = [
-            'tbl_systemunit',
-            'tbl_allinone',
-            'tbl_monitor',
-            'tbl_printer',
-            'tbl_otherequipment',
-            'tbl_software',
-        ];
-
-        $unassignedCounts = [];
-        foreach ($tables as $table) {
-            $countStmt = $db->prepare("SELECT COUNT(*) FROM {$table} WHERE employeeId = ?");
-            $countStmt->execute([$employeeId]);
-            $count = (int) $countStmt->fetchColumn();
-
-            if ($count > 0) {
-                $db->prepare("UPDATE {$table} SET employeeId = NULL WHERE employeeId = ?")
-                   ->execute([$employeeId]);
-                $unassignedCounts[$table] = $count;
-            }
-        }
-
-        // 2) Mark employee as archived
-        $db->prepare("UPDATE tbl_employee SET is_archive = 1, updatedAt = NOW() WHERE employeeId = ?")
-           ->execute([$employeeId]);
-
-        $db->commit();
-
-        $totalUnassigned = array_sum($unassignedCounts);
-        $msg = "Employee \"{$fullName}\" has been archived.";
-        if ($totalUnassigned > 0) {
-            $msg .= " {$totalUnassigned} equipment item(s) were unassigned.";
-        }
-
-        logActivity(ACTION_UPDATE, MODULE_EMPLOYEES,
-            "Archived employee {$fullName} (ID: {$employeeId}). {$totalUnassigned} equipment item(s) unassigned.");
-
-        echo json_encode(['success' => true, 'message' => $msg]);
-
-    } elseif ($action === 'restore') {
-        $db->prepare("UPDATE tbl_employee SET is_archive = 0, updatedAt = NOW() WHERE employeeId = ?")
-           ->execute([$employeeId]);
-
-        logActivity(ACTION_UPDATE, MODULE_EMPLOYEES,
-            "Restored employee {$fullName} (ID: {$employeeId}) from archive.");
-
-        echo json_encode(['success' => true, 'message' => "Employee \"{$fullName}\" has been restored."]);
-
-    } else {
-        echo json_encode(['success' => false, 'message' => 'Invalid action. Use "archive" or "restore".']);
-    }
+    $db->commit();
+    echo json_encode([
+        'success' => true,
+        'message' => "Employee archived. $eqCount equipment and $swCount software unassigned.",
+    ]);
 
 } catch (PDOException $e) {
-    if ($db->inTransaction()) {
-        $db->rollBack();
-    }
-    error_log("Archive employee error: " . $e->getMessage());
+    if ($db->inTransaction()) $db->rollBack();
     echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
-} catch (Exception $e) {
-    if ($db->inTransaction()) {
-        $db->rollBack();
-    }
-    error_log("Archive employee error: " . $e->getMessage());
-    echo json_encode(['success' => false, 'message' => 'An error occurred: ' . $e->getMessage()]);
 }

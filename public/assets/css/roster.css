@@ -695,6 +695,8 @@ th.sort-active .sort-icon { opacity: 1; }
     flex-direction: column;
     align-items: flex-end;
     gap: 12px;
+
+    pointer-events: none;
 }
 
 /* ---- The round FAB button ---- */
@@ -713,6 +715,7 @@ th.sort-active .sort-icon { opacity: 1; }
     display: flex;
     align-items: center;
     justify-content: center;
+    pointer-events: auto;
 }
 .fab-maintenance-btn:hover {
     transform: scale(1.08);
@@ -763,16 +766,20 @@ th.sort-active .sort-icon { opacity: 1; }
     box-shadow: 0 12px 40px rgba(0,0,0,.18);
     overflow: hidden;
     transform: translateY(12px) scale(.95);
+    
     opacity: 0;
+    visibility: hidden; 
     pointer-events: none;
+
     transition: transform .25s cubic-bezier(.4,0,.2,1), opacity .25s ease;
+
 }
 .fab-equipment-panel.open {
     transform: translateY(0) scale(1);
     opacity: 1;
+    visibility: visible;
     pointer-events: auto;
 }
-
 .fab-panel-header {
     display: flex;
     align-items: center;
@@ -957,4 +964,22 @@ th.sort-active .sort-icon { opacity: 1; }
 
 .modal-body {
     height: 80vh;
+}
+
+[data-theme="dark"] .viewEquipmentDetails {
+    background: var(--neutral-300);
+    color: var(--text-dark);
+    border-color: var(--neutral-300) !important;
+}
+
+[data-theme="dark"] .equipmentEye {
+    color: var(--text-dark);
+}
+
+[data-theme="dark"] .text-dark {
+    color: var(--text-light) !important;
+}
+
+[data-theme="dark"] .modal-footer {
+    background: var(--neutral-100) !important;
 }

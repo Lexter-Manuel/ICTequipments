@@ -1,362 +1,140 @@
 <?php
+/**
+ * ajax/manage_allinone.php
+ * Adapter: translates legacy All-in-One API calls to unified tbl_equipment + tbl_equipment_specs.
+ */
 require_once '../config/database.php';
 require_once '../config/config.php';
 require_once '../includes/maintenanceHelper.php';
 
 header('Content-Type: application/json');
-
-if (session_status() === PHP_SESSION_NONE) { session_start(); }
+if (session_status() === PHP_SESSION_NONE) session_start();
 
 $db = getDB();
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
-
-/**
- * Sanitize string input
- */
-function sanitizeString($input) {
-    return trim(htmlspecialchars(strip_tags($input), ENT_QUOTES, 'UTF-8'));
-}
-
-/**
- * Validate serial number format
- */
-function validateSerial($serial) {
-    $serial = sanitizeString($serial);
-    if (empty($serial)) {
-        throw new Exception("Serial number cannot be empty");
-    }
-    if (strlen($serial) < 3 || strlen($serial) > 100) {
-        throw new Exception("Serial number must be between 3 and 100 characters");
-    }
-    if (!preg_match('/^[a-zA-Z0-9\-_]+$/', $serial)) {
-        throw new Exception("Serial number can only contain letters, numbers, hyphens, and underscores");
-    }
-    return $serial;
-}
-
-/**
- * Validate brand name
- */
-function validateBrand($brand) {
-    $brand = sanitizeString($brand);
-    if (empty($brand)) {
-        throw new Exception("Brand name cannot be empty");
-    }
-    if (strlen($brand) < 2 || strlen($brand) > 100) {
-        throw new Exception("Brand name must be between 2 and 100 characters");
-    }
-    return $brand;
-}
-
-/**
- * Validate specification fields
- */
-function validateSpecification($spec, $fieldName) {
-    $spec = sanitizeString($spec);
-    if (empty($spec)) {
-        throw new Exception("$fieldName cannot be empty");
-    }
-    if (strlen($spec) > 255) {
-        throw new Exception("$fieldName must not exceed 255 characters");
-    }
-    return $spec;
-}
-
-/**
- * Validate employee ID
- */
-function validateEmployeeId($db, $employeeId) {
-    if (empty($employeeId)) {
-        return null;
-    }
-    
-    $employeeId = filter_var($employeeId, FILTER_VALIDATE_INT);
-    if ($employeeId === false || $employeeId < 1) {
-        throw new Exception("Invalid employee ID");
-    }
-    
-    // Check if employee exists
-    $stmt = $db->prepare("SELECT COUNT(*) FROM tbl_employee WHERE employeeId = :id");
-    $stmt->execute([':id' => $employeeId]);
-    if ($stmt->fetchColumn() == 0) {
-        throw new Exception("Employee not found");
-    }
-    
-    return $employeeId;
-}
+$TYPE_ID = 2; // All-in-One
 
 try {
     switch ($action) {
-        case 'list':
-            listAllInOnes($db);
-            break;
-        case 'get':
-            getAllInOne($db);
-            break;
-        case 'create':
-            createAllInOne($db);
-            break;
-        case 'update':
-            updateAllInOne($db);
-            break;
-        case 'delete':
-            deleteAllInOne($db);
-            break;
-        default:
-            throw new Exception('Invalid action');
+        case 'list':   listItems($db); break;
+        case 'get':    getItem($db); break;
+        case 'create': createItem($db); break;
+        case 'update': updateItem($db); break;
+        case 'delete': deleteItem($db); break;
+        default: throw new Exception('Invalid action');
     }
 } catch (Exception $e) {
     echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 }
 
-function listAllInOnes($db) {
+function listItems($db) {
+    global $TYPE_ID;
     $search = $_GET['search'] ?? '';
     $status = $_GET['status'] ?? '';
 
-    $sql = "
-        SELECT 
-            a.*,
-            CONCAT_WS(' ', e.firstName, e.middleName, e.lastName) as employeeName
-        FROM tbl_allinone a
-        LEFT JOIN tbl_employee e ON a.employeeId = e.employeeId
-        WHERE 1=1
-    ";
-    
-    $params = [];
+    $sql = "SELECT eq.equipment_id, eq.brand, eq.serial_number, eq.property_number, eq.year_acquired, eq.employee_id,
+                   CONCAT_WS(' ', e.firstName, e.lastName) AS employeeName
+            FROM tbl_equipment eq LEFT JOIN tbl_employee e ON eq.employee_id = e.employeeId
+            WHERE eq.type_id = :tid AND eq.is_archived = 0";
+    $params = [':tid' => $TYPE_ID];
 
-    if (!empty($status)) {
-        if ($status === 'Active') {
-            $sql .= " AND a.employeeId IS NOT NULL";
-        } elseif ($status === 'Available') {
-            $sql .= " AND a.employeeId IS NULL";
-        }
+    if ($status === 'Active')    $sql .= " AND eq.employee_id IS NOT NULL";
+    if ($status === 'Available') $sql .= " AND eq.employee_id IS NULL";
+    if ($search !== '') {
+        $sql .= " AND (eq.brand LIKE :s OR eq.serial_number LIKE :s2 OR eq.property_number LIKE :s3 OR e.firstName LIKE :s4 OR e.lastName LIKE :s5)";
+        $t = "%$search%"; $params[':s'] = $t; $params[':s2'] = $t; $params[':s3'] = $t; $params[':s4'] = $t; $params[':s5'] = $t;
     }
+    $sql .= " ORDER BY eq.equipment_id DESC";
+    $stmt = $db->prepare($sql); $stmt->execute($params);
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $specs = bulkSpecs($db, array_column($rows, 'equipment_id'));
 
-    if (!empty($search)) {
-        $term = "%$search%";
-        $sql .= " AND (
-            a.allinoneBrand LIKE :search1 OR
-            a.allinoneSerial LIKE :search2 OR
-            a.specificationProcessor LIKE :search3 OR
-            CONCAT_WS(' ', e.firstName, e.middleName, e.lastName) LIKE :search4
-        )";
-        $params [':search1'] = $term;
-        $params [':search2'] = $term;
-        $params [':search3'] = $term;
-        $params [':search4'] = $term;
-    }
-    
-    $sql .= " ORDER BY a.allinoneId DESC";
-    $stmt = $db->prepare($sql);
-    $stmt->execute($params);
-    $units = $stmt->fetchAll();
-    
-    $formatted = array_map(function($a) {
+    $data = array_map(function($r) use ($specs) {
+        $sp = $specs[$r['equipment_id']] ?? [];
         return [
-            'allinoneId' => $a['allinoneId'],
-            'allinoneBrand' => $a['allinoneBrand'],
-            'allinoneSerial' => $a['allinoneSerial'] ?? null,
-            'specificationProcessor' => $a['specificationProcessor'],
-            'specificationMemory' => $a['specificationMemory'],
-            'specificationGPU' => $a['specificationGPU'],
-            'specificationStorage' => $a['specificationStorage'],
-            'yearAcquired' => $a['yearAcquired'] ?? null,
-            'employeeId' => $a['employeeId'],
-            'employeeName' => $a['employeeName'],
-            'status' => $a['employeeId'] ? 'Active' : 'Available'
+            'allinoneId' => $r['equipment_id'], 'allinoneBrand' => $r['brand'],
+            'allinoneSerial' => $r['serial_number'], 'propertyNumber' => $r['property_number'],
+            'specificationProcessor' => $sp['Processor'] ?? '', 'specificationMemory' => $sp['Memory'] ?? '',
+            'specificationGpu' => $sp['GPU'] ?? '', 'specificationStorage' => $sp['Storage'] ?? '',
+            'yearAcquired' => $r['year_acquired'], 'employeeId' => $r['employee_id'],
+            'employeeName' => $r['employeeName'], 'status' => $r['employee_id'] ? 'Active' : 'Available',
         ];
-    }, $units);
-    
-    echo json_encode(['success' => true, 'data' => $formatted]);
+    }, $rows);
+    echo json_encode(['success' => true, 'data' => $data]);
 }
 
-function getAllInOne($db) {
+function getItem($db) {
+    global $TYPE_ID;
     $id = $_GET['allinone_id'] ?? null;
     if (!$id) throw new Exception('All-in-One ID is required');
-    
-    $stmt = $db->prepare("
-        SELECT a.*, CONCAT_WS(' ', e.firstName, e.middleName, e.lastName) as employeeName
-        FROM tbl_allinone a
-        LEFT JOIN tbl_employee e ON a.employeeId = e.employeeId
-        WHERE a.allinoneId = :id
-    ");
-    $stmt->execute([':id' => $id]);
-    $unit = $stmt->fetch();
-    
-    if (!$unit) throw new Exception('All-in-One not found');
-    
-    $formatted = [
-        'allinoneId' => $unit['allinoneId'],
-        'allinoneBrand' => $unit['allinoneBrand'],
-        'allinoneSerial' => $unit['allinoneSerial'] ?? null,
-        'specificationProcessor' => $unit['specificationProcessor'],
-        'specificationMemory' => $unit['specificationMemory'],
-        'specificationGPU' => $unit['specificationGPU'],
-        'specificationStorage' => $unit['specificationStorage'],
-        'yearAcquired' => $unit['yearAcquired'] ?? null,
-        'employeeId' => $unit['employeeId'],
-        'employeeName' => $unit['employeeName'],
-        'status' => $unit['employeeId'] ? 'Active' : 'Available'
-    ];
-    
-    echo json_encode(['success' => true, 'data' => $formatted]);
+    $stmt = $db->prepare("SELECT eq.*, CONCAT_WS(' ', e.firstName, e.middleName, e.lastName) AS employeeName
+        FROM tbl_equipment eq LEFT JOIN tbl_employee e ON eq.employee_id = e.employeeId
+        WHERE eq.equipment_id = :id AND eq.type_id = :tid");
+    $stmt->execute([':id' => $id, ':tid' => $TYPE_ID]);
+    $r = $stmt->fetch(PDO::FETCH_ASSOC);
+    if (!$r) throw new Exception('All-in-One not found');
+    $sp = getSpecs($db, $id);
+    echo json_encode(['success' => true, 'data' => [
+        'allinoneId' => $r['equipment_id'], 'allinoneBrand' => $r['brand'],
+        'allinoneSerial' => $r['serial_number'], 'propertyNumber' => $r['property_number'],
+        'specificationProcessor' => $sp['Processor'] ?? '', 'specificationMemory' => $sp['Memory'] ?? '',
+        'specificationGpu' => $sp['GPU'] ?? '', 'specificationStorage' => $sp['Storage'] ?? '',
+        'yearAcquired' => $r['year_acquired'], 'employeeId' => $r['employee_id'],
+        'employeeName' => $r['employeeName'], 'status' => $r['employee_id'] ? 'Active' : 'Available',
+    ]]);
 }
 
-function createAllInOne($db) {
-    $brand = validateBrand($_POST['brand'] ?? '');
-    $serial = validateSerial($_POST['allinoneSerial'] ?? '');
-    $processor = validateSpecification($_POST['processor'] ?? '', 'Processor');
-    $memory = validateSpecification($_POST['memory'] ?? '', 'Memory');
-    $gpu = validateSpecification($_POST['gpu'] ?? '', 'GPU');
-    $storage = validateSpecification($_POST['storage'] ?? '', 'Storage');
-    $employeeId = validateEmployeeId($db, $_POST['employee_id'] ?? null);
+function createItem($db) {
+    global $TYPE_ID;
+    $brand = trim($_POST['brand'] ?? ''); $serial = trim($_POST['serial'] ?? '');
+    $prop = trim($_POST['property_number'] ?? ''); $year = $_POST['year'] ?? null;
+    $empId = $_POST['employee_id'] ?? null;
+    $proc = trim($_POST['processor'] ?? ''); $mem = trim($_POST['memory'] ?? '');
+    $gpu = trim($_POST['gpu'] ?? ''); $storage = trim($_POST['storage'] ?? '');
+    if (empty($brand)) throw new Exception('Brand is required');
 
-    $yearAcquired = null;
-    if (!empty($_POST['year_acquired'])) {
-        $yr = filter_var($_POST['year_acquired'], FILTER_VALIDATE_INT);
-        $currentYear = (int)date('Y');
-        if ($yr === false || $yr < 1990 || $yr > $currentYear + 1) {
-            throw new Exception("Invalid year. Must be between 1990 and " . ($currentYear + 1));
-        }
-        $yearAcquired = $yr;
-    }
-
-    // Check duplicate serial
-    $stmt = $db->prepare("SELECT COUNT(*) FROM tbl_allinone WHERE allinoneSerial = :serial");
-    $stmt->execute([':serial' => $serial]);
-    if ($stmt->fetchColumn() > 0) {
-        throw new Exception('Serial number already exists');
-    }
-    
-    $stmt = $db->prepare("
-        INSERT INTO tbl_allinone (
-            allinoneBrand, allinoneSerial, specificationProcessor, specificationMemory,
-            specificationGPU, specificationStorage, yearAcquired, employeeId
-        ) VALUES (
-            :brand, :serial, :processor, :memory, :gpu, :storage, :yearAcquired, :employeeId
-        )
-    ");
-    
-    $stmt->execute([
-        ':brand'        => $brand,
-        ':serial'       => $serial,
-        ':processor'    => $processor,
-        ':memory'       => $memory,
-        ':gpu'          => $gpu,
-        ':storage'      => $storage,
-        ':yearAcquired' => $yearAcquired,
-        ':employeeId'   => $employeeId
-    ]);
-
+    $db->beginTransaction();
+    $stmt = $db->prepare("INSERT INTO tbl_equipment (type_id, employee_id, brand, serial_number, property_number, status, year_acquired) VALUES (:tid,:eid,:brand,:serial,:prop,'Active',:year)");
+    $stmt->execute([':tid'=>$TYPE_ID,':eid'=>$empId?:null,':brand'=>$brand,':serial'=>$serial?:null,':prop'=>$prop?:null,':year'=>$year?:null]);
     $newId = $db->lastInsertId();
-
-    logActivity(ACTION_CREATE, MODULE_COMPUTERS,
-        "Added All-in-One — Brand: {$brand}, Serial: {$serial}, CPU: {$processor}, RAM: {$memory}, Storage: {$storage}."
-        . ($employeeId ? " Assigned to employee ID {$employeeId}." : ""));
-
-    try {
-        $maint = new MaintenanceHelper($db);
-        $maint->initScheduleByType('All-in-One', $newId);
-    } catch (Exception $e) {
-        error_log("Failed to schedule maintenance for All-in-One ID $newId: " . $e->getMessage());
-    }
-    
-    echo json_encode([
-        'success' => true,
-        'message' => 'All-in-One added successfully',
-        'allinone_id' => $newId
-    ]);
+    saveSpecs($db, $newId, ['Processor'=>$proc, 'Memory'=>$mem, 'GPU'=>$gpu, 'Storage'=>$storage]);
+    try { $m = new MaintenanceHelper($db); $m->initScheduleByTypeId($TYPE_ID, $newId); } catch (Exception $e) { error_log($e->getMessage()); }
+    $db->commit();
+    logActivity(ACTION_CREATE, MODULE_COMPUTERS, "Added All-in-One — Brand: {$brand}, Serial: {$serial}.");
+    echo json_encode(['success' => true, 'message' => 'All-in-One added successfully', 'allinone_id' => $newId]);
 }
 
-function updateAllInOne($db) {
-    $id = filter_var($_POST['allinone_id'] ?? null, FILTER_VALIDATE_INT);
-    if (!$id || $id < 1) {
-        throw new Exception('Valid All-in-One ID is required');
-    }
-    
-    // Check exists
-    $stmt = $db->prepare("SELECT COUNT(*) FROM tbl_allinone WHERE allinoneId = :id");
-    $stmt->execute([':id' => $id]);
-    if ($stmt->fetchColumn() == 0) {
-        throw new Exception('All-in-One not found');
-    }
-    
-    $brand = validateBrand($_POST['brand'] ?? '');
-    $serial = validateSerial($_POST['allinoneSerial'] ?? '');
-    $processor = validateSpecification($_POST['processor'] ?? '', 'Processor');
-    $memory = validateSpecification($_POST['memory'] ?? '', 'Memory');
-    $gpu = validateSpecification($_POST['gpu'] ?? '', 'GPU');
-    $storage = validateSpecification($_POST['storage'] ?? '', 'Storage');
-    $employeeId = validateEmployeeId($db, $_POST['employee_id'] ?? null);
+function updateItem($db) {
+    global $TYPE_ID;
+    $id = $_POST['allinone_id'] ?? null; if (!$id) throw new Exception('All-in-One ID is required');
+    $brand = trim($_POST['brand'] ?? ''); $serial = trim($_POST['serial'] ?? '');
+    $prop = trim($_POST['property_number'] ?? ''); $year = $_POST['year'] ?? null;
+    $empId = $_POST['employee_id'] ?? null;
+    $proc = trim($_POST['processor'] ?? ''); $mem = trim($_POST['memory'] ?? '');
+    $gpu = trim($_POST['gpu'] ?? ''); $storage = trim($_POST['storage'] ?? '');
 
-    $yearAcquired = null;
-    if (!empty($_POST['year_acquired'])) {
-        $yr = filter_var($_POST['year_acquired'], FILTER_VALIDATE_INT);
-        $currentYear = (int)date('Y');
-        if ($yr === false || $yr < 1990 || $yr > $currentYear + 1) {
-            throw new Exception("Invalid year. Must be between 1990 and " . ($currentYear + 1));
-        }
-        $yearAcquired = $yr;
-    }
-
-    // Check duplicate serial (exclude self)
-    $stmt = $db->prepare("SELECT COUNT(*) FROM tbl_allinone WHERE allinoneSerial = :serial AND allinoneId != :id");
-    $stmt->execute([':serial' => $serial, ':id' => $id]);
-    if ($stmt->fetchColumn() > 0) {
-        throw new Exception('Serial number already exists');
-    }
-    
-    $stmt = $db->prepare("
-        UPDATE tbl_allinone SET
-            allinoneBrand = :brand,
-            allinoneSerial = :serial,
-            specificationProcessor = :processor,
-            specificationMemory = :memory,
-            specificationGPU = :gpu,
-            specificationStorage = :storage,
-            yearAcquired = :yearAcquired,
-            employeeId = :employeeId
-        WHERE allinoneId = :id
-    ");
-    
-    $stmt->execute([
-        ':brand'        => $brand,
-        ':serial'       => $serial,
-        ':processor'    => $processor,
-        ':memory'       => $memory,
-        ':gpu'          => $gpu,
-        ':storage'      => $storage,
-        ':yearAcquired' => $yearAcquired,
-        ':employeeId'   => $employeeId,
-        ':id'           => $id
-    ]);
-    
-    logActivity(ACTION_UPDATE, MODULE_COMPUTERS,
-        "Updated All-in-One (ID: {$id}) — Brand: {$brand}, Serial: {$serial}."
-        . ($employeeId ? " Assigned to employee ID {$employeeId}." : " Unassigned."));
-
+    $db->beginTransaction();
+    $db->prepare("UPDATE tbl_equipment SET brand=:brand, serial_number=:serial, property_number=:prop, year_acquired=:year, employee_id=:eid WHERE equipment_id=:id AND type_id=:tid")
+       ->execute([':brand'=>$brand,':serial'=>$serial?:null,':prop'=>$prop?:null,':year'=>$year?:null,':eid'=>$empId?:null,':id'=>$id,':tid'=>$TYPE_ID]);
+    saveSpecs($db, $id, ['Processor'=>$proc, 'Memory'=>$mem, 'GPU'=>$gpu, 'Storage'=>$storage]);
+    $db->commit();
+    logActivity(ACTION_UPDATE, MODULE_COMPUTERS, "Updated All-in-One (ID: {$id}) — Brand: {$brand}.");
     echo json_encode(['success' => true, 'message' => 'All-in-One updated successfully']);
 }
 
-function deleteAllInOne($db) {
-    $id = $_POST['allinone_id'] ?? null;
-    if (!$id) throw new Exception('All-in-One ID is required');
-    
-    // Fetch details before deleting so we can log them
-    $row = $db->prepare("SELECT allinoneBrand, allinoneSerial FROM tbl_allinone WHERE allinoneId = :id");
-    $row->execute([':id' => $id]);
-    $item = $row->fetch();
-
-    $stmt = $db->prepare("DELETE FROM tbl_allinone WHERE allinoneId = :id");
-    $stmt->execute([':id' => $id]);
-    
-    if ($stmt->rowCount() == 0) {
-        throw new Exception('All-in-One not found or already deleted');
-    }
-
-    logActivity(ACTION_DELETE, MODULE_COMPUTERS,
-        "Deleted All-in-One (ID: {$id}) — Brand: " . ($item['allinoneBrand'] ?? 'Unknown')
-        . ", Serial: " . ($item['allinoneSerial'] ?? 'Unknown') . ".");
-    
+function deleteItem($db) {
+    global $TYPE_ID;
+    $id = $_POST['allinone_id'] ?? null; if (!$id) throw new Exception('All-in-One ID is required');
+    $db->beginTransaction();
+    $db->prepare("DELETE FROM tbl_equipment_specs WHERE equipment_id = :id")->execute([':id'=>$id]);
+    $db->prepare("DELETE FROM tbl_maintenance_schedule WHERE equipmentId = :id AND equipmentType = :tid")->execute([':id'=>$id,':tid'=>$TYPE_ID]);
+    $stmt = $db->prepare("DELETE FROM tbl_equipment WHERE equipment_id = :id"); $stmt->execute([':id'=>$id]);
+    if ($stmt->rowCount() == 0) { $db->rollBack(); throw new Exception('All-in-One not found'); }
+    $db->commit();
+    logActivity(ACTION_DELETE, MODULE_COMPUTERS, "Deleted All-in-One (ID: {$id}).");
     echo json_encode(['success' => true, 'message' => 'All-in-One deleted successfully']);
 }
+
+function getSpecs($db, $id) { $s = $db->prepare("SELECT spec_key, spec_value FROM tbl_equipment_specs WHERE equipment_id = :id"); $s->execute([':id'=>$id]); return $s->fetchAll(PDO::FETCH_KEY_PAIR); }
+function bulkSpecs($db, $ids) { if (empty($ids)) return []; $ph = implode(',', array_fill(0, count($ids), '?')); $s = $db->prepare("SELECT equipment_id, spec_key, spec_value FROM tbl_equipment_specs WHERE equipment_id IN ($ph)"); $s->execute($ids); $m = []; while ($r = $s->fetch(PDO::FETCH_ASSOC)) $m[$r['equipment_id']][$r['spec_key']] = $r['spec_value']; return $m; }
+function saveSpecs($db, $id, $specs) { $db->prepare("DELETE FROM tbl_equipment_specs WHERE equipment_id = :id")->execute([':id'=>$id]); $s = $db->prepare("INSERT INTO tbl_equipment_specs (equipment_id, spec_key, spec_value) VALUES (:id,:k,:v)"); foreach ($specs as $k => $v) { if (trim($v) !== '') $s->execute([':id'=>$id,':k'=>$k,':v'=>trim($v)]); } }

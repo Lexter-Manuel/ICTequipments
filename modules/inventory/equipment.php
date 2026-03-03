@@ -12,55 +12,121 @@ $stmtPP = $db->prepare("SELECT setting_value FROM system_settings WHERE setting_
 $stmtPP->execute();
 $defaultPerPage = (int)($stmtPP->fetchColumn() ?: 25);
 
-// ── Fetch System Units ──
-$stmtSU = $db->query("
-    SELECT s.*, CONCAT_WS(' ', e.firstName, e.middleName, e.lastName) as employeeName, m.lastMaintenanceDate
-    FROM tbl_systemunit s
-    LEFT JOIN tbl_employee e ON s.employeeId = e.employeeId
-    LEFT JOIN tbl_maintenance_schedule m ON (s.systemunitId = m.equipmentId AND (LOWER(TRIM(m.equipmentType)) = 'System Unit' OR m.equipmentType = '1'))
-    ORDER BY s.systemunitId DESC
+// ── Fetch ALL equipment from unified table ──
+$stmtAll = $db->query("
+    SELECT eq.equipment_id, eq.type_id, eq.employee_id, eq.location_id,
+           eq.brand, eq.model, eq.serial_number, eq.property_number,
+           eq.status, eq.year_acquired, eq.acquisition_date, eq.is_archived,
+           CONCAT_WS(' ', e.firstName, e.middleName, e.lastName) AS employeeName,
+           r.typeName,
+           ms.lastMaintenanceDate,
+           l.location_name
+    FROM tbl_equipment eq
+    INNER JOIN tbl_equipment_type_registry r ON eq.type_id = r.typeId
+    LEFT JOIN tbl_employee e ON eq.employee_id = e.employeeId
+    LEFT JOIN tbl_maintenance_schedule ms ON (eq.equipment_id = ms.equipmentId AND eq.type_id = ms.equipmentType AND ms.isActive = 1)
+    LEFT JOIN location l ON eq.location_id = l.location_id
+    WHERE eq.is_archived = 0
+    ORDER BY eq.equipment_id DESC
 ");
-$systemUnits = $stmtSU->fetchAll();
+$allEquipment = $stmtAll->fetchAll(PDO::FETCH_ASSOC);
 
-// ── Fetch Monitors ──
-$stmtMon = $db->query("
-    SELECT m.*, CONCAT_WS(' ', e.firstName, e.middleName, e.lastName) as employeeName, m2.lastMaintenanceDate
-    FROM tbl_monitor m
-    LEFT JOIN tbl_employee e ON m.employeeId = e.employeeId
-    LEFT JOIN tbl_maintenance_schedule m2 ON (m.monitorId = m2.equipmentId AND (LOWER(TRIM(m2.equipmentType)) = 'monitor' OR m2.equipmentType = '3'))
-    ORDER BY m.monitorId DESC
-");
-$monitors = $stmtMon->fetchAll();
+// Bulk load specs
+$allIds = array_column($allEquipment, 'equipment_id');
+$specsMap = [];
+if (!empty($allIds)) {
+    $ph = implode(',', array_fill(0, count($allIds), '?'));
+    $specStmt = $db->prepare("SELECT equipment_id, spec_key, spec_value FROM tbl_equipment_specs WHERE equipment_id IN ($ph)");
+    $specStmt->execute($allIds);
+    while ($row = $specStmt->fetch(PDO::FETCH_ASSOC)) {
+        $specsMap[$row['equipment_id']][$row['spec_key']] = $row['spec_value'];
+    }
+}
 
-// ── Fetch All-in-Ones ──
-$stmtAIO = $db->query("
-    SELECT a.*, CONCAT_WS(' ', e.firstName, e.middleName, e.lastName) as employeeName, m.lastMaintenanceDate
-    FROM tbl_allinone a
-    LEFT JOIN tbl_employee e ON a.employeeId = e.employeeId
-    LEFT JOIN tbl_maintenance_schedule m ON (a.allinoneId = m.equipmentId AND (LOWER(TRIM(m.equipmentType)) = 'All-in-one' OR m.equipmentType = '2'))
-    ORDER BY a.allinoneId DESC
-");
-$allInOnes = $stmtAIO->fetchAll();
+// Split into legacy arrays with backward-compatible column names for templates
+$systemUnits = [];
+$monitors = [];
+$allInOnes = [];
+$printers = [];
+$otherEquipment = [];
 
-// ── Fetch Printers ──
-$stmtPr = $db->query("
-    SELECT p.*, CONCAT_WS(' ', e.firstName, e.middleName, e.lastName) as employeeName, m.lastMaintenanceDate
-    FROM tbl_printer p
-    LEFT JOIN tbl_employee e ON p.employeeId = e.employeeId
-    LEFT JOIN tbl_maintenance_schedule m ON (p.printerId = m.equipmentId AND (LOWER(TRIM(m.equipmentType)) = 'printer' OR m.equipmentType = '4'))
-    ORDER BY p.printerId DESC
-");
-$printers = $stmtPr->fetchAll();
-
-// ── Fetch Other Equipment ──
-$stmtOther = $db->query("
-    SELECT o.*, CONCAT_WS(' ', e.firstName, e.middleName, e.lastName) as employeeName, l.location_name
-    FROM tbl_otherequipment o
-    LEFT JOIN tbl_employee e ON o.employeeId = e.employeeId
-    LEFT JOIN location l ON o.location_id = l.location_id
-    ORDER BY o.otherEquipmentId DESC
-");
-$otherEquipment = $stmtOther->fetchAll();
+foreach ($allEquipment as $eq) {
+    $specs = $specsMap[$eq['equipment_id']] ?? [];
+    $eqId = $eq['equipment_id'];
+    
+    switch ($eq['typeName']) {
+        case 'System Unit':
+            $systemUnits[] = [
+                'systemunitId'           => $eqId,
+                'systemUnitBrand'        => $eq['brand'],
+                'systemUnitSerial'       => $eq['serial_number'],
+                'systemUnitCategory'     => $specs['Category'] ?? 'Pre-Built',
+                'specificationProcessor' => $specs['Processor'] ?? '',
+                'specificationMemory'    => $specs['Memory'] ?? '',
+                'specificationGPU'       => $specs['GPU'] ?? '',
+                'specificationStorage'   => $specs['Storage'] ?? '',
+                'yearAcquired'           => $eq['year_acquired'],
+                'employeeId'             => $eq['employee_id'],
+                'employeeName'           => $eq['employeeName'],
+                'lastMaintenanceDate'    => $eq['lastMaintenanceDate'],
+            ];
+            break;
+        case 'Monitor':
+            $monitors[] = [
+                'monitorId'           => $eqId,
+                'monitorBrand'        => $eq['brand'],
+                'monitorSerial'       => $eq['serial_number'],
+                'monitorSize'         => $specs['Monitor Size'] ?? '',
+                'yearAcquired'        => $eq['year_acquired'],
+                'employeeId'          => $eq['employee_id'],
+                'employeeName'        => $eq['employeeName'],
+                'lastMaintenanceDate' => $eq['lastMaintenanceDate'],
+            ];
+            break;
+        case 'All-in-One':
+            $allInOnes[] = [
+                'allinoneId'             => $eqId,
+                'allinoneBrand'          => $eq['brand'],
+                'allinoneSerial'         => $eq['serial_number'],
+                'specificationProcessor' => $specs['Processor'] ?? '',
+                'specificationMemory'    => $specs['Memory'] ?? '',
+                'specificationGPU'       => $specs['GPU'] ?? '',
+                'specificationStorage'   => $specs['Storage'] ?? '',
+                'yearAcquired'           => $eq['year_acquired'],
+                'employeeId'             => $eq['employee_id'],
+                'employeeName'           => $eq['employeeName'],
+                'lastMaintenanceDate'    => $eq['lastMaintenanceDate'],
+            ];
+            break;
+        case 'Printer':
+            $printers[] = [
+                'printerId'           => $eqId,
+                'printerBrand'        => $eq['brand'],
+                'printerModel'        => $eq['model'],
+                'printerSerial'       => $eq['serial_number'],
+                'yearAcquired'        => $eq['year_acquired'],
+                'employeeId'          => $eq['employee_id'],
+                'employeeName'        => $eq['employeeName'],
+                'lastMaintenanceDate' => $eq['lastMaintenanceDate'],
+            ];
+            break;
+        default:
+            $otherEquipment[] = [
+                'otherEquipmentId' => $eqId,
+                'equipmentType'    => $eq['typeName'],
+                'brand'            => $eq['brand'],
+                'model'            => $eq['model'],
+                'serialNumber'     => $eq['serial_number'],
+                'yearAcquired'     => $eq['year_acquired'],
+                'status'           => $eq['status'],
+                'employeeId'       => $eq['employee_id'],
+                'employeeName'     => $eq['employeeName'],
+                'location_id'      => $eq['location_id'],
+                'location_name'    => $eq['location_name'],
+            ];
+            break;
+    }
+}
 
 // ── Fetch Employees ──
 $stmtEmployees = $db->query("SELECT employeeId, CONCAT_WS(' ', firstName, middleName, lastName) as fullName FROM tbl_employee WHERE is_archive = '0' ORDER BY firstName, lastName");
@@ -195,6 +261,11 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                     <tr data-su-id="<?php echo $s['systemunitId']; ?>"
                             data-serial="<?php echo strtolower(htmlspecialchars($s['systemUnitSerial'] ?? '')); ?>"
                             data-brand="<?php echo strtolower(htmlspecialchars($s['systemUnitBrand'] ?? '')); ?>"
+                            data-category="<?php echo strtolower(htmlspecialchars($s['systemUnitCategory'] ?? '')); ?>"
+                            data-processor="<?php echo strtolower(htmlspecialchars($s['specificationProcessor'] ?? '')); ?>"
+                            data-memory="<?php echo strtolower(htmlspecialchars($s['specificationMemory'] ?? '')); ?>"
+                            data-storage="<?php echo strtolower(htmlspecialchars($s['specificationStorage'] ?? '')); ?>"
+                            data-year="<?php echo strtolower(htmlspecialchars($s['yearAcquired'] ?? '')); ?>"
                             data-employee="<?php echo strtolower(htmlspecialchars($s['employeeName'] ?? '')); ?>"
                             data-status="<?php echo $status; ?>">
                         <td class="row-counter"></td>
@@ -312,6 +383,8 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                     <tr data-mon-id="<?php echo $m['monitorId']; ?>"
                             data-serial="<?php echo strtolower(htmlspecialchars($m['monitorSerial'] ?? '')); ?>"
                             data-brand="<?php echo strtolower(htmlspecialchars($m['monitorBrand'] ?? '')); ?>"
+                            data-size="<?php echo strtolower(htmlspecialchars($m['monitorSize'] ?? '')); ?>"
+                            data-year="<?php echo strtolower(htmlspecialchars($m['yearAcquired'] ?? '')); ?>"
                             data-employee="<?php echo strtolower(htmlspecialchars($m['employeeName'] ?? '')); ?>"
                             data-status="<?php echo $status; ?>">
                         <td class="row-counter"></td>
@@ -420,7 +493,12 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                     <?php foreach ($allInOnes as $a): ?>
                     <?php $status = $a['employeeId'] ? 'Active' : 'Available'; ?>
                     <tr data-aio-id="<?php echo $a['allinoneId']; ?>"
+                            data-serial="<?php echo strtolower(htmlspecialchars($a['allinoneSerial'] ?? '')); ?>"
                             data-brand="<?php echo strtolower(htmlspecialchars($a['allinoneBrand'] ?? '')); ?>"
+                            data-processor="<?php echo strtolower(htmlspecialchars($a['specificationProcessor'] ?? '')); ?>"
+                            data-memory="<?php echo strtolower(htmlspecialchars($a['specificationMemory'] ?? '')); ?>"
+                            data-storage="<?php echo strtolower(htmlspecialchars($a['specificationStorage'] ?? '')); ?>"
+                            data-year="<?php echo strtolower(htmlspecialchars($a['yearAcquired'] ?? '')); ?>"
                             data-employee="<?php echo strtolower(htmlspecialchars($a['employeeName'] ?? '')); ?>"
                             data-status="<?php echo $status; ?>">
                         <td class="row-counter"></td>

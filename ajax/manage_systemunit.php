@@ -1,390 +1,207 @@
 <?php
+/**
+ * ajax/manage_systemunit.php
+ * Adapter: translates legacy System Unit API calls to unified tbl_equipment + tbl_equipment_specs.
+ * Maintains backward-compatible JSON response format.
+ */
 require_once '../config/database.php';
 require_once '../config/config.php';
 require_once '../includes/maintenanceHelper.php';
 
 header('Content-Type: application/json');
-
-if (session_status() === PHP_SESSION_NONE) { session_start(); }
+if (session_status() === PHP_SESSION_NONE) session_start();
 
 $db = getDB();
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
-/**
- * Sanitize string input
- */
-function sanitizeString($input) {
-    return trim(htmlspecialchars(strip_tags($input), ENT_QUOTES, 'UTF-8'));
-}
-
-/**
- * Validate and sanitize year
- */
-function validateYear($year) {
-    $year = filter_var($year, FILTER_VALIDATE_INT);
-    $currentYear = date('Y');
-    if ($year === false || $year < 1990 || $year > $currentYear + 1) {
-        throw new Exception("Invalid year. Must be between 1990 and " . ($currentYear + 1));
-    }
-    return $year;
-}
-
-/**
- * Validate serial number format
- */
-function validateSerial($serial) {
-    $serial = sanitizeString($serial);
-    if (empty($serial)) {
-        throw new Exception("Serial number cannot be empty");
-    }
-    if (strlen($serial) < 3 || strlen($serial) > 100) {
-        throw new Exception("Serial number must be between 3 and 100 characters");
-    }
-    // Allow alphanumeric, hyphens, and underscores
-    if (!preg_match('/^[a-zA-Z0-9\-_]+$/', $serial)) {
-        throw new Exception("Serial number can only contain letters, numbers, hyphens, and underscores");
-    }
-    return $serial;
-}
-
-/**
- * Validate brand name
- */
-function validateBrand($brand) {
-    $brand = sanitizeString($brand);
-    if (empty($brand)) {
-        throw new Exception("Brand name cannot be empty");
-    }
-    if (strlen($brand) < 2 || strlen($brand) > 100) {
-        throw new Exception("Brand name must be between 2 and 100 characters");
-    }
-    return $brand;
-}
-
-/**
- * Validate specification fields
- */
-function validateSpecification($spec, $fieldName) {
-    $spec = sanitizeString($spec);
-    if (empty($spec)) {
-        throw new Exception("$fieldName cannot be empty");
-    }
-    if (strlen($spec) > 255) {
-        throw new Exception("$fieldName must not exceed 255 characters");
-    }
-    return $spec;
-}
-
-/**
- * Validate category
- */
-function validateCategory($category) {
-    $validCategories = ['Pre-Built', 'Custom Built'];
-    $category = sanitizeString($category);
-    if (empty($category)) {
-        return 'Pre-Built'; // Default
-    }
-    if (!in_array($category, $validCategories)) {
-        throw new Exception("Invalid category. Must be one of: " . implode(', ', $validCategories));
-    }
-    return $category;
-}
-
-/**
- * Validate employee ID
- */
-function validateEmployeeId($db, $employeeId) {
-    if (empty($employeeId)) {
-        return null;
-    }
-    
-    $employeeId = filter_var($employeeId, FILTER_VALIDATE_INT);
-    if ($employeeId === false || $employeeId < 1) {
-        throw new Exception("Invalid employee ID");
-    }
-    
-    // Check if employee exists
-    $stmt = $db->prepare("SELECT COUNT(*) FROM tbl_employee WHERE employeeId = :id");
-    $stmt->execute([':id' => $employeeId]);
-    if ($stmt->fetchColumn() == 0) {
-        throw new Exception("Employee not found");
-    }
-    
-    return $employeeId;
-}
+// System Unit type_id = 1
+$TYPE_ID = 1;
 
 try {
     switch ($action) {
-        case 'list':
-            listSystemUnits($db);
-            break;
-        case 'get':
-            getSystemUnit($db);
-            break;
-        case 'create':
-            createSystemUnit($db);
-            break;
-        case 'update':
-            updateSystemUnit($db);
-            break;
-        case 'delete':
-            deleteSystemUnit($db);
-            break;
-        default:
-            throw new Exception('Invalid action');
+        case 'list':   listItems($db); break;
+        case 'get':    getItem($db); break;
+        case 'create': createItem($db); break;
+        case 'update': updateItem($db); break;
+        case 'delete': deleteItem($db); break;
+        default: throw new Exception('Invalid action');
     }
 } catch (Exception $e) {
     echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 }
 
-function listSystemUnits($db) {
+function listItems($db) {
+    global $TYPE_ID;
     $search = $_GET['search'] ?? '';
     $status = $_GET['status'] ?? '';
 
-    $sql = "SELECT s.*, CONCAT_WS(' ', e.firstName, e.lastName) as employeeName 
-                FROM tbl_systemunit s 
-                LEFT JOIN tbl_employee e ON s.employeeId = e.employeeId
-                where 1=1";
-    
-    $params = [];
+    $sql = "SELECT eq.equipment_id, eq.brand, eq.serial_number, eq.year_acquired, eq.employee_id,
+                   CONCAT_WS(' ', e.firstName, e.lastName) AS employeeName
+            FROM tbl_equipment eq
+            LEFT JOIN tbl_employee e ON eq.employee_id = e.employeeId
+            WHERE eq.type_id = :tid AND eq.is_archived = 0";
+    $params = [':tid' => $TYPE_ID];
 
-    if (!empty($status)) {
-        if ($status === 'Active') {
-            $sql .= " AND s.employeeId IS NOT NULL";
-        } elseif ($status === 'Available') {
-            $sql .= " AND s.employeeId IS NULL";
-        }
-    }
+    if ($status === 'Active')    $sql .= " AND eq.employee_id IS NOT NULL";
+    if ($status === 'Available') $sql .= " AND eq.employee_id IS NULL";
 
-    if (!empty($search)) {
-        $term = "%$search%";
-        $sql .= " AND (
-            s.systemUnitCategory LIKE :search1 OR
-            s.systemUnitBrand LIKE :search2 OR
-            s.specificationProcessor LIKE :search3 OR
-            s.specificationMemory LIKE :search4 OR
-            s.specificationGPU LIKE :search5 OR
-            s.specificationStorage LIKE :search6 OR
-            s.systemUnitSerial LIKE :search7 OR
-            e.firstName LIKE :search8 OR
-            e.lastName LIKE :search9
-        )";
-        $params[':search1'] = $term;
-        $params[':search2'] = $term;
-        $params[':search3'] = $term;
-        $params[':search4'] = $term;
-        $params[':search5'] = $term;
-        $params[':search6'] = $term;
-        $params[':search7'] = $term;
-        $params[':search8'] = $term;
-        $params[':search9'] = $term;
+    if ($search !== '') {
+        $sql .= " AND (eq.brand LIKE :s OR eq.serial_number LIKE :s2 OR e.firstName LIKE :s3 OR e.lastName LIKE :s4)";
+        $t = "%$search%";
+        $params[':s'] = $t; $params[':s2'] = $t; $params[':s3'] = $t; $params[':s4'] = $t;
     }
-    
-    $sql .= " ORDER BY s.systemunitId DESC";
+    $sql .= " ORDER BY eq.equipment_id DESC";
+
     $stmt = $db->prepare($sql);
     $stmt->execute($params);
-    $units = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $ids = array_column($rows, 'equipment_id');
+    $specs = bulkSpecs($db, $ids);
 
-    
-    $formattedSystemUnit = array_map(function($s) {
+    $data = array_map(function($r) use ($specs) {
+        $sp = $specs[$r['equipment_id']] ?? [];
         return [
-            'systemunitId' => $s['systemunitId'],
-            'systemUnitCategory' => $s['systemUnitCategory'] ?? 'Pre-Built',
-            'systemUnitBrand' => $s['systemUnitBrand'],
-            'specificationProcessor' => $s['specificationProcessor'],
-            'specificationMemory' => $s['specificationMemory'],
-            'specificationGPU' => $s['specificationGPU'],
-            'specificationStorage' => $s['specificationStorage'],
-            'systemUnitSerial' => $s['systemUnitSerial'],
-            'yearAcquired' => $s['yearAcquired'],
-            'employeeId' => $s['employeeId'],
-            'employeeName' => $s['employeeName'],
-            'status' => $s['employeeId'] ? 'Active' : 'Available'
+            'systemunitId' => $r['equipment_id'],
+            'systemUnitCategory' => $sp['Category'] ?? 'Pre-Built',
+            'systemUnitBrand' => $r['brand'],
+            'specificationProcessor' => $sp['Processor'] ?? '',
+            'specificationMemory' => $sp['Memory'] ?? '',
+            'specificationGPU' => $sp['GPU'] ?? '',
+            'specificationStorage' => $sp['Storage'] ?? '',
+            'systemUnitSerial' => $r['serial_number'],
+            'yearAcquired' => $r['year_acquired'],
+            'employeeId' => $r['employee_id'],
+            'employeeName' => $r['employeeName'],
+            'status' => $r['employee_id'] ? 'Active' : 'Available',
         ];
-    }, $units);
-    
-    echo json_encode(['success' => true, 'data' => $formattedSystemUnit]);
+    }, $rows);
+    echo json_encode(['success' => true, 'data' => $data]);
 }
 
-function getSystemUnit($db) {
+function getItem($db) {
+    global $TYPE_ID;
     $id = $_GET['systemunit_id'] ?? null;
     if (!$id) throw new Exception('System unit ID is required');
-    
-    $stmt = $db->prepare("
-        SELECT s.*, CONCAT_WS(' ', e.firstName, e.middleName, e.lastName) as employeeName
-        FROM tbl_systemunit s
-        LEFT JOIN tbl_employee e ON s.employeeId = e.employeeId
-        WHERE s.systemunitId = :id
-    ");
-    $stmt->execute([':id' => $id]);
-    $unit = $stmt->fetch();
-    
-    if (!$unit) throw new Exception('System unit not found');
-    
-    $formatted = [
-        'systemunitId' => $unit['systemunitId'],
-        'systemUnitCategory' => $unit['systemUnitCategory'] ?? 'Pre-Built',
-        'systemUnitBrand' => $unit['systemUnitBrand'],
-        'specificationProcessor' => $unit['specificationProcessor'],
-        'specificationMemory' => $unit['specificationMemory'],
-        'specificationGPU' => $unit['specificationGPU'],
-        'specificationStorage' => $unit['specificationStorage'],
-        'systemUnitSerial' => $unit['systemUnitSerial'],
-        'yearAcquired' => $unit['yearAcquired'],
-        'employeeId' => $unit['employeeId'],
-        'employeeName' => $unit['employeeName'],
-        'status' => $unit['employeeId'] ? 'Active' : 'Available'
-    ];
-    
-    echo json_encode(['success' => true, 'data' => $formatted]);
+
+    $stmt = $db->prepare("SELECT eq.*, CONCAT_WS(' ', e.firstName, e.middleName, e.lastName) AS employeeName
+        FROM tbl_equipment eq LEFT JOIN tbl_employee e ON eq.employee_id = e.employeeId
+        WHERE eq.equipment_id = :id AND eq.type_id = :tid");
+    $stmt->execute([':id' => $id, ':tid' => $TYPE_ID]);
+    $r = $stmt->fetch(PDO::FETCH_ASSOC);
+    if (!$r) throw new Exception('System unit not found');
+    $sp = getSpecs($db, $id);
+
+    echo json_encode(['success' => true, 'data' => [
+        'systemunitId' => $r['equipment_id'],
+        'systemUnitCategory' => $sp['Category'] ?? 'Pre-Built',
+        'systemUnitBrand' => $r['brand'],
+        'specificationProcessor' => $sp['Processor'] ?? '',
+        'specificationMemory' => $sp['Memory'] ?? '',
+        'specificationGPU' => $sp['GPU'] ?? '',
+        'specificationStorage' => $sp['Storage'] ?? '',
+        'systemUnitSerial' => $r['serial_number'],
+        'yearAcquired' => $r['year_acquired'],
+        'employeeId' => $r['employee_id'],
+        'employeeName' => $r['employeeName'],
+        'status' => $r['employee_id'] ? 'Active' : 'Available',
+    ]]);
 }
 
-function createSystemUnit($db) {
-    // Validate and sanitize all inputs
-    $category = validateCategory($_POST['category'] ?? 'Pre-Built');
-    $brand = validateBrand($_POST['brand'] ?? '');
-    $processor = validateSpecification($_POST['processor'] ?? '', 'Processor');
-    $memory = validateSpecification($_POST['memory'] ?? '', 'Memory');
-    $gpu = validateSpecification($_POST['gpu'] ?? '', 'GPU');
-    $storage = validateSpecification($_POST['storage'] ?? '', 'Storage');
-    $serial = validateSerial($_POST['serial'] ?? '');
-    $year = validateYear($_POST['year'] ?? '');
-    $employeeId = validateEmployeeId($db, $_POST['employee_id'] ?? null);
-    
-    // Check duplicate serial
-    $stmt = $db->prepare("SELECT COUNT(*) FROM tbl_systemunit WHERE systemUnitSerial = :serial");
-    $stmt->execute([':serial' => $serial]);
-    if ($stmt->fetchColumn() > 0) {
-        throw new Exception('Serial number already exists');
-    }
-    
-    $stmt = $db->prepare("
-        INSERT INTO tbl_systemunit (
-            systemUnitCategory, systemUnitBrand, specificationProcessor,
-            specificationMemory, specificationGPU, specificationStorage,
-            systemUnitSerial, yearAcquired, employeeId
-        ) VALUES (
-            :category, :brand, :processor, :memory, :gpu, :storage, :serial, :year, :employeeId
-        )
-    ");
-    
-    $stmt->execute([
-        ':category' => $category,
-        ':brand' => $brand,
-        ':processor' => $processor,
-        ':memory' => $memory,
-        ':gpu' => $gpu,
-        ':storage' => $storage,
-        ':serial' => $serial,
-        ':year' => $year,
-        ':employeeId' => $employeeId
-    ]);
+function createItem($db) {
+    global $TYPE_ID;
+    $brand = trim($_POST['brand'] ?? '');
+    $serial = trim($_POST['serial'] ?? '');
+    $year = $_POST['year'] ?? null;
+    $empId = $_POST['employee_id'] ?? null;
+    $category = trim($_POST['category'] ?? 'Pre-Built');
+    $processor = trim($_POST['processor'] ?? '');
+    $memory = trim($_POST['memory'] ?? '');
+    $gpu = trim($_POST['gpu'] ?? '');
+    $storage = trim($_POST['storage'] ?? '');
+
+    if (empty($brand)) throw new Exception('Brand is required');
+    if (empty($serial)) throw new Exception('Serial number is required');
+
+    $db->beginTransaction();
+    $stmt = $db->prepare("INSERT INTO tbl_equipment (type_id, employee_id, brand, serial_number, status, year_acquired)
+        VALUES (:tid, :eid, :brand, :serial, 'Active', :year)");
+    $stmt->execute([':tid' => $TYPE_ID, ':eid' => $empId ?: null, ':brand' => $brand, ':serial' => $serial, ':year' => $year ?: null]);
     $newId = $db->lastInsertId();
 
-    logActivity(ACTION_CREATE, MODULE_COMPUTERS,
-        "Added System Unit — Brand: {$brand} ({$category}), Serial: {$serial}, CPU: {$processor}, RAM: {$memory}, Storage: {$storage}, Year: {$year}."
-        . ($employeeId ? " Assigned to employee ID {$employeeId}." : ""));
+    $specData = ['Category' => $category, 'Processor' => $processor, 'Memory' => $memory, 'GPU' => $gpu, 'Storage' => $storage];
+    saveSpecs($db, $newId, $specData);
 
-    try {
-        $maint = new MaintenanceHelper($db);
-        $maint->initScheduleByType('System Unit', $newId);
-    } catch (Exception $e) {
-         error_log("Failed to schedule maintenance for System Unit ID $newId: " . $e->getMessage());
-    }
-    echo json_encode([
-        'success' => true,
-        'message' => 'System unit added successfully',
-        'systemunit_id' => $newId
-    ]);
+    try { $m = new MaintenanceHelper($db); $m->initScheduleByTypeId($TYPE_ID, $newId); } catch (Exception $e) { error_log($e->getMessage()); }
+    $db->commit();
+
+    logActivity(ACTION_CREATE, MODULE_COMPUTERS, "Added System Unit — Brand: {$brand}, Serial: {$serial}.");
+    echo json_encode(['success' => true, 'message' => 'System unit added successfully', 'systemunit_id' => $newId]);
 }
 
-function updateSystemUnit($db) {
-    $id = filter_var($_POST['systemunit_id'] ?? null, FILTER_VALIDATE_INT);
-    if (!$id || $id < 1) {
-        throw new Exception('Valid system unit ID is required');
-    }
-    
-    // Check exists
-    $stmt = $db->prepare("SELECT COUNT(*) FROM tbl_systemunit WHERE systemunitId = :id");
-    $stmt->execute([':id' => $id]);
-    if ($stmt->fetchColumn() == 0) {
-        throw new Exception('System unit not found');
-    }
-    
-    // Validate and sanitize all inputs
-    $category = validateCategory($_POST['category'] ?? 'Pre-Built');
-    $brand = validateBrand($_POST['brand'] ?? '');
-    $processor = validateSpecification($_POST['processor'] ?? '', 'Processor');
-    $memory = validateSpecification($_POST['memory'] ?? '', 'Memory');
-    $gpu = validateSpecification($_POST['gpu'] ?? '', 'GPU');
-    $storage = validateSpecification($_POST['storage'] ?? '', 'Storage');
-    $serial = validateSerial($_POST['serial'] ?? '');
-    $year = validateYear($_POST['year'] ?? '');
-    $employeeId = validateEmployeeId($db, $_POST['employee_id'] ?? null);
-    
-    // Check duplicate serial
-    $stmt = $db->prepare("
-        SELECT COUNT(*) FROM tbl_systemunit 
-        WHERE systemUnitSerial = :serial AND systemunitId != :id
-    ");
-    $stmt->execute([':serial' => $serial, ':id' => $id]);
-    if ($stmt->fetchColumn() > 0) {
-        throw new Exception('Serial number already exists');
-    }
-    
-    $stmt = $db->prepare("
-        UPDATE tbl_systemunit SET
-            systemUnitCategory = :category,
-            systemUnitBrand = :brand,
-            specificationProcessor = :processor,
-            specificationMemory = :memory,
-            specificationGPU = :gpu,
-            specificationStorage = :storage,
-            systemUnitSerial = :serial,
-            yearAcquired = :year,
-            employeeId = :employeeId
-        WHERE systemunitId = :id
-    ");
-    
-    $stmt->execute([
-        ':category' => $category,
-        ':brand' => $brand,
-        ':processor' => $processor,
-        ':memory' => $memory,
-        ':gpu' => $gpu,
-        ':storage' => $storage,
-        ':serial' => $serial,
-        ':year' => $year,
-        ':employeeId' => $employeeId,
-        ':id' => $id
-    ]);
-    
-    logActivity(ACTION_UPDATE, MODULE_COMPUTERS,
-        "Updated System Unit (ID: {$id}) — Brand: {$brand}, Serial: {$serial}."
-        . ($employeeId ? " Assigned to employee ID {$employeeId}." : " Unassigned."));
-
-    echo json_encode(['success' => true, 'message' => 'System unit updated successfully']);
-}
-
-function deleteSystemUnit($db) {
+function updateItem($db) {
+    global $TYPE_ID;
     $id = $_POST['systemunit_id'] ?? null;
     if (!$id) throw new Exception('System unit ID is required');
 
-    // Fetch details before deleting
-    $row = $db->prepare("SELECT systemUnitBrand, systemUnitSerial FROM tbl_systemunit WHERE systemunitId = :id");
-    $row->execute([':id' => $id]);
-    $item = $row->fetch();
-    
-    $stmt = $db->prepare("DELETE FROM tbl_systemunit WHERE systemunitId = :id");
-    $stmt->execute([':id' => $id]);
-    
-    if ($stmt->rowCount() == 0) {
-        throw new Exception('System unit not found or already deleted');
-    }
+    $brand = trim($_POST['brand'] ?? '');
+    $serial = trim($_POST['serial'] ?? '');
+    $year = $_POST['year'] ?? null;
+    $empId = $_POST['employee_id'] ?? null;
+    $category = trim($_POST['category'] ?? 'Pre-Built');
+    $processor = trim($_POST['processor'] ?? '');
+    $memory = trim($_POST['memory'] ?? '');
+    $gpu = trim($_POST['gpu'] ?? '');
+    $storage = trim($_POST['storage'] ?? '');
 
-    logActivity(ACTION_DELETE, MODULE_COMPUTERS,
-        "Deleted System Unit (ID: {$id}) — Brand: " . ($item['systemUnitBrand'] ?? 'Unknown')
-        . ", Serial: " . ($item['systemUnitSerial'] ?? 'Unknown') . ".");
-    
+    $db->beginTransaction();
+    $stmt = $db->prepare("UPDATE tbl_equipment SET brand = :brand, serial_number = :serial, year_acquired = :year, employee_id = :eid
+        WHERE equipment_id = :id AND type_id = :tid");
+    $stmt->execute([':brand' => $brand, ':serial' => $serial, ':year' => $year ?: null, ':eid' => $empId ?: null, ':id' => $id, ':tid' => $TYPE_ID]);
+
+    $specData = ['Category' => $category, 'Processor' => $processor, 'Memory' => $memory, 'GPU' => $gpu, 'Storage' => $storage];
+    saveSpecs($db, $id, $specData);
+    $db->commit();
+
+    logActivity(ACTION_UPDATE, MODULE_COMPUTERS, "Updated System Unit (ID: {$id}) — Brand: {$brand}, Serial: {$serial}.");
+    echo json_encode(['success' => true, 'message' => 'System unit updated successfully']);
+}
+
+function deleteItem($db) {
+    $id = $_POST['systemunit_id'] ?? null;
+    if (!$id) throw new Exception('System unit ID is required');
+
+    $db->beginTransaction();
+    $db->prepare("DELETE FROM tbl_equipment_specs WHERE equipment_id = :id")->execute([':id' => $id]);
+    $db->prepare("DELETE FROM tbl_maintenance_schedule WHERE equipmentId = :id AND equipmentType = :tid")->execute([':id' => $id, ':tid' => 1]);
+    $stmt = $db->prepare("DELETE FROM tbl_equipment WHERE equipment_id = :id");
+    $stmt->execute([':id' => $id]);
+    if ($stmt->rowCount() == 0) { $db->rollBack(); throw new Exception('System unit not found'); }
+    $db->commit();
+
+    logActivity(ACTION_DELETE, MODULE_COMPUTERS, "Deleted System Unit (ID: {$id}).");
     echo json_encode(['success' => true, 'message' => 'System unit deleted successfully']);
+}
+
+function getSpecs($db, $eqId) {
+    $stmt = $db->prepare("SELECT spec_key, spec_value FROM tbl_equipment_specs WHERE equipment_id = :id");
+    $stmt->execute([':id' => $eqId]);
+    return $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+}
+
+function bulkSpecs($db, $ids) {
+    if (empty($ids)) return [];
+    $ph = implode(',', array_fill(0, count($ids), '?'));
+    $stmt = $db->prepare("SELECT equipment_id, spec_key, spec_value FROM tbl_equipment_specs WHERE equipment_id IN ($ph)");
+    $stmt->execute($ids);
+    $map = [];
+    while ($r = $stmt->fetch(PDO::FETCH_ASSOC)) $map[$r['equipment_id']][$r['spec_key']] = $r['spec_value'];
+    return $map;
+}
+
+function saveSpecs($db, $eqId, $specs) {
+    $db->prepare("DELETE FROM tbl_equipment_specs WHERE equipment_id = :id")->execute([':id' => $eqId]);
+    $stmt = $db->prepare("INSERT INTO tbl_equipment_specs (equipment_id, spec_key, spec_value) VALUES (:id, :k, :v)");
+    foreach ($specs as $k => $v) {
+        if (trim($v) !== '') $stmt->execute([':id' => $eqId, ':k' => $k, ':v' => trim($v)]);
+    }
 }

@@ -6,13 +6,29 @@
 require_once '../../config/database.php';
 $db = getDB();
 
-$stmt = $db->query("
-    SELECT o.*, CONCAT_WS(' ', e.firstName, e.middleName, e.lastName) as employeeName, l.location_name
-    FROM tbl_otherequipment o
-    LEFT JOIN tbl_employee e ON o.employeeId = e.employeeId
-    LEFT JOIN location l ON o.location_id = l.location_id
-    ORDER BY o.otherEquipmentId DESC
+// Fetch "other" equipment (non built-in types) from unified table
+$builtinTypes = ['System Unit', 'All-in-One', 'Monitor', 'Printer'];
+$builtinPH = implode(',', array_fill(0, count($builtinTypes), '?'));
+
+$stmt = $db->prepare("
+    SELECT eq.equipment_id AS otherEquipmentId,
+           r.typeName AS equipmentType,
+           eq.brand, eq.model,
+           eq.serial_number AS serialNumber,
+           eq.year_acquired AS yearAcquired,
+           eq.status,
+           eq.employee_id AS employeeId,
+           CONCAT_WS(' ', e.firstName, e.middleName, e.lastName) AS employeeName,
+           eq.location_id,
+           l.location_name
+    FROM tbl_equipment eq
+    INNER JOIN tbl_equipment_type_registry r ON eq.type_id = r.typeId
+    LEFT JOIN tbl_employee e ON eq.employee_id = e.employeeId
+    LEFT JOIN location l ON eq.location_id = l.location_id
+    WHERE eq.is_archived = 0 AND r.typeName NOT IN ($builtinPH)
+    ORDER BY eq.equipment_id DESC
 ");
+$stmt->execute($builtinTypes);
 $equipment = $stmt->fetchAll();
 
 $stmtLoc = $db->query("SELECT location_id, location_name FROM location WHERE is_deleted = '0' ORDER BY location_name ASC");

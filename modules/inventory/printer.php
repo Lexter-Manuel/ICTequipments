@@ -8,16 +8,20 @@ $db = getDB();
 
 $stmt = $db->query("
     SELECT 
-        p.*,
+        eq.equipment_id AS printerId,
+        eq.brand AS printerBrand,
+        eq.model AS printerModel,
+        eq.serial_number AS printerSerial,
+        eq.year_acquired AS yearAcquired,
+        eq.employee_id AS employeeId,
         CONCAT_WS(' ', e.firstName, e.middleName, e.lastName) as employeeName,
-        m.lastMaintenanceDate
-    FROM tbl_printer p
-    LEFT JOIN tbl_employee e ON p.employeeId = e.employeeId
-    LEFT JOIN tbl_maintenance_schedule m ON (
-        p.printerId = m.equipmentId 
-        AND (LOWER(TRIM(m.equipmentType)) = 'printer' OR m.equipmentType = '4')
-    )
-    ORDER BY p.printerId DESC
+        ms.lastMaintenanceDate
+    FROM tbl_equipment eq
+    INNER JOIN tbl_equipment_type_registry r ON eq.type_id = r.typeId
+    LEFT JOIN tbl_employee e ON eq.employee_id = e.employeeId
+    LEFT JOIN tbl_maintenance_schedule ms ON (eq.equipment_id = ms.equipmentId AND eq.type_id = ms.equipmentType AND ms.isActive = 1)
+    WHERE eq.is_archived = 0 AND r.typeName = 'Printer'
+    ORDER BY eq.equipment_id DESC
 ");
 $printers = $stmt->fetchAll();
 

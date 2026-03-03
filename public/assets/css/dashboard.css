@@ -954,7 +954,7 @@
 
     .user-info { display: none; }
 
-    .datetime-display { flex-direction: column; gap: var(--space-2); padding: 10px; }
+    .datetime-display { display: none; }
     .date-info, .time-info { font-size: 12px; }
 
     .sidebar { width: 280px; }
@@ -965,6 +965,10 @@
     .logo-text p  { font-size: 9px; }
     .nav-item { padding: 11px 20px; font-size: 13px; }
     .nav-section-title { padding: 8px 20px 5px; font-size: 9px; }
+
+    .header-bottom {
+        display: none;
+    }
 }
 
 @media (max-width: 480px) {

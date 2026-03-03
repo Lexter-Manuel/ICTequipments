@@ -61,11 +61,7 @@ $accountCount = $db->query("SELECT COUNT(*) FROM tbl_accounts")->fetchColumn();
 $activeAccounts = $db->query("SELECT COUNT(*) FROM tbl_accounts WHERE status = 'Active'")->fetchColumn();
 $logCount = $db->query("SELECT COUNT(*) FROM tbl_activity_logs")->fetchColumn();
 $equipmentCount = $db->query("
-    SELECT (SELECT COUNT(*) FROM tbl_systemunit)
-         + (SELECT COUNT(*) FROM tbl_monitor)
-         + (SELECT COUNT(*) FROM tbl_allinone)
-         + (SELECT COUNT(*) FROM tbl_printer)
-         + (SELECT COUNT(*) FROM tbl_otherequipment) AS total
+    SELECT COUNT(*) FROM tbl_equipment WHERE is_archived = 0
 ")->fetchColumn();
 ?>
 

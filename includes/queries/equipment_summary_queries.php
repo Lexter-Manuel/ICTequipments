@@ -1,6 +1,6 @@
 <?php
 /**
- * Equipment Summary — Data Queries
+ * Equipment Summary — Data Queries (Unified tbl_equipment schema)
  *
  * Expects the following variables to be defined before including this file:
  *   $db             — PDO connection
@@ -24,43 +24,40 @@ $divisions = $db->query(
 )->fetchAll(PDO::FETCH_ASSOC);
 
 $yearOptions = $db->query("
-    SELECT DISTINCT year_acquired FROM (
-        SELECT yearAcquired as year_acquired FROM tbl_systemunit WHERE yearAcquired IS NOT NULL
-        UNION SELECT yearAcquired FROM tbl_monitor WHERE yearAcquired IS NOT NULL
-        UNION SELECT yearAcquired FROM tbl_printer WHERE yearAcquired IS NOT NULL
-        UNION SELECT yearAcquired FROM tbl_otherequipment WHERE yearAcquired IS NOT NULL
-    ) yrs ORDER BY year_acquired DESC
+    SELECT DISTINCT year_acquired
+    FROM tbl_equipment
+    WHERE year_acquired IS NOT NULL AND is_archived = 0
+    ORDER BY year_acquired DESC
 ")->fetchAll(PDO::FETCH_COLUMN);
 
 $equipmentTypes = $db->query(
     "SELECT typeId, typeName FROM tbl_equipment_type_registry ORDER BY typeName"
 )->fetchAll(PDO::FETCH_ASSOC);
 
-// ── Division-filter helper ───────────────────────────────────────────
-if (!function_exists('buildDivFilter')) {
-    function buildDivFilter($tableAlias, $empFk, $divId) {
-        if ($divId === '') return '';
-        return " AND EXISTS (
-            SELECT 1 FROM tbl_employee emp
-            INNER JOIN location loc ON emp.location_id = loc.location_id
-            LEFT JOIN location parent ON loc.parent_location_id = parent.location_id
-            LEFT JOIN location grandparent ON parent.parent_location_id = grandparent.location_id
-            WHERE emp.employeeId = {$tableAlias}.employeeId
-            AND (loc.location_id = {$divId} OR parent.location_id = {$divId} OR grandparent.location_id = {$divId})
-        )";
-    }
+// ── Filter helpers ───────────────────────────────────────────────────
+$whereBase = "eq.is_archived = 0";
+$params = [];
+
+if ($filterDivision !== '') {
+    $divId = intval($filterDivision);
+    $whereBase .= " AND EXISTS (
+        SELECT 1 FROM tbl_employee emp
+        INNER JOIN location loc ON emp.location_id = loc.location_id
+        LEFT JOIN location parent ON loc.parent_location_id = parent.location_id
+        LEFT JOIN location grandparent ON parent.parent_location_id = grandparent.location_id
+        WHERE emp.employeeId = eq.employee_id
+        AND (loc.location_id = {$divId} OR parent.location_id = {$divId} OR grandparent.location_id = {$divId})
+    )";
 }
 
-$divFilterSU  = $filterDivision !== '' ? buildDivFilter('su',  'employeeId', intval($filterDivision)) : '';
-$divFilterMO  = $filterDivision !== '' ? buildDivFilter('mo',  'employeeId', intval($filterDivision)) : '';
-$divFilterPR  = $filterDivision !== '' ? buildDivFilter('pr',  'employeeId', intval($filterDivision)) : '';
-$divFilterAIO = $filterDivision !== '' ? buildDivFilter('aio', 'employeeId', intval($filterDivision)) : '';
-$divFilterOTH = $filterDivision !== '' ? buildDivFilter('oth', 'employeeId', intval($filterDivision)) : '';
+if ($filterYear !== '') {
+    $whereBase .= " AND eq.year_acquired = " . intval($filterYear);
+}
 
-$yearFilterSU  = $filterYear !== '' ? " AND su.yearAcquired = "  . intval($filterYear) : '';
-$yearFilterMO  = $filterYear !== '' ? " AND mo.yearAcquired = "  . intval($filterYear) : '';
-$yearFilterPR  = $filterYear !== '' ? " AND pr.yearAcquired = "  . intval($filterYear) : '';
-$yearFilterOTH = $filterYear !== '' ? " AND oth.yearAcquired = " . intval($filterYear) : '';
+$typeFilter = '';
+if ($filterEqType !== '') {
+    $typeFilter = " AND eq.type_id = " . intval($filterEqType);
+}
 
 // ── Equipment-type visibility ────────────────────────────────────────
 $showSU  = ($filterEqType === '' || $filterEqType === '1');
@@ -70,57 +67,60 @@ $showAIO = ($filterEqType === '' || $filterEqType === '2');
 $showOTH = ($filterEqType === '' || in_array($filterEqType, ['5','6','7','8','9']));
 
 // ── Counts per type ──────────────────────────────────────────────────
-$suCount  = $showSU  ? (int) $db->query("SELECT COUNT(*) FROM tbl_systemunit su WHERE 1=1 $divFilterSU $yearFilterSU")->fetchColumn()       : 0;
-$moCount  = $showMO  ? (int) $db->query("SELECT COUNT(*) FROM tbl_monitor mo WHERE 1=1 $divFilterMO $yearFilterMO")->fetchColumn()           : 0;
-$prCount  = $showPR  ? (int) $db->query("SELECT COUNT(*) FROM tbl_printer pr WHERE 1=1 $divFilterPR $yearFilterPR")->fetchColumn()           : 0;
-$aioCount = $showAIO ? (int) $db->query("SELECT COUNT(*) FROM tbl_allinone aio WHERE 1=1 $divFilterAIO")->fetchColumn()                     : 0;
-$othCount = $showOTH ? (int) $db->query("SELECT COUNT(*) FROM tbl_otherequipment oth WHERE 1=1 $divFilterOTH $yearFilterOTH")->fetchColumn() : 0;
+$countStmt = $db->query("
+    SELECT r.typeName, COUNT(*) AS cnt
+    FROM tbl_equipment eq
+    INNER JOIN tbl_equipment_type_registry r ON eq.type_id = r.typeId
+    WHERE {$whereBase} {$typeFilter}
+    GROUP BY r.typeId, r.typeName
+");
+$countsByType = $countStmt->fetchAll(PDO::FETCH_KEY_PAIR);
+
+$suCount  = $showSU  ? (int)($countsByType['System Unit'] ?? 0) : 0;
+$moCount  = $showMO  ? (int)($countsByType['Monitor'] ?? 0) : 0;
+$prCount  = $showPR  ? (int)($countsByType['Printer'] ?? 0) : 0;
+$aioCount = $showAIO ? (int)($countsByType['All-in-One'] ?? 0) : 0;
+$othCount = $showOTH ? array_sum($countsByType) - ($countsByType['System Unit'] ?? 0) - ($countsByType['Monitor'] ?? 0) - ($countsByType['Printer'] ?? 0) - ($countsByType['All-in-One'] ?? 0) : 0;
 $total    = $suCount + $moCount + $prCount + $aioCount + $othCount;
 
 // ── Assigned / Unassigned ────────────────────────────────────────────
-$assignedParts = [];
-if ($showSU)  $assignedParts[] = "(SELECT COUNT(*) FROM tbl_systemunit su WHERE su.employeeId IS NOT NULL $divFilterSU $yearFilterSU)";
-if ($showMO)  $assignedParts[] = "(SELECT COUNT(*) FROM tbl_monitor mo WHERE mo.employeeId IS NOT NULL $divFilterMO $yearFilterMO)";
-if ($showPR)  $assignedParts[] = "(SELECT COUNT(*) FROM tbl_printer pr WHERE pr.employeeId IS NOT NULL $divFilterPR $yearFilterPR)";
-if ($showAIO) $assignedParts[] = "(SELECT COUNT(*) FROM tbl_allinone aio WHERE aio.employeeId IS NOT NULL $divFilterAIO)";
-if ($showOTH) $assignedParts[] = "(SELECT COUNT(*) FROM tbl_otherequipment oth WHERE oth.employeeId IS NOT NULL $divFilterOTH $yearFilterOTH)";
-$assigned   = !empty($assignedParts) ? (int) $db->query("SELECT (" . implode(' + ', $assignedParts) . ")")->fetchColumn() : 0;
+$assigned = (int) $db->query("
+    SELECT COUNT(*) FROM tbl_equipment eq
+    INNER JOIN tbl_equipment_type_registry r ON eq.type_id = r.typeId
+    WHERE {$whereBase} {$typeFilter} AND eq.employee_id IS NOT NULL
+")->fetchColumn();
 $unassigned = $total - $assigned;
 
 // ── Equipment by division ────────────────────────────────────────────
 $divExtraWhere = $filterDivision !== '' ? " AND l.location_id = " . intval($filterDivision) : '';
 $byDivision = $db->query("
     SELECT l.location_name as division,
-           COUNT(DISTINCT su.systemunitId) as system_units,
-           COUNT(DISTINCT mo.monitorId) as monitors,
-           COUNT(DISTINCT pr.printerId) as printers,
-           COUNT(DISTINCT aio.allinoneId) as allinones
+           SUM(CASE WHEN r.typeName = 'System Unit' THEN 1 ELSE 0 END) as system_units,
+           SUM(CASE WHEN r.typeName = 'Monitor' THEN 1 ELSE 0 END) as monitors,
+           SUM(CASE WHEN r.typeName = 'Printer' THEN 1 ELSE 0 END) as printers,
+           SUM(CASE WHEN r.typeName = 'All-in-One' THEN 1 ELSE 0 END) as allinones
     FROM location l
     LEFT JOIN location sec ON sec.parent_location_id = l.location_id AND sec.is_deleted = '0'
     LEFT JOIN location unit ON unit.parent_location_id = sec.location_id AND unit.is_deleted = '0'
     LEFT JOIN tbl_employee e ON (e.location_id = l.location_id OR e.location_id = sec.location_id OR e.location_id = unit.location_id) AND e.is_archive = 0
-    LEFT JOIN tbl_systemunit su ON su.employeeId = e.employeeId" . ($showSU ? '' : ' AND 1=0') . ($filterYear !== '' ? " AND su.yearAcquired = " . intval($filterYear) : '') . "
-    LEFT JOIN tbl_monitor mo ON mo.employeeId = e.employeeId" . ($showMO ? '' : ' AND 1=0') . ($filterYear !== '' ? " AND mo.yearAcquired = " . intval($filterYear) : '') . "
-    LEFT JOIN tbl_printer pr ON pr.employeeId = e.employeeId" . ($showPR ? '' : ' AND 1=0') . ($filterYear !== '' ? " AND pr.yearAcquired = " . intval($filterYear) : '') . "
-    LEFT JOIN tbl_allinone aio ON aio.employeeId = e.employeeId" . ($showAIO ? '' : ' AND 1=0') . "
+    LEFT JOIN tbl_equipment eq ON eq.employee_id = e.employeeId AND eq.is_archived = 0
+        " . ($filterYear !== '' ? " AND eq.year_acquired = " . intval($filterYear) : '') . "
+        " . ($filterEqType !== '' ? " AND eq.type_id = " . intval($filterEqType) : '') . "
+    LEFT JOIN tbl_equipment_type_registry r ON eq.type_id = r.typeId
     WHERE l.location_type_id = 1 AND l.is_deleted = '0' $divExtraWhere
     GROUP BY l.location_id, l.location_name
     ORDER BY l.location_name
 ")->fetchAll(PDO::FETCH_ASSOC);
 
 // ── Equipment by year acquired ───────────────────────────────────────
-$yearExtraFilter = $filterYear !== '' ? " AND yearAcquired = " . intval($filterYear) : '';
-$yearParts = [];
-if ($showSU)  $yearParts[] = "SELECT yearAcquired as year_acquired, COUNT(*) as cnt FROM tbl_systemunit WHERE yearAcquired IS NOT NULL $yearExtraFilter GROUP BY yearAcquired";
-if ($showMO)  $yearParts[] = "SELECT yearAcquired, COUNT(*) FROM tbl_monitor WHERE yearAcquired IS NOT NULL $yearExtraFilter GROUP BY yearAcquired";
-if ($showPR)  $yearParts[] = "SELECT yearAcquired, COUNT(*) FROM tbl_printer WHERE yearAcquired IS NOT NULL $yearExtraFilter GROUP BY yearAcquired";
-if ($showOTH) $yearParts[] = "SELECT yearAcquired, COUNT(*) FROM tbl_otherequipment WHERE yearAcquired IS NOT NULL $yearExtraFilter GROUP BY yearAcquired";
-$byYear = [];
-if (!empty($yearParts)) {
-    $byYear = $db->query(
-        "SELECT year_acquired, SUM(cnt) as total FROM (" . implode(' UNION ALL ', $yearParts) . ") combined GROUP BY year_acquired ORDER BY year_acquired DESC"
-    )->fetchAll(PDO::FETCH_ASSOC);
-}
+$byYear = $db->query("
+    SELECT eq.year_acquired, COUNT(*) as total
+    FROM tbl_equipment eq
+    INNER JOIN tbl_equipment_type_registry r ON eq.type_id = r.typeId
+    WHERE {$whereBase} {$typeFilter} AND eq.year_acquired IS NOT NULL
+    GROUP BY eq.year_acquired
+    ORDER BY eq.year_acquired DESC
+")->fetchAll(PDO::FETCH_ASSOC);
 
 // ── Latest condition from maintenance records ────────────────────────
 $recEqFilter = '';

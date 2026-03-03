@@ -17,17 +17,12 @@ if ($filterEqType !== '') {
 }
 if ($filterDivision !== '') {
     $schedWhere .= " AND EXISTS (
-        SELECT 1 FROM tbl_employee emp
+        SELECT 1 FROM tbl_equipment eq
+        INNER JOIN tbl_employee emp ON eq.employee_id = emp.employeeId
         INNER JOIN location loc ON emp.location_id = loc.location_id
         LEFT JOIN location parent ON loc.parent_location_id = parent.location_id
         LEFT JOIN location grandparent ON parent.parent_location_id = grandparent.location_id
-        WHERE emp.employeeId = COALESCE(
-            (SELECT su.employeeId FROM tbl_systemunit su WHERE su.systemunitId = s.equipmentId AND s.equipmentType = 1),
-            (SELECT aio.employeeId FROM tbl_allinone aio WHERE aio.allinoneId = s.equipmentId AND s.equipmentType = 2),
-            (SELECT mo.employeeId FROM tbl_monitor mo WHERE mo.monitorId = s.equipmentId AND s.equipmentType = 3),
-            (SELECT pr.employeeId FROM tbl_printer pr WHERE pr.printerId = s.equipmentId AND s.equipmentType = 4),
-            (SELECT oe.employeeId FROM tbl_otherequipment oe WHERE oe.otherEquipmentId = s.equipmentId AND s.equipmentType IN (5,6,7,8,9))
-        )
+        WHERE eq.equipment_id = s.equipmentId AND eq.type_id = s.equipmentType
         AND (loc.location_id = :divId_sched OR parent.location_id = :divId_sched2 OR grandparent.location_id = :divId_sched3)
     )";
     $schedParams[':divId_sched']  = $filterDivision;
@@ -52,13 +47,8 @@ if ($filterEqType !== '') {
 if ($filterDivision !== '') {
     $recWhere .= " AND EXISTS (
         SELECT 1 FROM tbl_maintenance_schedule ss
-        INNER JOIN tbl_employee emp ON emp.employeeId = COALESCE(
-            (SELECT su.employeeId FROM tbl_systemunit su WHERE su.systemunitId = ss.equipmentId AND ss.equipmentType = 1),
-            (SELECT aio.employeeId FROM tbl_allinone aio WHERE aio.allinoneId = ss.equipmentId AND ss.equipmentType = 2),
-            (SELECT mo.employeeId FROM tbl_monitor mo WHERE mo.monitorId = ss.equipmentId AND ss.equipmentType = 3),
-            (SELECT pr.employeeId FROM tbl_printer pr WHERE pr.printerId = ss.equipmentId AND ss.equipmentType = 4),
-            (SELECT oe.employeeId FROM tbl_otherequipment oe WHERE oe.otherEquipmentId = ss.equipmentId AND ss.equipmentType IN (5,6,7,8,9))
-        )
+        INNER JOIN tbl_equipment eq ON eq.equipment_id = ss.equipmentId AND eq.type_id = ss.equipmentType
+        INNER JOIN tbl_employee emp ON eq.employee_id = emp.employeeId
         INNER JOIN location loc ON emp.location_id = loc.location_id
         LEFT JOIN location parent ON loc.parent_location_id = parent.location_id
         LEFT JOIN location grandparent ON parent.parent_location_id = grandparent.location_id
@@ -166,16 +156,10 @@ $stmt = $db->prepare("
     SELECT v.scheduleId, v.equipmentType as typeId, v.equipmentId, v.maintenanceFrequency,
            v.nextDueDate, v.days_overdue,
            etr.typeName as equipment_type,
-           CASE
-               WHEN etr.tableName = 'tbl_systemunit' THEN (SELECT CONCAT(systemUnitBrand, ' ', systemUnitCategory) FROM tbl_systemunit WHERE systemunitId = v.equipmentId)
-               WHEN etr.tableName = 'tbl_monitor' THEN (SELECT CONCAT(monitorBrand, ' ', monitorSize) FROM tbl_monitor WHERE monitorId = v.equipmentId)
-               WHEN etr.tableName = 'tbl_printer' THEN (SELECT CONCAT(printerBrand, ' ', printerModel) FROM tbl_printer WHERE printerId = v.equipmentId)
-               WHEN etr.tableName = 'tbl_allinone' THEN (SELECT CONCAT(allinoneBrand, ' AIO') FROM tbl_allinone WHERE allinoneId = v.equipmentId)
-               WHEN etr.tableName = 'tbl_otherequipment' THEN (SELECT CONCAT(brand, ' ', model) FROM tbl_otherequipment WHERE otherEquipmentId = v.equipmentId)
-               ELSE CONCAT('Equipment #', v.equipmentId)
-           END as equipment_name
+           COALESCE(CONCAT(eq.brand, ' ', eq.model), CONCAT('Equipment #', v.equipmentId)) as equipment_name
     FROM view_overdue_maintenance v
     LEFT JOIN tbl_equipment_type_registry etr ON etr.typeId = v.equipmentType
+    LEFT JOIN tbl_equipment eq ON eq.equipment_id = v.equipmentId AND eq.type_id = v.equipmentType
     WHERE 1=1 $overdueExtraWhere
     ORDER BY v.days_overdue DESC LIMIT 20
 ");

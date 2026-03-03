@@ -5,22 +5,25 @@ session_start();
 try {
     $db = Database::getInstance()->getConnection();
     
-    // ─── Equipment Counts ───
-    $systemUnitCount = (int) $db->query("SELECT COUNT(*) FROM tbl_systemunit")->fetchColumn();
-    $monitorCount    = (int) $db->query("SELECT COUNT(*) FROM tbl_monitor")->fetchColumn();
-    $printerCount    = (int) $db->query("SELECT COUNT(*) FROM tbl_printer")->fetchColumn();
-    $allinoneCount   = (int) $db->query("SELECT COUNT(*) FROM tbl_allinone")->fetchColumn();
-    $otherCount      = (int) $db->query("SELECT COUNT(*) FROM tbl_otherequipment")->fetchColumn();
-    $totalEquipment  = $systemUnitCount + $monitorCount + $printerCount + $allinoneCount + $otherCount;
+    // ─── Equipment Counts (unified tbl_equipment) ───
+    $typeCountStmt = $db->query("
+        SELECT r.typeName, COUNT(*) AS cnt
+        FROM tbl_equipment eq
+        INNER JOIN tbl_equipment_type_registry r ON eq.type_id = r.typeId
+        WHERE eq.is_archived = 0
+        GROUP BY r.typeId, r.typeName
+    ");
+    $typeCounts = $typeCountStmt->fetchAll(PDO::FETCH_KEY_PAIR);
+
+    $systemUnitCount = $typeCounts['System Unit'] ?? 0;
+    $monitorCount    = $typeCounts['Monitor'] ?? 0;
+    $printerCount    = $typeCounts['Printer'] ?? 0;
+    $allinoneCount   = $typeCounts['All-in-One'] ?? 0;
+    $otherCount      = array_sum($typeCounts) - $systemUnitCount - $monitorCount - $printerCount - $allinoneCount;
+    $totalEquipment  = array_sum($typeCounts);
 
     $assignedEquip = (int) $db->query("
-        SELECT (
-            (SELECT COUNT(*) FROM tbl_systemunit WHERE employeeId IS NOT NULL) +
-            (SELECT COUNT(*) FROM tbl_monitor WHERE employeeId IS NOT NULL) +
-            (SELECT COUNT(*) FROM tbl_printer WHERE employeeId IS NOT NULL) +
-            (SELECT COUNT(*) FROM tbl_allinone WHERE employeeId IS NOT NULL) +
-            (SELECT COUNT(*) FROM tbl_otherequipment WHERE employeeId IS NOT NULL)
-        )
+        SELECT COUNT(*) FROM tbl_equipment WHERE employee_id IS NOT NULL AND is_archived = 0
     ")->fetchColumn();
     $unassignedEquip = $totalEquipment - $assignedEquip;
 
@@ -127,6 +130,7 @@ try {
     error_log("Dashboard error: " . $e->getMessage());
     $systemUnitCount = $monitorCount = $printerCount = $allinoneCount = $otherCount = 0;
     $totalEquipment = $assignedEquip = $unassignedEquip = $employeeCount = 0;
+    $typeCounts = [];
     $softwareCount = $activeSchedules = $overdueCount = $dueSoonCount = 0;
     $dueThisMonth = $completedMonth = $totalCompleted = $complianceRate = 0;
     $totalAlerts = 0;

@@ -31,7 +31,7 @@ $activeTemplates = $db->query("SELECT COUNT(*) FROM tbl_maintenance_template WHE
 
 <!-- Template Builder Modal -->
 <div class="modal fade" id="templateBuilderModal" tabindex="-1" data-bs-backdrop="static">
-    <div class="modal-dialog modal-fullscreen">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
             
             <div class="modal-header border-bottom py-2">

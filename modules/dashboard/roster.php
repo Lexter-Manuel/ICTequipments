@@ -16,12 +16,8 @@ $employeeSQL = "
         lt.name AS location_type_name,
         parent_loc.location_name AS parent_location_name,
         (
-            (SELECT COUNT(*) FROM tbl_systemunit    WHERE employeeId = e.employeeId) +
-            (SELECT COUNT(*) FROM tbl_allinone      WHERE employeeId = e.employeeId) +
-            (SELECT COUNT(*) FROM tbl_monitor       WHERE employeeId = e.employeeId) +
-            (SELECT COUNT(*) FROM tbl_printer       WHERE employeeId = e.employeeId) +
-            (SELECT COUNT(*) FROM tbl_otherequipment WHERE employeeId = e.employeeId) +
-            (SELECT COUNT(*) FROM tbl_software      WHERE employeeId = e.employeeId)
+            (SELECT COUNT(*) FROM tbl_equipment WHERE employee_id = e.employeeId AND is_archived = 0) +
+            (SELECT COUNT(*) FROM tbl_software  WHERE employeeId = e.employeeId)
         ) AS equipment_count,
         e.is_archive
     FROM tbl_employee e
@@ -51,11 +47,9 @@ $jobOrderCount  = count(array_filter($employees, fn($e) => $e['employmentStatus'
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
 <link rel="stylesheet" href="assets/css/roster.css?v=<?php echo time(); ?>">
+<link rel="stylesheet" href="assets/css/add_equipment_to_employee.css?v=<?php echo time(); ?>">
 <link rel="stylesheet" href="assets/css/maintenance-checklist.css?v=<?php echo time(); ?>">
 
-<!-- ========================================
-     ROSTER LIST VIEW
-     ======================================== -->
 <div id="roster-list-view">
     <div class="page-header">
         <h2 class="page-title"><i class="fas fa-address-book"></i> Employee Roster</h2>
@@ -92,7 +86,6 @@ $jobOrderCount  = count(array_filter($employees, fn($e) => $e['employmentStatus'
         </div>
     </div>
 
-    <!-- ── Active Employees Table ── -->
     <div class="data-table-container">
         <div class="table-header">
             <h2 class="table-title"><i class="fas fa-list"></i> All Employees</h2>
@@ -151,7 +144,9 @@ $jobOrderCount  = count(array_filter($employees, fn($e) => $e['employmentStatus'
                         data-empid="<?php echo htmlspecialchars($emp['employeeId']); ?>"
                         data-assignment="<?php echo strtolower(htmlspecialchars($locationBreadcrumb)); ?>"
                         data-active="<?php echo $isActive; ?>"
-                        class="<?php echo $isActive ? '' : 'row-inactive'; ?>">
+                        class="<?php echo $isActive ? '' : 'row-inactive'; ?>"
+                        style="cursor: pointer;"
+                        onclick="viewEmployee(<?php echo $emp['employeeId']; ?>)">
                         <td class="row-counter" data-label="#"></td>
                         <td data-label="Photo">
                             <?php if ($emp['photoPath']): ?>
@@ -182,13 +177,13 @@ $jobOrderCount  = count(array_filter($employees, fn($e) => $e['employmentStatus'
                         </td>
                         <td data-label="Actions">
                             <div class="action-buttons">
-                                <button class="btn-action btn-view" onclick="viewEmployee(<?php echo $emp['employeeId']; ?>)" title="View Profile">
+                                <button class="btn-action btn-view" onclick="event.stopPropagation(); viewEmployee(<?php echo $emp['employeeId']; ?>)" title="View Profile">
                                     <i class="fas fa-eye"></i>
                                 </button>
-                                <button class="btn-action btn-edit" onclick="editEmployee(<?php echo $emp['employeeId']; ?>)" title="Edit Employee">
+                                <button class="btn-action btn-edit" onclick="event.stopPropagation();editEmployee(<?php echo $emp['employeeId']; ?>)" title="Edit Employee">
                                     <i class="fas fa-edit"></i>
                                 </button>
-                                <button class="btn-action btn-archive" onclick="archiveEmployee(<?php echo $emp['employeeId']; ?>, '<?php echo htmlspecialchars(addslashes($fullName)); ?>')" title="Archive Employee">
+                                <button class="btn-action btn-archive" onclick="event.stopPropagation();archiveEmployee(<?php echo $emp['employeeId']; ?>, '<?php echo htmlspecialchars(addslashes($fullName)); ?>')" title="Archive Employee">
                                     <i class="fas fa-archive"></i>
                                 </button>
                             </div>
@@ -215,7 +210,6 @@ $jobOrderCount  = count(array_filter($employees, fn($e) => $e['employmentStatus'
         </div>
     </div>
 
-    <!-- ── Archived Employees Table ── -->
     <?php if ($archivedCount > 0): ?>
     <div class="data-table-container archived-section">
         <div class="table-header">
@@ -254,7 +248,9 @@ $jobOrderCount  = count(array_filter($employees, fn($e) => $e['employmentStatus'
                     ?>
                     <tr data-name="<?php echo strtolower(htmlspecialchars($fullName)); ?>"
                         data-empid="<?php echo htmlspecialchars($emp['employeeId']); ?>"
-                        class="row-archived">
+                        class="row-archived"
+                        style="cursor: pointer;"
+                        onclick="viewEmployee(<?php echo $emp['employeeId']; ?>)">
                         <td class="row-counter" data-label="#"></td>
                         <td data-label="Photo">
                             <?php if ($emp['photoPath']): ?>
@@ -279,10 +275,10 @@ $jobOrderCount  = count(array_filter($employees, fn($e) => $e['employmentStatus'
                         <td data-label="Status"><span class="status-badge status-<?php echo $statusClass; ?>"><?php echo htmlspecialchars($emp['employmentStatus']); ?></span></td>
                         <td data-label="Actions">
                             <div class="action-buttons">
-                                <button class="btn-action btn-view" onclick="viewEmployee(<?php echo $emp['employeeId']; ?>)" title="View Profile">
+                                <button class="btn-action btn-view" onclick="event.stopPropagation(); viewEmployee(<?php echo $emp['employeeId']; ?>)" title="View Profile">
                                     <i class="fas fa-eye"></i>
                                 </button>
-                                <button class="btn-action btn-restore" onclick="restoreEmployee(<?php echo $emp['employeeId']; ?>, '<?php echo htmlspecialchars(addslashes($fullName)); ?>')" title="Restore Employee">
+                                <button class="btn-action btn-restore" onclick="event.stopPropagation(); restoreEmployee(<?php echo $emp['employeeId']; ?>, '<?php echo htmlspecialchars(addslashes($fullName)); ?>')" title="Restore Employee">
                                     <i class="fas fa-undo"></i>
                                 </button>
                             </div>
@@ -296,9 +292,6 @@ $jobOrderCount  = count(array_filter($employees, fn($e) => $e['employmentStatus'
     <?php endif; ?>
 </div>
 
-<!-- ========================================
-     EMPLOYEE PROFILE VIEW
-     ======================================== -->
 <div id="employee-profile-view" style="display: none;">
     
     <div class="page-header">
@@ -315,7 +308,6 @@ $jobOrderCount  = count(array_filter($employees, fn($e) => $e['employmentStatus'
         </div>
     </div>
 
-    <!-- Personal Information with Integrated Profile Header -->
     <div class="data-table-container">
         <div class="table-header">
             <h2 class="table-title"><i class="fas fa-user-circle"></i> Personal Information</h2>
@@ -325,7 +317,6 @@ $jobOrderCount  = count(array_filter($employees, fn($e) => $e['employmentStatus'
         </div>
     </div>
 
-    <!-- Employment Details -->
     <div class="data-table-container">
         <div class="table-header">
             <h2 class="table-title"><i class="fas fa-briefcase"></i> Employment Details</h2>
@@ -335,7 +326,6 @@ $jobOrderCount  = count(array_filter($employees, fn($e) => $e['employmentStatus'
         </div>
     </div>
 
-    <!-- Assigned Equipment -->
     <div class="data-table-container">
         <div class="table-header">
             <h2 class="table-title"><i class="fas fa-laptop"></i> Assigned Equipment</h2>
@@ -346,7 +336,6 @@ $jobOrderCount  = count(array_filter($employees, fn($e) => $e['employmentStatus'
         </div>
     </div>
 
-    <!-- Printers -->
     <div class="data-table-container">
         <div class="table-header">
             <h2 class="table-title">
@@ -359,7 +348,6 @@ $jobOrderCount  = count(array_filter($employees, fn($e) => $e['employmentStatus'
         </div>
     </div>
 
-    <!-- Software Licenses -->
     <div class="data-table-container">
         <div class="table-header">
             <h2 class="table-title">
@@ -372,7 +360,6 @@ $jobOrderCount  = count(array_filter($employees, fn($e) => $e['employmentStatus'
         </div>
     </div>
 
-    <!-- Floating Maintenance FAB -->
     <div class="fab-maintenance-wrapper" id="fabMaintenanceWrapper" data-hidden="true">
         <div class="fab-equipment-panel" id="fabEquipmentPanel">
             <div class="fab-panel-header">
@@ -383,8 +370,7 @@ $jobOrderCount  = count(array_filter($employees, fn($e) => $e['employmentStatus'
                 </button>
             </div>
             <div class="fab-panel-body" id="fabEquipmentList">
-                <!-- Populated dynamically -->
-            </div>
+                </div>
             <div class="fab-panel-footer" id="fabPanelFooter" style="display:none;">
                 <button class="fab-perform-all-btn" onclick="fabPerformAll()">
                     <i class="fas fa-play-circle"></i> Perform All Maintenance
@@ -398,7 +384,6 @@ $jobOrderCount  = count(array_filter($employees, fn($e) => $e['employmentStatus'
     </div>
 </div>
 
-<!-- Maintenance Modal (reusable component) -->
 <?php include __DIR__ . '/../../includes/components/maintenance_modal.php'; ?>
 
 <div class="modal fade" id="equipmentDetailsModal" tabindex="-1" aria-hidden="true">
@@ -418,7 +403,6 @@ $jobOrderCount  = count(array_filter($employees, fn($e) => $e['employmentStatus'
                     <span id="detailType" class="badge bg-secondary">Type</span>
                 </div>
                 
-                <!-- Dynamic specs rendered by JS based on equipment type -->
                 <ul id="detailSpecsList" class="list-group list-group-flush">
                 </ul>
             </div>
@@ -449,3 +433,4 @@ var unitsData = <?php echo json_encode($units); ?>;
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
 <script src="assets/js/roster.js?v=<?php echo time(); ?>"></script>
+<script src="assets/js/add_equipment_to_employee.js?v=<?php echo time(); ?>"></script>

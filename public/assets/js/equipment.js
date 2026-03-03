@@ -410,11 +410,16 @@ function applySystemUnitTableState() {
     var allRows = Array.from(document.querySelectorAll('#systemunitTableBody tr[data-su-id]'));
 
     suFilteredRows = allRows.filter(function(row) {
-        var serial   = row.dataset.serial   || '';
-        var brand    = row.dataset.brand    || '';
-        var employee = row.dataset.employee || '';
-        var status   = row.dataset.status   || '';
-        var matchesSearch = serial.includes(searchTerm) || brand.includes(searchTerm) || employee.includes(searchTerm);
+        var serial    = row.dataset.serial    || '';
+        var brand     = row.dataset.brand     || '';
+        var category  = row.dataset.category  || '';
+        var processor = row.dataset.processor || '';
+        var memory    = row.dataset.memory    || '';
+        var storage   = row.dataset.storage   || '';
+        var year      = row.dataset.year      || '';
+        var employee  = row.dataset.employee  || '';
+        var status    = row.dataset.status    || '';
+        var matchesSearch = serial.includes(searchTerm) || brand.includes(searchTerm) || category.includes(searchTerm) || processor.includes(searchTerm) || memory.includes(searchTerm) || storage.includes(searchTerm) || year.includes(searchTerm) || employee.includes(searchTerm);
         var matchesStatus = !statusFilter || status === statusFilter;
         return matchesSearch && matchesStatus;
     });
@@ -473,9 +478,11 @@ function applyMonitorTableState() {
     monFilteredRows = allRows.filter(function(row) {
         var serial   = row.dataset.serial   || '';
         var brand    = row.dataset.brand    || '';
+        var size     = row.dataset.size     || '';
+        var year     = row.dataset.year     || '';
         var employee = row.dataset.employee || '';
         var status   = row.dataset.status   || '';
-        var matchesSearch = serial.includes(searchTerm) || brand.includes(searchTerm) || employee.includes(searchTerm);
+        var matchesSearch = serial.includes(searchTerm) || brand.includes(searchTerm) || size.includes(searchTerm) || year.includes(searchTerm) || employee.includes(searchTerm);
         var matchesStatus = !statusFilter || status === statusFilter;
         return matchesSearch && matchesStatus;
     });
@@ -532,10 +539,15 @@ function applyAIOTableState() {
     var allRows = Array.from(document.querySelectorAll('#allinoneTableBody tr[data-aio-id]'));
 
     aioFilteredRows = allRows.filter(function(row) {
-        var brand    = row.dataset.brand    || '';
-        var employee = row.dataset.employee || '';
-        var status   = row.dataset.status   || '';
-        var matchesSearch = brand.includes(searchTerm) || employee.includes(searchTerm);
+        var serial    = row.dataset.serial    || '';
+        var brand     = row.dataset.brand     || '';
+        var processor = row.dataset.processor || '';
+        var memory    = row.dataset.memory    || '';
+        var storage   = row.dataset.storage   || '';
+        var year      = row.dataset.year      || '';
+        var employee  = row.dataset.employee  || '';
+        var status    = row.dataset.status    || '';
+        var matchesSearch = serial.includes(searchTerm) || brand.includes(searchTerm) || processor.includes(searchTerm) || memory.includes(searchTerm) || storage.includes(searchTerm) || year.includes(searchTerm) || employee.includes(searchTerm);
         var matchesStatus = !statusFilter || status === statusFilter;
         return matchesSearch && matchesStatus;
     });
@@ -730,12 +742,15 @@ function applyOtherTableState() {
     var allRows      = Array.from(document.querySelectorAll('#otherTableBody tr[data-equipment-id]'));
 
     otherFilteredRows = allRows.filter(function(row) {
-        var serial = row.dataset.serial || '';
-        var type   = row.dataset.type   || '';
-        var brand  = row.dataset.brand  || '';
-        var status = row.dataset.status || '';
+        var serial   = row.dataset.serial   || '';
+        var type     = row.dataset.type     || '';
+        var brand    = row.dataset.brand    || '';
+        var location = row.dataset.location || '';
+        var employee = row.dataset.employee || '';
+        var year     = row.dataset.year     || '';
+        var status   = row.dataset.status   || '';
 
-        var matchesSearch = serial.includes(searchTerm) || type.includes(searchTerm) || brand.includes(searchTerm);
+        var matchesSearch = serial.includes(searchTerm) || type.includes(searchTerm) || brand.includes(searchTerm) || location.includes(searchTerm) || employee.includes(searchTerm) || year.includes(searchTerm);
         var matchesStatus = !statusFilter || status === statusFilter;
         return matchesSearch && matchesStatus;
     });

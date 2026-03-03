@@ -34,6 +34,13 @@ class MaintenanceHelper {
         }
     }
 
+    /**
+     * Alias for initScheduleById (used by unified manage_equipment.php)
+     */
+    public function initScheduleByTypeId($typeId, $equipmentId) {
+        return $this->initScheduleById($typeId, $equipmentId);
+    }
+
     private function createSchedule($typeId, $equipmentId, $frequency) {
         // Try to find a location group to sync with
         $locationGroupId = null;

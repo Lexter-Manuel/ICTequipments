@@ -23,9 +23,6 @@ var sortDir = 'asc';
 var filteredRows = [];
 
 var LocationHierarchy = {
-    /**
-     * Populate sections based on selected division
-     */
     populateSections: function(divisionId, sectionSelectId = 'edit_section') {
         var sectionSelect = document.getElementById(sectionSelectId);
         sectionSelect.innerHTML = '<option value="">Select Section</option>';
@@ -45,9 +42,6 @@ var LocationHierarchy = {
         }
     },
 
-    /**
-     * Populate units based on selected parent (can be section OR division)
-     */
     populateUnits: function(parentId, unitSelectId = 'edit_unit') {
         var unitSelect = document.getElementById(unitSelectId);
         unitSelect.innerHTML = '<option value="">Select Unit</option>';
@@ -67,75 +61,51 @@ var LocationHierarchy = {
         }
     },
 
-    /**
-     * Setup location dropdowns based on current location
-     * Handles all hierarchy variations:
-     * 1. Unit > Section > Division
-     * 2. Unit > Division (no section)
-     * 3. Section > Division (no unit)
-     * 4. Division only
-     */
     setupLocationDropdowns: function(locationId, divisionSelectId = 'edit_division', sectionSelectId = 'edit_section', unitSelectId = 'edit_unit') {
         var divSelect = document.getElementById(divisionSelectId);
         var secSelect = document.getElementById(sectionSelectId);
         var unitSelect = document.getElementById(unitSelectId);
 
-        // Find the location in our data
         var unit = unitsData.find(u => u.location_id == locationId);
         var section = sectionsData.find(s => s.location_id == locationId);
         
         var targetDiv = '', targetSec = '', targetUnit = '';
 
         if (unit) {
-            // Location is a Unit
             targetUnit = unit.location_id;
-            
-            // Check if unit's parent is a Section
             var parentIsSection = sectionsData.find(s => s.location_id == unit.parent_location_id);
             
             if (parentIsSection) {
-                // Hierarchy: Unit > Section > Division
                 targetSec = parentIsSection.location_id;
                 targetDiv = parentIsSection.parent_location_id;
             } else {
-                // Hierarchy: Unit > Division (no section)
                 targetDiv = unit.parent_location_id;
             }
         } else if (section) {
-            // Location is a Section
             targetSec = section.location_id;
             targetDiv = section.parent_location_id;
         } else {
-            // Location is a Division
             targetDiv = locationId;
         }
 
-        // Set division first
         divSelect.value = targetDiv;
         this.populateSections(targetDiv, sectionSelectId);
         
-        // Set section if exists
         if (targetSec) {
             secSelect.value = targetSec;
             secSelect.disabled = false;
             this.populateUnits(targetSec, unitSelectId);
         } else {
             secSelect.value = "";
-            // Try to populate units directly from division
             this.populateUnits(targetDiv, unitSelectId);
         }
         
-        // Set unit if exists
         if (targetUnit) {
             unitSelect.value = targetUnit;
             unitSelect.disabled = false;
         }
     },
 
-    /**
-     * Get the final location ID for saving
-     * Priority: Unit > Section > Division
-     */
     getFinalLocationId: function(divisionSelectId = 'edit_division', sectionSelectId = 'edit_section', unitSelectId = 'edit_unit') {
         var unitValue = document.getElementById(unitSelectId).value;
         var sectionValue = document.getElementById(sectionSelectId).value;
@@ -188,7 +158,7 @@ function viewEmployee(employeeId) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                currentProfileData = data; // Store full profile data for equipment details
+                currentProfileData = data; // Save data for dynamic specs viewer
                 renderEmployeeProfile(data);
                 document.getElementById('roster-list-view').style.display = 'none';
                 document.getElementById('employee-profile-view').style.display = 'block';
@@ -223,35 +193,22 @@ function editEmployeeFromProfile() {
 // ========================================
 function renderEmployeeProfile(data) {
     var emp = data.employee;
-    
-    // Render Personal Information (with integrated header)
     renderPersonalInformation(emp);
-    
-    // Render Employment Details
     renderEmploymentDetails(emp);
-    
-    // Render Equipment
     renderEquipment(data);
-    
-    // Render Printers
     renderPrinters(data);
-
-    // Render Software Licenses
     renderSoftwareLicenses(data);
-
 }
 
 function renderPersonalInformation(emp) {
     var container = document.getElementById('profile-personal-info');
     var age = calculateAge(emp.birthDate);
     
-    // Status class for badge
     var statusClass = 'status-permanent';
     if(emp.employmentStatus === 'Casual') statusClass = 'status-casual';
     if(emp.employmentStatus === 'Job Order') statusClass = 'status-job-order';
     if(emp.employmentStatus === 'Contract of Service') statusClass = 'status-job-order';
     
-    // Active status
     var isActive = emp.is_active == 1;
     var isArchived = emp.is_archive == 1;
     
@@ -297,7 +254,6 @@ function renderPersonalInformation(emp) {
 function renderEmploymentDetails(emp) {
     var container = document.getElementById('profile-employment-info');
     
-    // Build location breadcrumb
     var locationText = '—';
     if (emp.location_name) {
         if (emp.parent_location_name) {
@@ -321,14 +277,12 @@ function renderEquipment(data) {
     var countsContainer = document.getElementById('equipment-counts');
     var gridContainer = document.getElementById('equipment-grid');
     
-    // Count equipment
     var systemUnitsCount = data.systemUnits ? data.systemUnits.length : 0;
     var allinonesCount = data.allinones ? data.allinones.length : 0;
     var monitorsCount = data.monitors ? data.monitors.length : 0;
     var otherCount = data.other ? data.other.length : 0;
     var totalCount = systemUnitsCount + allinonesCount + monitorsCount + otherCount;
     
-    // Render counts
     countsContainer.innerHTML = `
         <div class="asset-count-item">
             <i class="fas fa-desktop"></i>
@@ -348,7 +302,6 @@ function renderEquipment(data) {
         </div>
     `;
     
-    // Render equipment cards
     var equipmentHtml = '';
     
     if (data.systemUnits && data.systemUnits.length > 0) {
@@ -356,34 +309,21 @@ function renderEquipment(data) {
             equipmentHtml += createEquipmentCard('System Unit', item.systemUnitBrand, item.systemUnitSerial, 'desktop', item.systemunitId, 'systemunit');
         });
     }
-    
     if (data.allinones && data.allinones.length > 0) {
         data.allinones.forEach(item => {
             equipmentHtml += createEquipmentCard('All-in-One PC', item.allinoneBrand, item.allinoneSerial || 'N/A', 'computer', item.allinoneId, 'allinone');
         });
     }
-    
     if (data.monitors && data.monitors.length > 0) {
         data.monitors.forEach(item => {
             equipmentHtml += createEquipmentCard('Monitor', item.monitorBrand, item.monitorSerial, 'tv', item.monitorId, 'monitor');
         });
     }
-    
     if (data.other && data.other.length > 0) {
         data.other.forEach(item => {
-            // Use the actual type from DB (e.g., "Laptop", "Projector") if available
-            // Fallback to 'other' if missing
             const realType = item.equipmentType || 'other'; 
             const displayType = item.equipmentType || 'Other Equipment';
-            
-            equipmentHtml += createEquipmentCard(
-                displayType, 
-                item.brand, 
-                item.serialNumber, 
-                'server', 
-                item.otherEquipmentId, 
-                realType // Pass "Laptop" so TYPE_MAPPING['laptop'] works
-            );
+            equipmentHtml += createEquipmentCard(displayType, item.brand, item.serialNumber, 'server', item.otherEquipmentId, realType);
         });
     }
     
@@ -488,7 +428,6 @@ function createDetailItem(label, value, icon) {
 }
 
 function createEquipmentCard(type, brand, serial, icon, id, equipmentType) {
-    // Escape strings to prevent errors with quotes
     const safeBrand = (brand || 'Unknown').replace(/'/g, "\\'");
     const safeSerial = (serial || 'N/A').replace(/'/g, "\\'");
     const safeType = (equipmentType || 'other').replace(/'/g, "\\'");
@@ -506,7 +445,7 @@ function createEquipmentCard(type, brand, serial, icon, id, equipmentType) {
             <div class="eq-footer">
                 <div class="row g-2">
                     <div class="col-6">
-                        <button class="btn btn-sm btn-light w-100 border viewEquipmentDetails" 
+                        <button class="btn btn-sm btn-light w-100 border" 
                                 onclick="viewEquipmentDetails('${safeType}', ${id}, '${icon}')">
                             <i class="fas fa-eye text-secondary"></i> View
                         </button>
@@ -523,25 +462,17 @@ function createEquipmentCard(type, brand, serial, icon, id, equipmentType) {
     `;
 }
 
-// mula dito -1
-
+// ========================================
+// DYNAMIC EQUIPMENT VIEWER (Partner Merge)
+// ========================================
 function findEquipmentItem(type, id) {
     if (!currentProfileData) return null;
     var normalType = type.toLowerCase();
 
-    if (normalType === 'systemunit') {
-        return (currentProfileData.systemUnits || []).find(function(i) { return i.systemunitId == id; });
-    }
-    if (normalType === 'allinone') {
-        return (currentProfileData.allinones || []).find(function(i) { return i.allinoneId == id; });
-    }
-    if (normalType === 'monitor') {
-        return (currentProfileData.monitors || []).find(function(i) { return i.monitorId == id; });
-    }
-    if (normalType === 'printer') {
-        return (currentProfileData.printers || []).find(function(i) { return i.printerId == id; });
-    }
-    // Other equipment — type could be "Laptop", "Projector", etc.
+    if (normalType === 'systemunit') return (currentProfileData.systemUnits || []).find(function(i) { return i.systemunitId == id; });
+    if (normalType === 'allinone') return (currentProfileData.allinones || []).find(function(i) { return i.allinoneId == id; });
+    if (normalType === 'monitor') return (currentProfileData.monitors || []).find(function(i) { return i.monitorId == id; });
+    if (normalType === 'printer') return (currentProfileData.printers || []).find(function(i) { return i.printerId == id; });
     return (currentProfileData.other || []).find(function(i) { return i.otherEquipmentId == id; });
 }
 
@@ -569,12 +500,10 @@ function buildSpecRows(type, item) {
         rows += specRow('Model', item.printerModel);
         rows += specRow('Year Acquired', item.yearAcquired);
     } else {
-        // Other equipment
         rows += specRow('Type', item.equipmentType);
         rows += specRow('Model', item.model);
         rows += specRow('Year Acquired', item.yearAcquired);
     }
-
     return rows;
 }
 
@@ -590,7 +519,6 @@ function viewEquipmentDetails(type, id, icon) {
     var item = findEquipmentItem(type, id);
     var normalType = type.toLowerCase();
 
-    // Determine brand / serial from the found item
     var brand = '—', serial = '—';
     if (item) {
         if (normalType === 'systemunit')       { brand = item.systemUnitBrand; serial = item.systemUnitSerial; }
@@ -605,14 +533,13 @@ function viewEquipmentDetails(type, id, icon) {
     document.getElementById('detailType').innerText = type.toUpperCase();
     document.getElementById('detailIcon').className = 'fas fa-' + icon + ' fa-3x text-secondary';
 
-    // Owner & location from profile header
     var owner = document.querySelector('.profile-name-large') ? document.querySelector('.profile-name-large').innerText : 'Unknown';
     var locationEl = document.querySelector('.profile-badges-group .status-badge');
     var location = locationEl ? 'Current Assignment' : 'N/A';
 
-    // Build dynamic spec rows + common rows
     var specsHtml = buildSpecRows(type, item);
     specsHtml += specRow('Assigned To', owner);
+    specsHtml += specRow('Location', location);
 
     document.getElementById('detailSpecsList').innerHTML = specsHtml;
 
@@ -620,8 +547,9 @@ function viewEquipmentDetails(type, id, icon) {
     modal.show();
 }
 
-// hanggang dito
-
+// ========================================
+// EMPLOYEE EDIT/SAVE
+// ========================================
 function editEmployee(employeeId) {
     var employee = rosterData.find(emp => emp.employeeId == employeeId);
     if (!employee) {
@@ -639,10 +567,8 @@ function editEmployee(employeeId) {
     document.getElementById('edit_position').value = employee.position || '';
     document.getElementById('edit_employmentStatus').value = employee.employmentStatus || '';
     
-    // Setup location dropdowns using the extracted hierarchy manager
     LocationHierarchy.setupLocationDropdowns(employee.location_id);
     
-    // Photo Logic
     var previewImage = document.getElementById('edit_previewImage');
     var photoPreview = document.getElementById('edit_photoPreview');
     var uploadPlaceholder = document.getElementById('edit_uploadPlaceholder');
@@ -670,10 +596,7 @@ function saveEmployee() {
     var form = document.getElementById('editEmployeeForm');
     var formData = new FormData(form);
     
-    // Required by process_employee.php switch statement
     formData.append('action', 'update');
-
-    // Get final location using hierarchy manager
     var finalLoc = LocationHierarchy.getFinalLocationId();
                    
     if(!finalLoc) { 
@@ -696,73 +619,57 @@ function saveEmployee() {
 }
 
 // ========================================
-// CROPPER LOGIC
+// CROPPER LOGIC & EVENT LISTENERS
 // ========================================
+if (typeof bootstrap !== 'undefined') {
+    var cropEl = document.getElementById('edit_cropModal');
+    if(cropEl) editCropModal = new bootstrap.Modal(cropEl);
+}
 
-    if (typeof bootstrap !== 'undefined') {
-        var cropEl = document.getElementById('edit_cropModal');
-        if(cropEl) editCropModal = new bootstrap.Modal(cropEl);
-    }
-    
-    // Setup location dropdown event listeners
-    var divSelect = document.getElementById('edit_division');
-    var secSelect = document.getElementById('edit_section');
-    
-    if (divSelect) {
-        divSelect.addEventListener('change', function() {
-            LocationHierarchy.populateSections(this.value);
-            LocationHierarchy.populateUnits(this.value);
-        });
-    }
-    
-    if (secSelect) {
-        secSelect.addEventListener('change', function() {
-            var secId = this.value;
-            if (secId) {
-                LocationHierarchy.populateUnits(secId);
-            } else {
-                LocationHierarchy.populateUnits(document.getElementById('edit_division').value);
-            }
-        });
-    }
-    
-    // Initial Filter
-    applyTableState();
-    updateSortIcons();
+var divSelect = document.getElementById('edit_division');
+var secSelect = document.getElementById('edit_section');
 
-// Cropper modal events
+if (divSelect) {
+    divSelect.addEventListener('change', function() {
+        LocationHierarchy.populateSections(this.value);
+        LocationHierarchy.populateUnits(this.value);
+    });
+}
+
+if (secSelect) {
+    secSelect.addEventListener('change', function() {
+        var secId = this.value;
+        if (secId) {
+            LocationHierarchy.populateUnits(secId);
+        } else {
+            LocationHierarchy.populateUnits(document.getElementById('edit_division').value);
+        }
+    });
+}
+
+applyTableState();
+updateSortIcons();
+
 var cropModalEl = document.getElementById('edit_cropModal');
 if (cropModalEl) {
     cropModalEl.addEventListener('shown.bs.modal', function () {
         var imageToCrop = document.getElementById('edit_imageToCrop');
         if (!editCropper && imageToCrop.src) {
-            editCropper = new Cropper(imageToCrop, { 
-                aspectRatio: 1, 
-                viewMode: 2, 
-                autoCropArea: 0.8 
-            });
+            editCropper = new Cropper(imageToCrop, { aspectRatio: 1, viewMode: 2, autoCropArea: 0.8 });
         }
     });
-    
     cropModalEl.addEventListener('hidden.bs.modal', function () {
-        if (editCropper) { 
-            editCropper.destroy(); 
-            editCropper = null; 
-        }
+        if (editCropper) { editCropper.destroy(); editCropper = null; }
     });
 }
 
-// Photo upload box click
 var photoUploadBox = document.getElementById('edit_photoUploadBox');
 if (photoUploadBox) {
     photoUploadBox.addEventListener('click', function(e) {
-        if (!e.target.closest('.photo-preview.active')) {
-            document.getElementById('edit_photoInput').click();
-        }
+        if (!e.target.closest('.photo-preview.active')) document.getElementById('edit_photoInput').click();
     });
 }
 
-// Photo input change
 var photoInput = document.getElementById('edit_photoInput');
 if (photoInput) {
     photoInput.addEventListener('change', function(e) {
@@ -779,7 +686,6 @@ if (photoInput) {
     });
 }
 
-// Crop button
 var cropButton = document.getElementById('edit_cropButton');
 if (cropButton) {
     cropButton.addEventListener('click', function() {
@@ -795,7 +701,6 @@ if (cropButton) {
     });
 }
 
-// Change photo button
 var changePhotoBtn = document.getElementById('edit_changePhotoBtn');
 if (changePhotoBtn) {
     changePhotoBtn.addEventListener('click', function(e) {
@@ -807,28 +712,12 @@ if (changePhotoBtn) {
 // ========================================
 // TABLE FILTERING, SORTING, PAGINATION
 // ========================================
-function filterRoster() { 
-    currentPage = 1; 
-    applyTableState(); 
-}
-
-function changePerPage() { 
-    perPage = parseInt(document.getElementById('perPageSelect').value); 
-    currentPage = 1; 
-    applyTableState(); 
-}
-
+function filterRoster() { currentPage = 1; applyTableState(); }
+function changePerPage() { perPage = parseInt(document.getElementById('perPageSelect').value); currentPage = 1; applyTableState(); }
 function sortByCol(col) {
-    if (sortCol === col) {
-        sortDir = sortDir === 'asc' ? 'desc' : 'asc';
-    } else { 
-        sortCol = col; 
-        sortDir = 'asc'; 
-    }
-    applyTableState();
-    updateSortIcons();
+    if (sortCol === col) { sortDir = sortDir === 'asc' ? 'desc' : 'asc'; } else { sortCol = col; sortDir = 'asc'; }
+    applyTableState(); updateSortIcons();
 }
-
 function updateSortIcons() {
     document.querySelectorAll('th.sortable').forEach(th => {
         var icon = th.querySelector('.sort-icon i');
@@ -842,7 +731,6 @@ function updateSortIcons() {
         }
     });
 }
-
 function applyTableState() {
     var searchTerm = document.getElementById('rosterSearch').value.toLowerCase();
     var statusFilter = document.getElementById('statusFilter').value;
@@ -863,9 +751,7 @@ function applyTableState() {
     filteredRows.sort((a, b) => {
         var valA = a.dataset[sortCol] || '';
         var valB = b.dataset[sortCol] || '';
-        if(sortCol === 'empid') {
-            return sortDir === 'asc' ? parseInt(valA) - parseInt(valB) : parseInt(valB) - parseInt(valA);
-        }
+        if(sortCol === 'empid') return sortDir === 'asc' ? parseInt(valA) - parseInt(valB) : parseInt(valB) - parseInt(valA);
         return sortDir === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
     });
     
@@ -874,16 +760,11 @@ function applyTableState() {
     var start = (currentPage - 1) * perPage;
     var end = Math.min(start + perPage, total);
     filteredRows.forEach((row, idx) => {
-        if(idx >= start && idx < end) {
-            row.style.display = '';
-            document.getElementById('rosterTableBody').appendChild(row);
-        }
+        if(idx >= start && idx < end) { row.style.display = ''; document.getElementById('rosterTableBody').appendChild(row); }
     });
     document.getElementById('recordCount').innerHTML = 'Showing <strong>' + Math.min(start+1, total) + '&ndash;' + end + '</strong> of <strong>' + total + '</strong> employee(s)';
     renderPagination(total);
-    updateRowCounters('rosterTableBody', total === 0 ? 0 : start + 1);
 }
-
 function renderPagination(total) {
     var totalPages = Math.max(1, Math.ceil(total / perPage));
     var container = document.getElementById('paginationControls');
@@ -892,34 +773,19 @@ function renderPagination(total) {
 
     function makeBtn(html, page, disabled, active) {
         var btn = document.createElement('button');
-        btn.innerHTML = html;
-        btn.className = active ? 'active' : '';
-        btn.disabled = !!disabled;
-        if (!disabled) {
-            btn.onclick = function() { currentPage = page; applyTableState(); };
-        }
+        btn.innerHTML = html; btn.className = active ? 'active' : ''; btn.disabled = !!disabled;
+        if (!disabled) btn.onclick = function() { currentPage = page; applyTableState(); };
         return btn;
     }
-
     function makeEllipsis() {
-        var span = document.createElement('span');
-        span.textContent = '…';
-        span.style.cssText = 'padding: 0 4px; color: var(--text-medium); font-size: var(--text-sm); line-height: 32px;';
+        var span = document.createElement('span'); span.textContent = '…'; span.style.cssText = 'padding: 0 4px; color: var(--text-medium); font-size: var(--text-sm); line-height: 32px;';
         return span;
     }
 
-    // Prev button
     container.appendChild(makeBtn('<i class="fas fa-chevron-left"></i>', currentPage - 1, currentPage === 1, false));
-
-    // Page number buttons with smart ellipsis (matches equipment utils.js pattern)
-    var pages = [];
     if (totalPages <= 7) {
-        for (var i = 1; i <= totalPages; i++) pages.push(i);
-        pages.forEach(function(p) {
-            container.appendChild(makeBtn(p, p, false, p === currentPage));
-        });
+        for (var i = 1; i <= totalPages; i++) container.appendChild(makeBtn(i, i, false, i === currentPage));
     } else {
-        // Always show first, last, current, and neighbours
         var shown = new Set([1, totalPages, currentPage]);
         if (currentPage > 1) shown.add(currentPage - 1);
         if (currentPage < totalPages) shown.add(currentPage + 1);
@@ -927,71 +793,38 @@ function renderPagination(total) {
         var sorted = Array.from(shown).sort(function(a, b) { return a - b; });
         var prev = 0;
         sorted.forEach(function(p) {
-            if (prev && p - prev > 1) {
-                container.appendChild(makeEllipsis());
-            }
+            if (prev && p - prev > 1) container.appendChild(makeEllipsis());
             container.appendChild(makeBtn(p, p, false, p === currentPage));
             prev = p;
         });
     }
-
-    // Next button
     container.appendChild(makeBtn('<i class="fas fa-chevron-right"></i>', currentPage + 1, currentPage === totalPages, false));
 }
 
 // ========================================
-// MAINTENANCE — thin wrapper around shared openMaintenanceModal()
-// ========================================
-// GENERATE EMPLOYEE CHECKLIST REPORT
+// MAINTENANCE & REPORT GEN
 // ========================================
 function generateEmployeeReport() {
-    if (!currentEmployeeId) {
-        showAlert('warning', 'No employee selected.');
-        return;
-    }
-    window.open(
-        BASE_URL + 'includes/generative/generate_employee_checklist_report.php?employeeId=' + currentEmployeeId,
-        '_blank'
-    );
+    if (!currentEmployeeId) { showAlert('warning', 'No employee selected.'); return; }
+    window.open(BASE_URL + 'includes/generative/generate_employee_checklist_report.php?employeeId=' + currentEmployeeId, '_blank');
 }
 
-// (openMaintenanceModal lives in maintenance-conductor.js, loaded globally)
-// ========================================
 function openRosterMaintenance(equipmentId, typeString, brand, serial) {
-    var owner = document.querySelector('.profile-name-large')
-        ? document.querySelector('.profile-name-large').innerText : 'Current Employee';
-    var location = document.querySelector('.profile-badges-group .status-badge')
-        ? document.querySelector('.profile-badges-group .status-badge').innerText : 'Assigned Location';
-
-    openMaintenanceModal({
-        equipmentId:   equipmentId,
-        equipmentType: typeString,   // string like "systemunit" — conductor resolves to numeric ID
-        typeName:      typeString,
-        brand:         brand,
-        serial:        serial,
-        owner:         owner,
-        location:      location
-    });
+    var owner = document.querySelector('.profile-name-large') ? document.querySelector('.profile-name-large').innerText : 'Current Employee';
+    var location = document.querySelector('.profile-badges-group .status-badge') ? document.querySelector('.profile-badges-group .status-badge').innerText : 'Assigned Location';
+    openMaintenanceModal({ equipmentId: equipmentId, equipmentType: typeString, typeName: typeString, brand: brand, serial: serial, owner: owner, location: location });
 }
 
 // ========================================
-// FLOATING ACTION BUTTON — Maintenance FAB
+// FLOATING ACTION BUTTON
 // ========================================
-
-/**
- * Show or hide the maintenance FAB
- */
 function showMaintenanceFab(show) {
     var wrapper = document.getElementById('fabMaintenanceWrapper');
     if (!wrapper) return;
     wrapper.setAttribute('data-hidden', show ? 'false' : 'true');
-    // Also close panel when hiding
     if (!show) toggleFabPanel(false);
 }
 
-/**
- * Toggle the equipment fly-out panel
- */
 function toggleFabPanel(forceState) {
     var panel = document.getElementById('fabEquipmentPanel');
     if (!panel) return;
@@ -999,9 +832,6 @@ function toggleFabPanel(forceState) {
     panel.classList.toggle('open', shouldOpen);
 }
 
-/**
- * Build the equipment list shown in the FAB panel from profile data
- */
 function buildFabEquipmentList(data) {
     var list = document.getElementById('fabEquipmentList');
     var badge = document.getElementById('fabEquipmentCount');
@@ -1010,53 +840,24 @@ function buildFabEquipmentList(data) {
     currentEmployeeEquipment = [];
     var html = '';
 
-    // Gather all equipment into a flat list
     if (data.systemUnits && data.systemUnits.length) {
-        data.systemUnits.forEach(function(item) {
-            currentEmployeeEquipment.push({
-                id: item.systemunitId, type: 'systemunit', typeName: 'System Unit',
-                brand: item.systemUnitBrand, serial: item.systemUnitSerial, icon: 'desktop'
-            });
-        });
+        data.systemUnits.forEach(function(item) { currentEmployeeEquipment.push({ id: item.systemunitId, type: 'systemunit', typeName: 'System Unit', brand: item.systemUnitBrand, serial: item.systemUnitSerial, icon: 'desktop' }); });
     }
     if (data.allinones && data.allinones.length) {
-        data.allinones.forEach(function(item) {
-            currentEmployeeEquipment.push({
-                id: item.allinoneId, type: 'allinone', typeName: 'All-in-One PC',
-                brand: item.allinoneBrand, serial: item.allinoneSerial || 'N/A', icon: 'computer'
-            });
-        });
+        data.allinones.forEach(function(item) { currentEmployeeEquipment.push({ id: item.allinoneId, type: 'allinone', typeName: 'All-in-One PC', brand: item.allinoneBrand, serial: item.allinoneSerial || 'N/A', icon: 'computer' }); });
     }
     if (data.monitors && data.monitors.length) {
-        data.monitors.forEach(function(item) {
-            currentEmployeeEquipment.push({
-                id: item.monitorId, type: 'monitor', typeName: 'Monitor',
-                brand: item.monitorBrand, serial: item.monitorSerial, icon: 'tv'
-            });
-        });
+        data.monitors.forEach(function(item) { currentEmployeeEquipment.push({ id: item.monitorId, type: 'monitor', typeName: 'Monitor', brand: item.monitorBrand, serial: item.monitorSerial, icon: 'tv' }); });
     }
     if (data.printers && data.printers.length) {
-        data.printers.forEach(function(item) {
-            currentEmployeeEquipment.push({
-                id: item.printerId, type: 'printer', typeName: 'Printer',
-                brand: item.printerBrand, serial: item.printerSerial, icon: 'print'
-            });
-        });
+        data.printers.forEach(function(item) { currentEmployeeEquipment.push({ id: item.printerId, type: 'printer', typeName: 'Printer', brand: item.printerBrand, serial: item.printerSerial, icon: 'print' }); });
     }
     if (data.other && data.other.length) {
-        data.other.forEach(function(item) {
-            var realType = item.equipmentType || 'other';
-            currentEmployeeEquipment.push({
-                id: item.otherEquipmentId, type: realType, typeName: item.equipmentType || 'Other',
-                brand: item.brand, serial: item.serialNumber, icon: 'server'
-            });
-        });
+        data.other.forEach(function(item) { currentEmployeeEquipment.push({ id: item.otherEquipmentId, type: item.equipmentType || 'other', typeName: item.equipmentType || 'Other', brand: item.brand, serial: item.serialNumber, icon: 'server' }); });
     }
 
-    // Update badge count
     if (badge) badge.textContent = currentEmployeeEquipment.length;
 
-    // Build list HTML
     if (currentEmployeeEquipment.length === 0) {
         html = '<div class="fab-panel-empty"><i class="fas fa-box-open"></i>No equipment assigned to this employee.</div>';
     } else {
@@ -1077,19 +878,11 @@ function buildFabEquipmentList(data) {
                 + '</div>';
         });
     }
-
     list.innerHTML = html;
-
-    // Show/hide Perform All footer
     var footer = document.getElementById('fabPanelFooter');
-    if (footer) {
-        footer.style.display = currentEmployeeEquipment.length > 0 ? '' : 'none';
-    }
+    if (footer) footer.style.display = currentEmployeeEquipment.length > 0 ? '' : 'none';
 }
 
-/**
- * Start maintenance for an equipment item from the FAB panel
- */
 function fabStartMaintenance(index) {
     var eq = currentEmployeeEquipment[index];
     if (!eq) return;
@@ -1097,9 +890,6 @@ function fabStartMaintenance(index) {
     openRosterMaintenance(eq.id, eq.type, eq.brand, eq.serial);
 }
 
-/**
- * Perform All — queue every equipment item and walk through them one by one
- */
 function fabPerformAll() {
     if (currentEmployeeEquipment.length === 0) return;
     fabMaintenanceQueue = currentEmployeeEquipment.slice();
@@ -1113,30 +903,23 @@ function fabOpenNext() {
     if (fabQueueIndex >= fabMaintenanceQueue.length) {
         window._fabQueueActive = false;
         showAlert('success', 'All equipment maintenance completed!');
-        // Refresh profile to reflect updates
         if (currentEmployeeId) viewEmployee(currentEmployeeId);
         return;
     }
     var eq = fabMaintenanceQueue[fabQueueIndex];
     fabQueueIndex++;
-    var remaining = fabMaintenanceQueue.length - fabQueueIndex;
-    console.log('[FAB Queue] Starting ' + fabQueueIndex + ' of ' + fabMaintenanceQueue.length + ' — ' + eq.typeName + ' ' + (eq.brand || ''));
     openRosterMaintenance(eq.id, eq.type, eq.brand, eq.serial);
 }
 
-// Close FAB panel when clicking outside
 document.addEventListener('click', function(e) {
     var wrapper = document.getElementById('fabMaintenanceWrapper');
     if (!wrapper) return;
-    if (!wrapper.contains(e.target)) {
-        toggleFabPanel(false);
-    }
+    if (!wrapper.contains(e.target)) toggleFabPanel(false);
 });
 
 // ========================================
-// ARCHIVE / RESTORE EMPLOYEE
+// ARCHIVE / RESTORE
 // ========================================
-
 function archiveEmployee(employeeId, fullName) {
     Alerts.confirmAction({
         title: 'Archive ' + fullName + '?',
@@ -1203,9 +986,6 @@ function restoreEmployee(employeeId, fullName) {
     });
 }
 
-// ========================================
-// ARCHIVED TABLE SEARCH
-// ========================================
 function filterArchivedTable() {
     var searchTerm = (document.getElementById('archivedSearch') ? document.getElementById('archivedSearch').value : '').toLowerCase();
     var rows = document.querySelectorAll('#archivedTableBody tr');
@@ -1216,8 +996,6 @@ function filterArchivedTable() {
         var match = name.includes(searchTerm) || empid.includes(searchTerm);
         row.style.display = match ? '' : 'none';
         var counterCell = row.querySelector('td.row-counter');
-        if (counterCell && match) {
-            counterCell.textContent = counter++;
-        }
+        if (counterCell && match) counterCell.textContent = counter++;
     });
 }

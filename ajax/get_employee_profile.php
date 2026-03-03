@@ -2,6 +2,7 @@
 /**
  * ajax/get_employee_profile.php
  * Returns full employee profile including equipment and software assigned to them.
+ * Updated for unified tbl_equipment schema.
  */
 
 if (session_status() === PHP_SESSION_NONE) {
@@ -31,12 +32,8 @@ try {
             parent_loc.location_name AS parent_location_name,
             grandparent_loc.location_name AS grandparent_location_name,
             (
-                (SELECT COUNT(*) FROM tbl_systemunit     WHERE employeeId = e.employeeId) +
-                (SELECT COUNT(*) FROM tbl_allinone       WHERE employeeId = e.employeeId) +
-                (SELECT COUNT(*) FROM tbl_monitor        WHERE employeeId = e.employeeId) +
-                (SELECT COUNT(*) FROM tbl_printer        WHERE employeeId = e.employeeId) +
-                (SELECT COUNT(*) FROM tbl_otherequipment WHERE employeeId = e.employeeId) +
-                (SELECT COUNT(*) FROM tbl_software       WHERE employeeId = e.employeeId)
+                (SELECT COUNT(*) FROM tbl_equipment WHERE employee_id = e.employeeId AND is_archived = 0) +
+                (SELECT COUNT(*) FROM tbl_software  WHERE employeeId = e.employeeId)
             ) AS equipment_count
         FROM tbl_employee e
         LEFT JOIN location l            ON e.location_id = l.location_id
@@ -53,58 +50,101 @@ try {
         exit;
     }
 
-    // Derive is_active from equipment count — no extra column needed
     $employee['is_active'] = ($employee['equipment_count'] ?? 0) > 0 ? 1 : 0;
 
-    // ---- System Units ----
-    $suStmt = $db->prepare("
-        SELECT systemunitId, systemUnitCategory, systemUnitBrand,
-               specificationProcessor, specificationMemory,
-               specificationGPU, specificationStorage,
-               systemUnitSerial, yearAcquired
-        FROM tbl_systemunit
-        WHERE employeeId = :id
+    // ---- All equipment (unified) ----
+    $eqStmt = $db->prepare("
+        SELECT eq.equipment_id, eq.type_id, eq.brand, eq.model, eq.serial_number, 
+               eq.property_number, eq.status, eq.year_acquired, eq.acquisition_date,
+               r.typeName, r.context
+        FROM tbl_equipment eq
+        INNER JOIN tbl_equipment_type_registry r ON eq.type_id = r.typeId
+        WHERE eq.employee_id = :id AND eq.is_archived = 0
+        ORDER BY r.typeName, eq.equipment_id
     ");
-    $suStmt->execute([':id' => $employeeId]);
-    $systemUnits = $suStmt->fetchAll(PDO::FETCH_ASSOC);
+    $eqStmt->execute([':id' => $employeeId]);
+    $allEquipment = $eqStmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // ---- All-in-One ----
-    $aioStmt = $db->prepare("
-        SELECT allinoneId, allinoneBrand, allinoneSerial,
-               specificationProcessor, specificationMemory,
-               specificationGPU, specificationStorage
-        FROM tbl_allinone
-        WHERE employeeId = :id
-    ");
-    $aioStmt->execute([':id' => $employeeId]);
-    $allinones = $aioStmt->fetchAll(PDO::FETCH_ASSOC);
+    // Bulk load specs
+    $equipmentIds = array_column($allEquipment, 'equipment_id');
+    $specsMap = [];
+    if (!empty($equipmentIds)) {
+        $placeholders = implode(',', array_fill(0, count($equipmentIds), '?'));
+        $specStmt = $db->prepare("SELECT equipment_id, spec_key, spec_value FROM tbl_equipment_specs WHERE equipment_id IN ($placeholders)");
+        $specStmt->execute($equipmentIds);
+        while ($row = $specStmt->fetch(PDO::FETCH_ASSOC)) {
+            $specsMap[$row['equipment_id']][$row['spec_key']] = $row['spec_value'];
+        }
+    }
 
-    // ---- Monitors ----
-    $monStmt = $db->prepare("
-        SELECT monitorId, monitorBrand, monitorSize, monitorSerial, yearAcquired
-        FROM tbl_monitor
-        WHERE employeeId = :id
-    ");
-    $monStmt->execute([':id' => $employeeId]);
-    $monitors = $monStmt->fetchAll(PDO::FETCH_ASSOC);
+    // Organize by type for backward compatibility
+    $systemUnits = [];
+    $allinones   = [];
+    $monitors    = [];
+    $printers    = [];
+    $other       = [];
+    $equipment   = [];
 
-    // ---- Printers ----
-    $prtStmt = $db->prepare("
-        SELECT printerId, printerBrand, printerModel, printerSerial, yearAcquired
-        FROM tbl_printer
-        WHERE employeeId = :id
-    ");
-    $prtStmt->execute([':id' => $employeeId]);
-    $printers = $prtStmt->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($allEquipment as $eq) {
+        $specs = $specsMap[$eq['equipment_id']] ?? [];
+        $item = array_merge($eq, ['specs' => $specs]);
+        $equipment[] = $item;
 
-    // ---- Other Equipment (including Laptop) ----
-    $otherStmt = $db->prepare("
-        SELECT otherEquipmentId, equipmentType, brand, model, serialNumber, yearAcquired
-        FROM tbl_otherequipment
-        WHERE employeeId = :id
-    ");
-    $otherStmt->execute([':id' => $employeeId]);
-    $other = $otherStmt->fetchAll(PDO::FETCH_ASSOC);
+        switch ($eq['typeName']) {
+            case 'System Unit':
+                $systemUnits[] = [
+                    'systemunitId'           => $eq['equipment_id'],
+                    'systemUnitCategory'     => $specs['Category'] ?? 'Pre-Built',
+                    'systemUnitBrand'        => $eq['brand'],
+                    'specificationProcessor' => $specs['Processor'] ?? '',
+                    'specificationMemory'    => $specs['Memory'] ?? '',
+                    'specificationGPU'       => $specs['GPU'] ?? '',
+                    'specificationStorage'   => $specs['Storage'] ?? '',
+                    'systemUnitSerial'       => $eq['serial_number'],
+                    'yearAcquired'           => $eq['year_acquired'],
+                ];
+                break;
+            case 'All-in-One':
+                $allinones[] = [
+                    'allinoneId'             => $eq['equipment_id'],
+                    'allinoneBrand'          => $eq['brand'],
+                    'allinoneSerial'         => $eq['serial_number'],
+                    'specificationProcessor' => $specs['Processor'] ?? '',
+                    'specificationMemory'    => $specs['Memory'] ?? '',
+                    'specificationGPU'       => $specs['GPU'] ?? '',
+                    'specificationStorage'   => $specs['Storage'] ?? '',
+                ];
+                break;
+            case 'Monitor':
+                $monitors[] = [
+                    'monitorId'    => $eq['equipment_id'],
+                    'monitorBrand' => $eq['brand'],
+                    'monitorSize'  => $specs['Monitor Size'] ?? '',
+                    'monitorSerial'=> $eq['serial_number'],
+                    'yearAcquired' => $eq['year_acquired'],
+                ];
+                break;
+            case 'Printer':
+                $printers[] = [
+                    'printerId'     => $eq['equipment_id'],
+                    'printerBrand'  => $eq['brand'],
+                    'printerModel'  => $eq['model'],
+                    'printerSerial' => $eq['serial_number'],
+                    'yearAcquired'  => $eq['year_acquired'],
+                ];
+                break;
+            default:
+                $other[] = [
+                    'otherEquipmentId' => $eq['equipment_id'],
+                    'equipmentType'    => $eq['typeName'],
+                    'brand'            => $eq['brand'],
+                    'model'            => $eq['model'],
+                    'serialNumber'     => $eq['serial_number'],
+                    'yearAcquired'     => $eq['year_acquired'],
+                ];
+                break;
+        }
+    }
 
     // ---- Software ----
     $swStmt = $db->prepare("
@@ -115,7 +155,6 @@ try {
     $swStmt->execute([':id' => $employeeId]);
     $software = $swStmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Calculate software status
     $today = new DateTime();
     foreach ($software as &$sw) {
         if ($sw['expiryDate']) {
@@ -136,6 +175,7 @@ try {
     echo json_encode([
         'success'     => true,
         'employee'    => $employee,
+        'equipment'   => $equipment,
         'systemUnits' => $systemUnits,
         'allinones'   => $allinones,
         'monitors'    => $monitors,

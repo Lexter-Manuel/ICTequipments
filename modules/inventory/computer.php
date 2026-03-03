@@ -4,59 +4,86 @@ require_once '../../config/database.php';
 
 $db = getDB();
 
-// Fetch System Units
-$stmtSU = $db->query("
-    SELECT 
-        s.*,
-        CONCAT_WS(' ', e.firstName, e.middleName, e.lastName) as employeeName, m.lastMaintenanceDate
-    FROM tbl_systemunit s
-    LEFT JOIN tbl_employee e ON s.employeeId = e.employeeId
-    LEFT JOIN tbl_maintenance_schedule m ON (
-        s.systemunitId = m.equipmentId 
-        AND (
-            LOWER(TRIM(m.equipmentType)) = 'System Unit'     
-            OR m.equipmentType = '1'
-        )
-    )
-    ORDER BY s.systemunitId DESC
+// Fetch all computer-class equipment from unified table (System Unit, Monitor, All-in-One)
+$stmtComp = $db->query("
+    SELECT eq.equipment_id, eq.type_id, eq.employee_id, eq.brand, eq.model,
+           eq.serial_number, eq.year_acquired, eq.status,
+           CONCAT_WS(' ', e.firstName, e.middleName, e.lastName) AS employeeName,
+           ms.lastMaintenanceDate,
+           r.typeName
+    FROM tbl_equipment eq
+    INNER JOIN tbl_equipment_type_registry r ON eq.type_id = r.typeId
+    LEFT JOIN tbl_employee e ON eq.employee_id = e.employeeId
+    LEFT JOIN tbl_maintenance_schedule ms ON (eq.equipment_id = ms.equipmentId AND eq.type_id = ms.equipmentType AND ms.isActive = 1)
+    WHERE eq.is_archived = 0 AND r.typeName IN ('System Unit', 'Monitor', 'All-in-One')
+    ORDER BY eq.equipment_id DESC
 ");
-$systemUnits = $stmtSU->fetchAll();
+$computerEquipment = $stmtComp->fetchAll(PDO::FETCH_ASSOC);
 
-// Fetch Monitors
-$stmtMon = $db->query("
-    SELECT 
-        m.*,
-        CONCAT_WS(' ', e.firstName, e.middleName, e.lastName) as employeeName, m2.lastMaintenanceDate
-    FROM tbl_monitor m
-    LEFT JOIN tbl_employee e ON m.employeeId = e.employeeId
-    LEFT JOIN tbl_maintenance_schedule m2 ON (
-        m.monitorId = m2.equipmentId 
-        AND (
-            LOWER(TRIM(m2.equipmentType)) = 'monitor' 
-            OR m2.equipmentType = '3'
-        )
-    )
-    ORDER BY m.monitorId DESC
-");
-$monitors = $stmtMon->fetchAll();
+// Bulk load specs
+$compIds = array_column($computerEquipment, 'equipment_id');
+$specsMap = [];
+if (!empty($compIds)) {
+    $ph = implode(',', array_fill(0, count($compIds), '?'));
+    $specStmt = $db->prepare("SELECT equipment_id, spec_key, spec_value FROM tbl_equipment_specs WHERE equipment_id IN ($ph)");
+    $specStmt->execute($compIds);
+    while ($row = $specStmt->fetch(PDO::FETCH_ASSOC)) {
+        $specsMap[$row['equipment_id']][$row['spec_key']] = $row['spec_value'];
+    }
+}
 
-// Fetch All-in-Ones
-$stmtAIO = $db->query("
-    SELECT 
-        a.*,
-        CONCAT_WS(' ', e.firstName, e.middleName, e.lastName) as employeeName, m.lastMaintenanceDate
-    FROM tbl_allinone a
-    LEFT JOIN tbl_employee e ON a.employeeId = e.employeeId
-    LEFT JOIN tbl_maintenance_schedule m ON (
-        a.allinoneId = m.equipmentId 
-        AND (
-            LOWER(TRIM(m.equipmentType)) = 'All-in-one' 
-            OR m.equipmentType = '2'
-        )
-    )
-    ORDER BY a.allinoneId DESC
-");
-$allInOnes = $stmtAIO->fetchAll();
+// Build legacy arrays
+$systemUnits = [];
+$monitors = [];
+$allInOnes = [];
+foreach ($computerEquipment as $eq) {
+    $specs = $specsMap[$eq['equipment_id']] ?? [];
+    switch ($eq['typeName']) {
+        case 'System Unit':
+            $systemUnits[] = [
+                'systemunitId'           => $eq['equipment_id'],
+                'systemUnitBrand'        => $eq['brand'],
+                'systemUnitSerial'       => $eq['serial_number'],
+                'systemUnitCategory'     => $specs['Category'] ?? 'Pre-Built',
+                'specificationProcessor' => $specs['Processor'] ?? '',
+                'specificationMemory'    => $specs['Memory'] ?? '',
+                'specificationGPU'       => $specs['GPU'] ?? '',
+                'specificationStorage'   => $specs['Storage'] ?? '',
+                'yearAcquired'           => $eq['year_acquired'],
+                'employeeId'             => $eq['employee_id'],
+                'employeeName'           => $eq['employeeName'],
+                'lastMaintenanceDate'    => $eq['lastMaintenanceDate'],
+            ];
+            break;
+        case 'Monitor':
+            $monitors[] = [
+                'monitorId'           => $eq['equipment_id'],
+                'monitorBrand'        => $eq['brand'],
+                'monitorSerial'       => $eq['serial_number'],
+                'monitorSize'         => $specs['Monitor Size'] ?? '',
+                'yearAcquired'        => $eq['year_acquired'],
+                'employeeId'          => $eq['employee_id'],
+                'employeeName'        => $eq['employeeName'],
+                'lastMaintenanceDate' => $eq['lastMaintenanceDate'],
+            ];
+            break;
+        case 'All-in-One':
+            $allInOnes[] = [
+                'allinoneId'             => $eq['equipment_id'],
+                'allinoneBrand'          => $eq['brand'],
+                'allinoneSerial'         => $eq['serial_number'],
+                'specificationProcessor' => $specs['Processor'] ?? '',
+                'specificationMemory'    => $specs['Memory'] ?? '',
+                'specificationGPU'       => $specs['GPU'] ?? '',
+                'specificationStorage'   => $specs['Storage'] ?? '',
+                'yearAcquired'           => $eq['year_acquired'],
+                'employeeId'             => $eq['employee_id'],
+                'employeeName'           => $eq['employeeName'],
+                'lastMaintenanceDate'    => $eq['lastMaintenanceDate'],
+            ];
+            break;
+    }
+}
 
 // Fetch employees for dropdown
 $stmtEmployees = $db->query("

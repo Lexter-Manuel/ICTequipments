@@ -1,4 +1,9 @@
 <?php
+/**
+ * ajax/get_assets.php
+ * Returns equipment assets, optionally filtered by type name.
+ * Updated for unified tbl_equipment schema.
+ */
 require_once '../config/database.php';
 header('Content-Type: application/json');
 
@@ -6,42 +11,46 @@ $db = getDB();
 $type = $_GET['type'] ?? '';
 
 try {
-    // Map dropdown values to DB Table Names
-    $tableMap = [
-        'system_unit' => 'tbl_systemunit',
-        'printer' => 'tbl_printer',
-        'laptop'  => 'tbl_otherequipment', // Assuming laptops are here or separate
-        'monitor' => 'tbl_monitor'
+    // Map legacy dropdown values to typeName in the registry
+    $typeMap = [
+        'system_unit' => 'System Unit',
+        'printer'     => 'Printer',
+        'laptop'      => 'Laptop',
+        'monitor'     => 'Monitor',
+        'allinone'    => 'All-in-One',
     ];
 
-    if (!isset($tableMap[$type])) {
-        echo json_encode([]); 
-        exit;
+    $where = "eq.is_archived = 0";
+    $params = [];
+
+    if ($type !== '' && isset($typeMap[$type])) {
+        $where .= " AND r.typeName = :typeName";
+        $params[':typeName'] = $typeMap[$type];
+    } elseif ($type !== '') {
+        // Allow passing a raw typeName
+        $where .= " AND r.typeName = :typeName";
+        $params[':typeName'] = $type;
     }
 
-    $sql = "";
-    
-    // DIFFERENT QUERY BASED ON TYPE (Because column names differ)
-    if ($type === 'system_unit') {
-        $sql = "SELECT systemunitId as id, systemUnitBrand as name, systemUnitSerial as serial, 
-                CONCAT('Owned by: ', employeeId) as location_info 
-                FROM tbl_systemunit ORDER BY systemUnitBrand";
-    } 
-    elseif ($type === 'printer') {
-        $sql = "SELECT printerId as id, printerBrand as name, printerSerial as serial, 
-                'Printer' as location_info 
-                FROM tbl_printer ORDER BY printerBrand";
-    }
-    // Add other cases as needed...
+    $sql = "
+        SELECT eq.equipment_id AS id,
+               eq.brand AS name,
+               eq.serial_number AS serial,
+               CASE WHEN eq.employee_id IS NOT NULL 
+                    THEN CONCAT('Owned by: ', eq.employee_id)
+                    ELSE 'Unassigned'
+               END AS location_info,
+               r.typeName AS type
+        FROM tbl_equipment eq
+        INNER JOIN tbl_equipment_type_registry r ON eq.type_id = r.typeId
+        WHERE $where
+        ORDER BY r.typeName, eq.brand
+    ";
 
-    if ($sql) {
-        $stmt = $db->prepare($sql);
-        $stmt->execute();
-        $assets = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        echo json_encode($assets);
-    } else {
-        echo json_encode([]);
-    }
+    $stmt = $db->prepare($sql);
+    $stmt->execute($params);
+    $assets = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    echo json_encode($assets);
 
 } catch (Exception $e) {
     echo json_encode(['error' => $e->getMessage()]);
