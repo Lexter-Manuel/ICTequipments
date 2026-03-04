@@ -84,6 +84,11 @@
     transition: all 0.2s;
 }
 .stat-card-mini:hover { transform: translateY(-2px); box-shadow: var(--shadow-xl); }
+.stat-card-mini.is-clickable { cursor: pointer; }
+.stat-card-mini.is-clickable:focus-visible {
+    outline: 2px solid var(--primary-green);
+    outline-offset: 2px;
+}
 .stat-icon-sm {
     width: 44px; height: 44px;
     border-radius: var(--radius-md);
@@ -155,6 +160,11 @@
 }
 .alert-item:last-child { margin-bottom: 0; }
 .alert-item:hover { transform: translateX(3px); }
+.alert-item.is-clickable { cursor: pointer; }
+.alert-item.is-clickable:focus-visible {
+    outline: 2px solid var(--primary-green);
+    outline-offset: 2px;
+}
 .alert-item.overdue { background: #fef2f2; border-left: 3px solid #dc2626; }
 .alert-item.due-soon { background: #fffbeb; border-left: 3px solid #d97706; }
 .alert-item.problem { background: #fef2f2; border-left: 3px solid #e11d48; }

@@ -197,28 +197,28 @@ try {
 
 <!-- ═══ Quick Stats ═══ -->
 <div class="dash-grid cols-4" style="animation: fadeInUp 0.4s ease-out;">
-    <div class="stat-card-mini">
+    <div class="stat-card-mini is-clickable" onclick="navigateToPage('equipment')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();navigateToPage('equipment');}">
         <div class="stat-icon-sm green"><i class="fas fa-desktop"></i></div>
         <div class="stat-info">
             <div class="stat-val"><?= number_format($totalEquipment) ?></div>
             <div class="stat-lbl">Total Equipment</div>
         </div>
     </div>
-    <div class="stat-card-mini">
+    <div class="stat-card-mini is-clickable" onclick="navigateToPage('roster')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();navigateToPage('roster');}">
         <div class="stat-icon-sm blue"><i class="fas fa-users"></i></div>
         <div class="stat-info">
             <div class="stat-val"><?= number_format($employeeCount) ?></div>
             <div class="stat-lbl">Active Employees</div>
         </div>
     </div>
-    <div class="stat-card-mini">
+    <div class="stat-card-mini is-clickable" onclick="navigateToPage('maintenance-schedule')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();navigateToPage('maintenance-schedule');}">
         <div class="stat-icon-sm <?= $overdueCount > 0 ? 'red' : 'green' ?>"><i class="fas fa-clipboard-check"></i></div>
         <div class="stat-info">
             <div class="stat-val"><?= number_format($activeSchedules) ?></div>
             <div class="stat-lbl">Active Schedules</div>
         </div>
     </div>
-    <div class="stat-card-mini">
+    <div class="stat-card-mini is-clickable" onclick="navigateToPage('maintenance-history')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();navigateToPage('maintenance-history');}">
         <div class="stat-icon-sm <?= $complianceRate >= 80 ? 'green' : ($complianceRate >= 50 ? 'orange' : 'red') ?>"><i class="fas fa-chart-line"></i></div>
         <div class="stat-info">
             <div class="stat-val"><?= $complianceRate ?>%</div>
@@ -229,28 +229,28 @@ try {
 
 <!-- ═══ Equipment Breakdown ═══ -->
 <div class="dash-grid cols-4" style="animation: fadeInUp 0.5s ease-out;">
-    <div class="stat-card-mini">
+    <div class="stat-card-mini is-clickable" onclick="navigateToPage('equipment')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();navigateToPage('equipment');}">
         <div class="stat-icon-sm green"><i class="fas fa-server"></i></div>
         <div class="stat-info">
             <div class="stat-val"><?= number_format($systemUnitCount) ?></div>
             <div class="stat-lbl">System Units</div>
         </div>
     </div>
-    <div class="stat-card-mini">
+    <div class="stat-card-mini is-clickable" onclick="navigateToPage('equipment')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();navigateToPage('equipment');}">
         <div class="stat-icon-sm blue"><i class="fas fa-tv"></i></div>
         <div class="stat-info">
             <div class="stat-val"><?= number_format($monitorCount) ?></div>
             <div class="stat-lbl">Monitors</div>
         </div>
     </div>
-    <div class="stat-card-mini">
+    <div class="stat-card-mini is-clickable" onclick="navigateToPage('equipment')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();navigateToPage('equipment');}">
         <div class="stat-icon-sm purple"><i class="fas fa-print"></i></div>
         <div class="stat-info">
             <div class="stat-val"><?= number_format($printerCount) ?></div>
             <div class="stat-lbl">Printers</div>
         </div>
     </div>
-    <div class="stat-card-mini">
+    <div class="stat-card-mini is-clickable" onclick="navigateToPage('equipment')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();navigateToPage('equipment');}">
         <div class="stat-icon-sm teal"><i class="fas fa-laptop"></i></div>
         <div class="stat-info">
             <div class="stat-val"><?= number_format($allinoneCount + $otherCount) ?></div>
@@ -261,28 +261,28 @@ try {
 
 <!-- ═══ Maintenance Indicators ═══ -->
 <div class="dash-grid cols-4" style="animation: fadeInUp 0.55s ease-out;">
-    <div class="stat-card-mini" style="border-left: 3px solid #dc2626;">
+    <div class="stat-card-mini is-clickable" style="border-left: 3px solid #dc2626;" onclick="navigateToPage('maintenance-schedule')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();navigateToPage('maintenance-schedule');}">
         <div class="stat-icon-sm red"><i class="fas fa-exclamation-circle"></i></div>
         <div class="stat-info">
             <div class="stat-val"><?= $overdueCount ?></div>
             <div class="stat-lbl">Overdue</div>
         </div>
     </div>
-    <div class="stat-card-mini" style="border-left: 3px solid #d97706;">
+    <div class="stat-card-mini is-clickable" style="border-left: 3px solid #d97706;" onclick="navigateToPage('maintenance-schedule')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();navigateToPage('maintenance-schedule');}">
         <div class="stat-icon-sm orange"><i class="fas fa-clock"></i></div>
         <div class="stat-info">
             <div class="stat-val"><?= $dueSoonCount ?></div>
             <div class="stat-lbl">Due in 7 Days</div>
         </div>
     </div>
-    <div class="stat-card-mini" style="border-left: 3px solid #3b82f6;">
+    <div class="stat-card-mini is-clickable" style="border-left: 3px solid #3b82f6;" onclick="navigateToPage('maintenance-schedule')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();navigateToPage('maintenance-schedule');}">
         <div class="stat-icon-sm blue"><i class="fas fa-calendar-alt"></i></div>
         <div class="stat-info">
             <div class="stat-val"><?= $dueThisMonth ?></div>
             <div class="stat-lbl">Due in 30 Days</div>
         </div>
     </div>
-    <div class="stat-card-mini" style="border-left: 3px solid #16a34a;">
+    <div class="stat-card-mini is-clickable" style="border-left: 3px solid #16a34a;" onclick="navigateToPage('maintenance-history')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();navigateToPage('maintenance-history');}">
         <div class="stat-icon-sm green"><i class="fas fa-check-circle"></i></div>
         <div class="stat-info">
             <div class="stat-val"><?= $completedMonth ?></div>
@@ -312,7 +312,7 @@ try {
                 </div>
             <?php else: ?>
                 <?php foreach ($overdueList as $item): ?>
-                <div class="alert-item overdue">
+                <div class="alert-item overdue is-clickable" onclick="navigateToPage('maintenance-schedule')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();navigateToPage('maintenance-schedule');}">
                     <i class="fas fa-exclamation-triangle alert-icon"></i>
                     <div class="alert-text">
                         <strong><?= htmlspecialchars($item['typeName'] ?? 'Equipment') ?> #<?= $item['equipmentId'] ?></strong> — maintenance overdue
@@ -322,7 +322,7 @@ try {
                 <?php endforeach; ?>
 
                 <?php foreach ($dueSoonList as $item): ?>
-                <div class="alert-item due-soon">
+                <div class="alert-item due-soon is-clickable" onclick="navigateToPage('maintenance-schedule')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();navigateToPage('maintenance-schedule');}">
                     <i class="fas fa-clock alert-icon"></i>
                     <div class="alert-text">
                         <strong><?= htmlspecialchars($item['typeName'] ?? 'Equipment') ?> #<?= $item['equipmentId'] ?></strong> — due <?= date('M j', strtotime($item['nextDueDate'])) ?>
@@ -332,7 +332,7 @@ try {
                 <?php endforeach; ?>
 
                 <?php foreach ($problemEquipment as $item): ?>
-                <div class="alert-item problem">
+                <div class="alert-item problem is-clickable" onclick="navigateToPage('maintenance-history')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();navigateToPage('maintenance-history');}">
                     <i class="fas fa-tools alert-icon"></i>
                     <div class="alert-text">
                         <strong><?= htmlspecialchars($item['typeName'] ?? 'Equipment') ?> #<?= $item['equipmentId'] ?></strong> — <?= $item['overallStatus'] ?> (<?= $item['conditionRating'] ?>)
@@ -342,7 +342,7 @@ try {
                 <?php endforeach; ?>
 
                 <?php foreach ($expiredLicenses as $item): ?>
-                <div class="alert-item license-expired">
+                <div class="alert-item license-expired is-clickable" onclick="navigateToPage('software')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();navigateToPage('software');}">
                     <i class="fas fa-key alert-icon" style="color:#dc2626;"></i>
                     <div class="alert-text">
                         <strong><?= htmlspecialchars($item['licenseSoftware']) ?></strong> — expired
@@ -352,7 +352,7 @@ try {
                 <?php endforeach; ?>
 
                 <?php foreach ($expiringLicenses as $item): ?>
-                <div class="alert-item license-warn">
+                <div class="alert-item license-warn is-clickable" onclick="navigateToPage('software')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();navigateToPage('software');}">
                     <i class="fas fa-key alert-icon" style="color:#ea580c;"></i>
                     <div class="alert-text">
                         <strong><?= htmlspecialchars($item['licenseSoftware']) ?></strong> — expires <?= date('M j, Y', strtotime($item['expiryDate'])) ?>
@@ -587,14 +587,14 @@ try {
             <?php if (!empty($expiredLicenses) || !empty($expiringLicenses)): ?>
             <div style="max-height: 180px; overflow-y: auto;">
                 <?php foreach ($expiredLicenses as $lic): ?>
-                <div class="alert-item license-expired">
+                <div class="alert-item license-expired is-clickable" onclick="navigateToPage('software')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();navigateToPage('software');}">
                     <i class="fas fa-times-circle alert-icon" style="color: #dc2626;"></i>
                     <div class="alert-text"><?= htmlspecialchars($lic['licenseSoftware']) ?><?= $lic['assignedTo'] ? ' — '.$lic['assignedTo'] : '' ?></div>
                     <div class="alert-meta" style="color: #dc2626;"><?= $lic['days_expired'] ?>d expired</div>
                 </div>
                 <?php endforeach; ?>
                 <?php foreach ($expiringLicenses as $lic): ?>
-                <div class="alert-item license-warn">
+                <div class="alert-item license-warn is-clickable" onclick="navigateToPage('software')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();navigateToPage('software');}">
                     <i class="fas fa-exclamation-circle alert-icon" style="color: #ea580c;"></i>
                     <div class="alert-text"><?= htmlspecialchars($lic['licenseSoftware']) ?><?= $lic['assignedTo'] ? ' — '.$lic['assignedTo'] : '' ?></div>
                     <div class="alert-meta" style="color: #ea580c;"><?= $lic['days_until_expiry'] ?>d left</div>
