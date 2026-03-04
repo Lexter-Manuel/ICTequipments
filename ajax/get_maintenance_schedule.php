@@ -4,6 +4,7 @@
  * ----------------------------
  * Backend for the Maintenance Schedule page.
  *
+require_once '../config/session-guard.php';
  * Modes (via ?view=):
  *   stats     – aggregate counts (overdue / due-soon / scheduled / total)
  *   detailed  – paginated table, filterable by search / division / status

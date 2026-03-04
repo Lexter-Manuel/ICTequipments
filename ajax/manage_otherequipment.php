@@ -4,6 +4,7 @@
  * Adapter: translates legacy Other Equipment API calls to unified tbl_equipment + tbl_equipment_specs.
  * Unlike other adapters, this handles DYNAMIC type_ids (any type not in the fixed 1-4 set).
  */
+require_once '../config/session-guard.php';
 require_once '../config/database.php';
 require_once '../config/config.php';
 require_once '../includes/maintenanceHelper.php';

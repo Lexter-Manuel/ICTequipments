@@ -86,7 +86,7 @@ $availableCount = count(array_filter($printers, fn($p) => $p['employeeId'] == nu
         <h2 class="table-title"><i class="fas fa-list"></i> Printer Inventory</h2>
         <div class="table-controls">
             <div class="filter-group">
-                <select id="statusFilter" onchange="filterPrinters()">
+                <select id="printerStatusFilter" onchange="filterPrinters()">
                     <option value="">All Statuses</option>
                     <option value="Operational">Operational</option>
                     <option value="For Replacement">For Replacement</option>

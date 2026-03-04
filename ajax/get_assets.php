@@ -4,6 +4,7 @@
  * Returns equipment assets, optionally filtered by type name.
  * Updated for unified tbl_equipment schema.
  */
+require_once '../config/session-guard.php';
 require_once '../config/database.php';
 header('Content-Type: application/json');
 

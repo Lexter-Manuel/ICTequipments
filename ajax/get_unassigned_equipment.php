@@ -1,75 +1,113 @@
 <?php
 /**
  * ajax/get_unassigned_equipment.php
- * Returns equipment not assigned to any employee, optionally filtered by type.
- * Updated for unified tbl_equipment schema.
+ * Returns a list of items with employeeId IS NULL for the given type.
  */
+require_once '../config/session-guard.php';
 
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
+if (session_status() === PHP_SESSION_NONE) session_start();
 require_once '../config/database.php';
 header('Content-Type: application/json');
 
-$db = Database::getInstance()->getConnection();
-
-$typeId = filter_input(INPUT_GET, 'type_id', FILTER_VALIDATE_INT);
-$typeName = trim($_GET['type'] ?? '');
-$search = trim($_GET['search'] ?? '');
+$db   = Database::getInstance()->getConnection();
+$type = $_GET['type'] ?? '';
 
 try {
-    $where = "eq.employee_id IS NULL AND eq.is_archived = 0";
-    $params = [];
+    switch ($type) {
+        case 'systemunit':
+            $stmt = $db->query("
+                SELECT e.equipment_id AS id,
+                       e.brand,
+                       e.serial_number AS serial,
+                       CONCAT_WS(' / ', 
+                           NULLIF(MAX(CASE WHEN s.spec_key = 'Processor' THEN s.spec_value END), ''),
+                           NULLIF(MAX(CASE WHEN s.spec_key = 'Memory' THEN s.spec_value END), '')
+                       ) AS extra
+                FROM tbl_equipment e
+                LEFT JOIN tbl_equipment_specs s ON e.equipment_id = s.equipment_id
+                WHERE e.type_id = 1 AND e.employee_id IS NULL AND e.status = 'Available'
+                GROUP BY e.equipment_id, e.brand, e.serial_number
+                ORDER BY e.brand ASC
+            ");
+            break;
 
-    // Filter by type_id or type name
-    if ($typeId) {
-        $where .= " AND eq.type_id = :type_id";
-        $params[':type_id'] = $typeId;
-    } elseif ($typeName !== '') {
-        $where .= " AND r.typeName = :typeName";
-        $params[':typeName'] = $typeName;
+        case 'allinone':
+            $stmt = $db->query("
+                SELECT e.equipment_id AS id,
+                       e.brand,
+                       e.serial_number AS serial,
+                       CONCAT_WS(' / ', 
+                           NULLIF(MAX(CASE WHEN s.spec_key = 'Processor' THEN s.spec_value END), ''),
+                           NULLIF(MAX(CASE WHEN s.spec_key = 'Memory' THEN s.spec_value END), '')
+                       ) AS extra
+                FROM tbl_equipment e
+                LEFT JOIN tbl_equipment_specs s ON e.equipment_id = s.equipment_id
+                WHERE e.type_id = 2 AND e.employee_id IS NULL AND e.status = 'Available'
+                GROUP BY e.equipment_id, e.brand, e.serial_number
+                ORDER BY e.brand ASC
+            ");
+            break;
+
+        case 'monitor':
+            $stmt = $db->query("
+                SELECT e.equipment_id AS id,
+                       e.brand,
+                       e.serial_number AS serial,
+                       MAX(CASE WHEN s.spec_key = 'Monitor Size' THEN s.spec_value END) AS extra
+                FROM tbl_equipment e
+                LEFT JOIN tbl_equipment_specs s ON e.equipment_id = s.equipment_id
+                WHERE e.type_id = 3 AND e.employee_id IS NULL AND e.status = 'Available'
+                GROUP BY e.equipment_id, e.brand, e.serial_number
+                ORDER BY e.brand ASC
+            ");
+            break;
+
+        case 'printer':
+            $stmt = $db->query("
+                SELECT equipment_id AS id,
+                       brand,
+                       serial_number AS serial,
+                       model AS model,
+                       NULL AS extra
+                FROM tbl_equipment
+                WHERE type_id = 4 AND employee_id IS NULL AND status = 'Available'
+                ORDER BY brand ASC
+            ");
+            break;
+
+        case 'otherequipment':
+            $stmt = $db->query("
+                SELECT otherEquipmentId AS id,
+                       CONCAT(equipmentType, IFNULL(CONCAT(' — ', brand), '')) AS brand,
+                       serialNumber AS serial,
+                       model AS model,
+                       NULL AS extra
+                FROM tbl_otherequipment
+                WHERE employeeId IS NULL AND status = 'Available'
+                ORDER BY equipmentType ASC
+            ");
+            break;
+
+        case 'software':
+            $stmt = $db->query("
+                SELECT softwareId AS id,
+                       licenseSoftware AS brand,
+                       NULL AS serial,
+                       licenseDetails AS extra
+                FROM tbl_software
+                WHERE employeeId IS NULL
+                ORDER BY licenseSoftware ASC
+            ");
+            break;
+
+        default:
+            echo json_encode(['success' => false, 'message' => 'Unknown type.']);
+            exit;
     }
 
-    // Optional search
-    if ($search !== '') {
-        $where .= " AND (eq.brand LIKE :search OR eq.model LIKE :search OR eq.serial_number LIKE :search OR eq.property_number LIKE :search)";
-        $params[':search'] = "%$search%";
-    }
-
-    $sql = "
-        SELECT eq.equipment_id, eq.type_id, eq.brand, eq.model, eq.serial_number,
-               eq.property_number, eq.status, eq.year_acquired, eq.acquisition_date,
-               r.typeName, r.context
-        FROM tbl_equipment eq
-        INNER JOIN tbl_equipment_type_registry r ON eq.type_id = r.typeId
-        WHERE $where
-        ORDER BY r.typeName, eq.brand, eq.model
-    ";
-
-    $stmt = $db->prepare($sql);
-    $stmt->execute($params);
-    $equipment = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    // Bulk load specs
-    $ids = array_column($equipment, 'equipment_id');
-    $specsMap = [];
-    if (!empty($ids)) {
-        $ph = implode(',', array_fill(0, count($ids), '?'));
-        $specStmt = $db->prepare("SELECT equipment_id, spec_key, spec_value FROM tbl_equipment_specs WHERE equipment_id IN ($ph)");
-        $specStmt->execute($ids);
-        while ($row = $specStmt->fetch(PDO::FETCH_ASSOC)) {
-            $specsMap[$row['equipment_id']][$row['spec_key']] = $row['spec_value'];
-        }
-    }
-
-    foreach ($equipment as &$eq) {
-        $eq['specs'] = $specsMap[$eq['equipment_id']] ?? [];
-    }
-    unset($eq);
-
-    echo json_encode(['success' => true, 'equipment' => $equipment]);
+    $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    echo json_encode(['success' => true, 'items' => $items]);
 
 } catch (PDOException $e) {
-    echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+    echo json_encode(['success' => false, 'message' => 'DB Error: ' . $e->getMessage()]);
 }

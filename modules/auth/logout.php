@@ -28,6 +28,16 @@ if (isset($_COOKIE[session_name()])) {
 // Destroy session
 session_destroy();
 
-// Redirect to login page
-header('Location: login.php?logged_out=1');
-exit();
+// Use JS replace() to remove dashboard from history stack
+// so the back button can't return to it after logout
+?><!DOCTYPE html>
+<html><head><title>Logging out…</title></head>
+<body>
+<script>
+    sessionStorage.removeItem('nia-active-page');
+    window.location.replace('login.php?logged_out=1');
+</script>
+<noscript><meta http-equiv="refresh" content="0;url=login.php?logged_out=1"></noscript>
+</body>
+</html>
+<?php exit(); ?>

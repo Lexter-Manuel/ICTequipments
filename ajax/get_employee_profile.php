@@ -4,6 +4,7 @@
  * Returns full employee profile including equipment and software assigned to them.
  * Updated for unified tbl_equipment schema.
  */
+require_once '../config/session-guard.php';
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();

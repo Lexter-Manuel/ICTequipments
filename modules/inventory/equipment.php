@@ -3,6 +3,7 @@
  * Unified Equipment Inventory Module
  * Combines: Computer (System Units, Monitors, All-in-One), Printers, Other Equipment
  */
+require_once '../../config/session-guard.php';
 
 require_once '../../config/database.php';
 $db = getDB();
@@ -879,10 +880,45 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                         </div>
                     </div>
                     <div class="form-section">
-                        <h6 class="form-section-title"><i class="fas fa-user"></i> Assignment</h6>
-                        <div class="row mb-0">
-                            <div class="col-md-12">
-                                <label for="suEmployeeSearch" class="form-label">Assigned Employee</label>
+                        <h6 class="form-section-title"><i class="fas fa-map-marker-alt"></i> Assignment</h6>
+                        <div class="mb-3">
+                            <label class="form-label d-block">Assign To:</label>
+                            <div class="btn-group w-100" role="group">
+                                <input type="radio" class="btn-check" name="suAssignType" id="suTypeLocation" value="location" checked onchange="toggleSUAssignmentType()">
+                                <label class="btn btn-outline-primary" for="suTypeLocation"><i class="fas fa-building"></i> Location / Office</label>
+                                <input type="radio" class="btn-check" name="suAssignType" id="suTypeEmployee" value="employee" onchange="toggleSUAssignmentType()">
+                                <label class="btn btn-outline-primary" for="suTypeEmployee"><i class="fas fa-user"></i> Specific Employee</label>
+                            </div>
+                        </div>
+                        <div id="suLocationContainer">
+                            <div class="row g-2">
+                                <div class="col-md-12">
+                                    <label class="small text-muted">Division</label>
+                                    <select class="form-select" id="suLocDivision">
+                                        <option value="">Select Division</option>
+                                        <?php foreach ($divisionsData as $div): ?>
+                                            <option value="<?= $div['location_id'] ?>"><?= $div['location_name'] ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="small text-muted">Section</label>
+                                    <select class="form-select" id="suLocSection" disabled>
+                                        <option value="">Select Section</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="small text-muted">Unit</label>
+                                    <select class="form-select" id="suLocUnit" disabled>
+                                        <option value="">Select Unit</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <input type="hidden" id="suLocation" name="location_id">
+                        </div>
+                        <div id="suEmployeeContainer" style="display:none;">
+                            <div class="mb-3">
+                                <label for="suEmployeeSearch" class="form-label">Select Employee</label>
                                 <input type="text" class="form-control" id="suEmployeeSearch" data-emp-search="suEmployee" placeholder="Type to search employee..." autocomplete="off">
                                 <input type="hidden" id="suEmployee">
                             </div>
@@ -932,10 +968,49 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                         </div>
                     </div>
                     <div class="form-section">
-                        <h6 class="form-section-title"><i class="fas fa-user"></i> Assignment</h6>
-                        <label for="monEmployeeSearch" class="form-label">Assigned Employee</label>
-                        <input type="text" class="form-control" id="monEmployeeSearch" data-emp-search="monEmployee" placeholder="Type to search employee..." autocomplete="off">
-                        <input type="hidden" id="monEmployee">
+                        <h6 class="form-section-title"><i class="fas fa-map-marker-alt"></i> Assignment</h6>
+                        <div class="mb-3">
+                            <label class="form-label d-block">Assign To:</label>
+                            <div class="btn-group w-100" role="group">
+                                <input type="radio" class="btn-check" name="monAssignType" id="monTypeLocation" value="location" checked onchange="toggleMonAssignmentType()">
+                                <label class="btn btn-outline-primary" for="monTypeLocation"><i class="fas fa-building"></i> Location / Office</label>
+                                <input type="radio" class="btn-check" name="monAssignType" id="monTypeEmployee" value="employee" onchange="toggleMonAssignmentType()">
+                                <label class="btn btn-outline-primary" for="monTypeEmployee"><i class="fas fa-user"></i> Specific Employee</label>
+                            </div>
+                        </div>
+                        <div id="monLocationContainer">
+                            <div class="row g-2">
+                                <div class="col-md-12">
+                                    <label class="small text-muted">Division</label>
+                                    <select class="form-select" id="monLocDivision">
+                                        <option value="">Select Division</option>
+                                        <?php foreach ($divisionsData as $div): ?>
+                                            <option value="<?= $div['location_id'] ?>"><?= $div['location_name'] ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="small text-muted">Section</label>
+                                    <select class="form-select" id="monLocSection" disabled>
+                                        <option value="">Select Section</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="small text-muted">Unit</label>
+                                    <select class="form-select" id="monLocUnit" disabled>
+                                        <option value="">Select Unit</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <input type="hidden" id="monLocation" name="location_id">
+                        </div>
+                        <div id="monEmployeeContainer" style="display:none;">
+                            <div class="mb-3">
+                                <label for="monEmployeeSearch" class="form-label">Select Employee</label>
+                                <input type="text" class="form-control" id="monEmployeeSearch" data-emp-search="monEmployee" placeholder="Type to search employee..." autocomplete="off">
+                                <input type="hidden" id="monEmployee">
+                            </div>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -998,10 +1073,49 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                         </div>
                     </div>
                     <div class="form-section">
-                        <h6 class="form-section-title"><i class="fas fa-user"></i> Assignment</h6>
-                        <label for="aioEmployeeSearch" class="form-label">Assigned Employee</label>
-                        <input type="text" class="form-control" id="aioEmployeeSearch" data-emp-search="aioEmployee" placeholder="Type to search employee..." autocomplete="off">
-                        <input type="hidden" id="aioEmployee">
+                        <h6 class="form-section-title"><i class="fas fa-map-marker-alt"></i> Assignment</h6>
+                        <div class="mb-3">
+                            <label class="form-label d-block">Assign To:</label>
+                            <div class="btn-group w-100" role="group">
+                                <input type="radio" class="btn-check" name="aioAssignType" id="aioTypeLocation" value="location" checked onchange="toggleAIOAssignmentType()">
+                                <label class="btn btn-outline-primary" for="aioTypeLocation"><i class="fas fa-building"></i> Location / Office</label>
+                                <input type="radio" class="btn-check" name="aioAssignType" id="aioTypeEmployee" value="employee" onchange="toggleAIOAssignmentType()">
+                                <label class="btn btn-outline-primary" for="aioTypeEmployee"><i class="fas fa-user"></i> Specific Employee</label>
+                            </div>
+                        </div>
+                        <div id="aioLocationContainer">
+                            <div class="row g-2">
+                                <div class="col-md-12">
+                                    <label class="small text-muted">Division</label>
+                                    <select class="form-select" id="aioLocDivision">
+                                        <option value="">Select Division</option>
+                                        <?php foreach ($divisionsData as $div): ?>
+                                            <option value="<?= $div['location_id'] ?>"><?= $div['location_name'] ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="small text-muted">Section</label>
+                                    <select class="form-select" id="aioLocSection" disabled>
+                                        <option value="">Select Section</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="small text-muted">Unit</label>
+                                    <select class="form-select" id="aioLocUnit" disabled>
+                                        <option value="">Select Unit</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <input type="hidden" id="aioLocation" name="location_id">
+                        </div>
+                        <div id="aioEmployeeContainer" style="display:none;">
+                            <div class="mb-3">
+                                <label for="aioEmployeeSearch" class="form-label">Select Employee</label>
+                                <input type="text" class="form-control" id="aioEmployeeSearch" data-emp-search="aioEmployee" placeholder="Type to search employee..." autocomplete="off">
+                                <input type="hidden" id="aioEmployee">
+                            </div>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -1047,11 +1161,50 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                         </div>
                     </div>
                     <div class="form-section">
-                        <h6 class="form-section-title"><i class="fas fa-user"></i> Assignment</h6>
-                        <label class="form-label">Assigned Employee <small class="text-muted">(Optional)</small></label>
-                        <input type="text" class="form-control" id="printerEmployeeSearch" data-emp-search="printerEmployee" placeholder="Type to search employee..." autocomplete="off">
-                        <input type="hidden" id="printerEmployee">
-                        <small class="form-text"><i class="fas fa-info-circle"></i> If assigned, status automatically becomes "Working"</small>
+                        <h6 class="form-section-title"><i class="fas fa-map-marker-alt"></i> Assignment</h6>
+                        <div class="mb-3">
+                            <label class="form-label d-block">Assign To:</label>
+                            <div class="btn-group w-100" role="group">
+                                <input type="radio" class="btn-check" name="printerAssignType" id="printerTypeLocation" value="location" checked onchange="togglePrinterAssignmentType()">
+                                <label class="btn btn-outline-primary" for="printerTypeLocation"><i class="fas fa-building"></i> Location / Office</label>
+                                <input type="radio" class="btn-check" name="printerAssignType" id="printerTypeEmployee" value="employee" onchange="togglePrinterAssignmentType()">
+                                <label class="btn btn-outline-primary" for="printerTypeEmployee"><i class="fas fa-user"></i> Specific Employee</label>
+                            </div>
+                        </div>
+                        <div id="printerLocationContainer">
+                            <div class="row g-2">
+                                <div class="col-md-12">
+                                    <label class="small text-muted">Division</label>
+                                    <select class="form-select" id="printerLocDivision">
+                                        <option value="">Select Division</option>
+                                        <?php foreach ($divisionsData as $div): ?>
+                                            <option value="<?= $div['location_id'] ?>"><?= $div['location_name'] ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="small text-muted">Section</label>
+                                    <select class="form-select" id="printerLocSection" disabled>
+                                        <option value="">Select Section</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="small text-muted">Unit</label>
+                                    <select class="form-select" id="printerLocUnit" disabled>
+                                        <option value="">Select Unit</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <input type="hidden" id="printerLocation" name="location_id">
+                        </div>
+                        <div id="printerEmployeeContainer" style="display:none;">
+                            <div class="mb-3">
+                                <label class="form-label">Select Employee <small class="text-muted">(Optional)</small></label>
+                                <input type="text" class="form-control" id="printerEmployeeSearch" data-emp-search="printerEmployee" placeholder="Type to search employee..." autocomplete="off">
+                                <input type="hidden" id="printerEmployee">
+                                <small class="form-text"><i class="fas fa-info-circle"></i> If assigned, status automatically becomes "Working"</small>
+                            </div>
+                        </div>
                     </div>
                 </form>
             </div>

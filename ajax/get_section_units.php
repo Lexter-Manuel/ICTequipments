@@ -3,6 +3,7 @@
  * Returns sections (that have no child units) and all units
  * for use in the sectionUnit filter dropdown.
  */
+require_once '../config/session-guard.php';
 require_once '../config/database.php';
 header('Content-Type: application/json');
 

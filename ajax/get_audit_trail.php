@@ -3,6 +3,7 @@
  * AJAX endpoint for audit trail data
  * Returns paginated activity logs with filtering
  */
+require_once '../config/session-guard.php';
 require_once '../config/database.php';
 require_once '../config/session-check.php';
 

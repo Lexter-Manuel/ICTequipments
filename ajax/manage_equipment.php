@@ -4,6 +4,7 @@
  * Replaces manage_systemunit.php, manage_monitor.php, manage_printer.php,
  * manage_allinone.php, and manage_otherequipment.php
  * 
+require_once '../config/session-guard.php';
  * Works with: tbl_equipment + tbl_equipment_specs (EAV)
  */
 require_once '../config/database.php';

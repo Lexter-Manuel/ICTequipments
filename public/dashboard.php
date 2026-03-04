@@ -4,6 +4,11 @@ session_start();
 require_once '../config/database.php';
 require_once '../config/session-check.php';
 
+// Prevent back-forward cache from serving stale dashboard after logout
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
+header('Expires: 0');
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -267,7 +272,7 @@ require_once '../config/session-check.php';
     <script src="../vendor/node_modules/cropperjs/dist/cropper.min.js"></script>
     <script src="assets/js/alerts.js?v=<?php echo time()?>"></script>
     <script src="assets/js/utils.js?v=<?php echo time()?>"></script>
-    <script src="assets/js/realtime.js?v=<?php echo time()?>"></script>
+    <!-- <script src="assets/js/realtime.js?v="></script> -->
     <script src="assets/js/dashboard.js?v=<?php echo time()?>"></script>
     <script src="assets/js/maintenance-conductor.js?v=<?php echo time(); ?>"></script>
 

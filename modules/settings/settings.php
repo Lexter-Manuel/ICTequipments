@@ -3,7 +3,8 @@
  * System Settings — Super Admin only
  * Manages organization info, security, maintenance defaults, system config
  */
-session_start();
+require_once '../../config/session-guard.php';
+
 require_once '../../config/database.php';
 require_once '../../config/config.php';
 require_once '../../config/permissions.php';

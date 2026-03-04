@@ -1,5 +1,6 @@
 <?php
 // modules/reports/maintenance-summary.php
+require_once '../../config/session-guard.php';
 require_once '../../config/database.php';
 
 try {

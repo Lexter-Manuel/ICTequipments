@@ -4,6 +4,7 @@
  * 
  * Ultra-lightweight endpoint that returns last-modified timestamps
  * per data category. The client polls this every 5-10 seconds.
+require_once '../config/session-guard.php';
  * Only when timestamps differ from the client's cache will it
  * trigger a full data refresh — saving ~95% of server load vs
  * naive 1-second polling.

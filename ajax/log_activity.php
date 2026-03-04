@@ -4,6 +4,7 @@
  * 
  * Usage: POST request with fields: action, module, description
  * The canonical logActivity() function lives in config/config.php
+require_once '../config/session-guard.php';
  */
 require_once '../config/database.php';
 require_once '../config/config.php';

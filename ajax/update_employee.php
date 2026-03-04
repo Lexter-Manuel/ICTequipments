@@ -2,10 +2,8 @@
 // ajax/process_employee.php
 // Backend processing for employee management with CropperJS image handling
 
-// Start session
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+// Session guard (starts session + validates login)
+require_once '../config/session-guard.php';
 
 // Include database connection
 require_once '../config/database.php';

@@ -1,7 +1,7 @@
 <?php
 // modules/dashboard/home.php
+require_once '../../config/session-guard.php';
 require_once '../../config/database.php';
-session_start();
 try {
     $db = Database::getInstance()->getConnection();
     

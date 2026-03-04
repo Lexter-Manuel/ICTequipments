@@ -1,8 +1,6 @@
 <?php
 // modules/inventory/roster.php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+require_once '../../config/session-guard.php';
 
 require_once '../../config/database.php';
 $db = Database::getInstance()->getConnection();

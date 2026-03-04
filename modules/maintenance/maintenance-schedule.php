@@ -1,5 +1,6 @@
 <?php
 // modules/maintenance/maintenance-schedule.php
+require_once '../../config/session-guard.php';
 ?>
 <link rel="stylesheet" href="assets/css/root.css?v=<?php echo time(); ?>">
 <link rel="stylesheet" href="assets/css/maintenance.css?v=<?php echo time(); ?>">

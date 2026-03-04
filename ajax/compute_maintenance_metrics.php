@@ -4,6 +4,7 @@
  * ────────────────────────────────
  * Computes per-equipment maintenance frequency metrics.
  *
+require_once '../config/session-guard.php';
  * Can be called:
  *   - On-demand via GET ?action=compute (admin only)
  *   - After recording maintenance via POST with equipmentType + equipmentId

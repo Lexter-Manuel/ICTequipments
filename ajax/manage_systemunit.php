@@ -4,6 +4,7 @@
  * Adapter: translates legacy System Unit API calls to unified tbl_equipment + tbl_equipment_specs.
  * Maintains backward-compatible JSON response format.
  */
+require_once '../config/session-guard.php';
 require_once '../config/database.php';
 require_once '../config/config.php';
 require_once '../includes/maintenanceHelper.php';
@@ -103,6 +104,7 @@ function getItem($db) {
         'yearAcquired' => $r['year_acquired'],
         'employeeId' => $r['employee_id'],
         'employeeName' => $r['employeeName'],
+        'location_id' => $r['location_id'],
         'status' => $r['employee_id'] ? 'Active' : 'Available',
     ]]);
 }
@@ -113,6 +115,7 @@ function createItem($db) {
     $serial = trim($_POST['serial'] ?? '');
     $year = $_POST['year'] ?? null;
     $empId = $_POST['employee_id'] ?? null;
+    $locId = $_POST['location_id'] ?? null;
     $category = trim($_POST['category'] ?? 'Pre-Built');
     $processor = trim($_POST['processor'] ?? '');
     $memory = trim($_POST['memory'] ?? '');
@@ -123,9 +126,9 @@ function createItem($db) {
     if (empty($serial)) throw new Exception('Serial number is required');
 
     $db->beginTransaction();
-    $stmt = $db->prepare("INSERT INTO tbl_equipment (type_id, employee_id, brand, serial_number, status, year_acquired)
-        VALUES (:tid, :eid, :brand, :serial, 'Active', :year)");
-    $stmt->execute([':tid' => $TYPE_ID, ':eid' => $empId ?: null, ':brand' => $brand, ':serial' => $serial, ':year' => $year ?: null]);
+    $stmt = $db->prepare("INSERT INTO tbl_equipment (type_id, employee_id, location_id, brand, serial_number, status, year_acquired)
+        VALUES (:tid, :eid, :lid, :brand, :serial, 'Active', :year)");
+    $stmt->execute([':tid' => $TYPE_ID, ':eid' => $empId ?: null, ':lid' => $locId ?: null, ':brand' => $brand, ':serial' => $serial, ':year' => $year ?: null]);
     $newId = $db->lastInsertId();
 
     $specData = ['Category' => $category, 'Processor' => $processor, 'Memory' => $memory, 'GPU' => $gpu, 'Storage' => $storage];
@@ -147,6 +150,7 @@ function updateItem($db) {
     $serial = trim($_POST['serial'] ?? '');
     $year = $_POST['year'] ?? null;
     $empId = $_POST['employee_id'] ?? null;
+    $locId = $_POST['location_id'] ?? null;
     $category = trim($_POST['category'] ?? 'Pre-Built');
     $processor = trim($_POST['processor'] ?? '');
     $memory = trim($_POST['memory'] ?? '');
@@ -154,9 +158,9 @@ function updateItem($db) {
     $storage = trim($_POST['storage'] ?? '');
 
     $db->beginTransaction();
-    $stmt = $db->prepare("UPDATE tbl_equipment SET brand = :brand, serial_number = :serial, year_acquired = :year, employee_id = :eid
+    $stmt = $db->prepare("UPDATE tbl_equipment SET brand = :brand, serial_number = :serial, year_acquired = :year, employee_id = :eid, location_id = :lid
         WHERE equipment_id = :id AND type_id = :tid");
-    $stmt->execute([':brand' => $brand, ':serial' => $serial, ':year' => $year ?: null, ':eid' => $empId ?: null, ':id' => $id, ':tid' => $TYPE_ID]);
+    $stmt->execute([':brand' => $brand, ':serial' => $serial, ':year' => $year ?: null, ':eid' => $empId ?: null, ':lid' => $locId ?: null, ':id' => $id, ':tid' => $TYPE_ID]);
 
     $specData = ['Category' => $category, 'Processor' => $processor, 'Memory' => $memory, 'GPU' => $gpu, 'Storage' => $storage];
     saveSpecs($db, $id, $specData);

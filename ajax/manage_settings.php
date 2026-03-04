@@ -3,7 +3,7 @@
  * AJAX handler for System Settings management
  * Super Admin only
  */
-session_start();
+require_once '../config/session-guard.php';
 require_once '../config/database.php';
 require_once '../config/config.php';
 require_once '../config/permissions.php';

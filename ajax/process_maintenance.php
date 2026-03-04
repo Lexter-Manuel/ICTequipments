@@ -4,6 +4,7 @@
  *
  * Legacy endpoint for recording maintenance. Now mirrors record_maintenance.php:
  *   - Requires authenticated session
+require_once '../config/session-guard.php';
  *   - Records accountId, preparedBy, checkedBy, notedBy
  *   - Stores responses in tbl_maintenance_response (primary)
  *   - Keeps checklistJson as read-only backup for backward compat

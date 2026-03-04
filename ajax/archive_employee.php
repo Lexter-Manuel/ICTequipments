@@ -4,6 +4,7 @@
  * Archives an employee and unassigns all their equipment.
  * Updated for unified tbl_equipment schema.
  */
+require_once '../config/session-guard.php';
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();

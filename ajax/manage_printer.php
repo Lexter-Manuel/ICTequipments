@@ -3,6 +3,7 @@
  * ajax/manage_printer.php
  * Adapter: translates legacy Printer API calls to unified tbl_equipment + tbl_equipment_specs.
  */
+require_once '../config/session-guard.php';
 require_once '../config/database.php';
 require_once '../config/config.php';
 require_once '../includes/maintenanceHelper.php';
@@ -73,20 +74,22 @@ function getItem($db) {
         'printerId' => $r['equipment_id'], 'printerBrand' => $r['brand'],
         'printerModel' => $r['model'], 'printerSerial' => $r['serial_number'],
         'yearAcquired' => $r['year_acquired'], 'employeeId' => $r['employee_id'],
-        'employeeName' => $r['employeeName'], 'status' => $r['employee_id'] ? 'Active' : 'Available',
+        'employeeName' => $r['employeeName'], 'location_id' => $r['location_id'],
+        'status' => $r['employee_id'] ? 'Active' : 'Available',
     ]]);
 }
 
 function createItem($db) {
     global $TYPE_ID;
     $brand = trim($_POST['brand'] ?? ''); $model = trim($_POST['model'] ?? '');
-    $serial = trim($_POST['serial'] ?? ''); $year = $_POST['year'] ?? null;
+    $serial = trim($_POST['serial_number'] ?? $_POST['serial'] ?? ''); $year = $_POST['year_acquired'] ?? $_POST['year'] ?? null;
     $empId = $_POST['employee_id'] ?? null;
+    $locId = $_POST['location_id'] ?? null;
     if (empty($brand)) throw new Exception('Brand is required');
 
     $db->beginTransaction();
-    $stmt = $db->prepare("INSERT INTO tbl_equipment (type_id, employee_id, brand, model, serial_number, status, year_acquired) VALUES (:tid,:eid,:brand,:model,:serial,'Active',:year)");
-    $stmt->execute([':tid'=>$TYPE_ID,':eid'=>$empId?:null,':brand'=>$brand,':model'=>$model?:null,':serial'=>$serial?:null,':year'=>$year?:null]);
+    $stmt = $db->prepare("INSERT INTO tbl_equipment (type_id, employee_id, location_id, brand, model, serial_number, status, year_acquired) VALUES (:tid,:eid,:lid,:brand,:model,:serial,'Active',:year)");
+    $stmt->execute([':tid'=>$TYPE_ID,':eid'=>$empId?:null,':lid'=>$locId?:null,':brand'=>$brand,':model'=>$model?:null,':serial'=>$serial?:null,':year'=>$year?:null]);
     $newId = $db->lastInsertId();
     try { $m = new MaintenanceHelper($db); $m->initScheduleByTypeId($TYPE_ID, $newId); } catch (Exception $e) { error_log($e->getMessage()); }
     $db->commit();
@@ -98,11 +101,12 @@ function updateItem($db) {
     global $TYPE_ID;
     $id = $_POST['printer_id'] ?? null; if (!$id) throw new Exception('Printer ID is required');
     $brand = trim($_POST['brand'] ?? ''); $model = trim($_POST['model'] ?? '');
-    $serial = trim($_POST['serial'] ?? ''); $year = $_POST['year'] ?? null;
+    $serial = trim($_POST['serial_number'] ?? $_POST['serial'] ?? ''); $year = $_POST['year_acquired'] ?? $_POST['year'] ?? null;
     $empId = $_POST['employee_id'] ?? null;
+    $locId = $_POST['location_id'] ?? null;
 
-    $db->prepare("UPDATE tbl_equipment SET brand=:brand, model=:model, serial_number=:serial, year_acquired=:year, employee_id=:eid WHERE equipment_id=:id AND type_id=:tid")
-       ->execute([':brand'=>$brand,':model'=>$model?:null,':serial'=>$serial?:null,':year'=>$year?:null,':eid'=>$empId?:null,':id'=>$id,':tid'=>$TYPE_ID]);
+    $db->prepare("UPDATE tbl_equipment SET brand=:brand, model=:model, serial_number=:serial, year_acquired=:year, employee_id=:eid, location_id=:lid WHERE equipment_id=:id AND type_id=:tid")
+       ->execute([':brand'=>$brand,':model'=>$model?:null,':serial'=>$serial?:null,':year'=>$year?:null,':eid'=>$empId?:null,':lid'=>$locId?:null,':id'=>$id,':tid'=>$TYPE_ID]);
     logActivity(ACTION_UPDATE, MODULE_COMPUTERS, "Updated Printer (ID: {$id}) — Brand: {$brand}.");
     echo json_encode(['success' => true, 'message' => 'Printer updated successfully']);
 }

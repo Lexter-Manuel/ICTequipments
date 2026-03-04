@@ -3,6 +3,7 @@
  * ajax/manage_allinone.php
  * Adapter: translates legacy All-in-One API calls to unified tbl_equipment + tbl_equipment_specs.
  */
+require_once '../config/session-guard.php';
 require_once '../config/database.php';
 require_once '../config/config.php';
 require_once '../includes/maintenanceHelper.php';
@@ -80,22 +81,24 @@ function getItem($db) {
         'specificationProcessor' => $sp['Processor'] ?? '', 'specificationMemory' => $sp['Memory'] ?? '',
         'specificationGpu' => $sp['GPU'] ?? '', 'specificationStorage' => $sp['Storage'] ?? '',
         'yearAcquired' => $r['year_acquired'], 'employeeId' => $r['employee_id'],
-        'employeeName' => $r['employeeName'], 'status' => $r['employee_id'] ? 'Active' : 'Available',
+        'employeeName' => $r['employeeName'], 'location_id' => $r['location_id'],
+        'status' => $r['employee_id'] ? 'Active' : 'Available',
     ]]);
 }
 
 function createItem($db) {
     global $TYPE_ID;
-    $brand = trim($_POST['brand'] ?? ''); $serial = trim($_POST['serial'] ?? '');
-    $prop = trim($_POST['property_number'] ?? ''); $year = $_POST['year'] ?? null;
+    $brand = trim($_POST['brand'] ?? ''); $serial = trim($_POST['serial'] ?? $_POST['allinoneSerial'] ?? '');
+    $prop = trim($_POST['property_number'] ?? ''); $year = $_POST['year_acquired'] ?? $_POST['year'] ?? null;
     $empId = $_POST['employee_id'] ?? null;
+    $locId = $_POST['location_id'] ?? null;
     $proc = trim($_POST['processor'] ?? ''); $mem = trim($_POST['memory'] ?? '');
     $gpu = trim($_POST['gpu'] ?? ''); $storage = trim($_POST['storage'] ?? '');
     if (empty($brand)) throw new Exception('Brand is required');
 
     $db->beginTransaction();
-    $stmt = $db->prepare("INSERT INTO tbl_equipment (type_id, employee_id, brand, serial_number, property_number, status, year_acquired) VALUES (:tid,:eid,:brand,:serial,:prop,'Active',:year)");
-    $stmt->execute([':tid'=>$TYPE_ID,':eid'=>$empId?:null,':brand'=>$brand,':serial'=>$serial?:null,':prop'=>$prop?:null,':year'=>$year?:null]);
+    $stmt = $db->prepare("INSERT INTO tbl_equipment (type_id, employee_id, location_id, brand, serial_number, property_number, status, year_acquired) VALUES (:tid,:eid,:lid,:brand,:serial,:prop,'Active',:year)");
+    $stmt->execute([':tid'=>$TYPE_ID,':eid'=>$empId?:null,':lid'=>$locId?:null,':brand'=>$brand,':serial'=>$serial?:null,':prop'=>$prop?:null,':year'=>$year?:null]);
     $newId = $db->lastInsertId();
     saveSpecs($db, $newId, ['Processor'=>$proc, 'Memory'=>$mem, 'GPU'=>$gpu, 'Storage'=>$storage]);
     try { $m = new MaintenanceHelper($db); $m->initScheduleByTypeId($TYPE_ID, $newId); } catch (Exception $e) { error_log($e->getMessage()); }
@@ -107,15 +110,16 @@ function createItem($db) {
 function updateItem($db) {
     global $TYPE_ID;
     $id = $_POST['allinone_id'] ?? null; if (!$id) throw new Exception('All-in-One ID is required');
-    $brand = trim($_POST['brand'] ?? ''); $serial = trim($_POST['serial'] ?? '');
-    $prop = trim($_POST['property_number'] ?? ''); $year = $_POST['year'] ?? null;
+    $brand = trim($_POST['brand'] ?? ''); $serial = trim($_POST['serial'] ?? $_POST['allinoneSerial'] ?? '');
+    $prop = trim($_POST['property_number'] ?? ''); $year = $_POST['year_acquired'] ?? $_POST['year'] ?? null;
     $empId = $_POST['employee_id'] ?? null;
+    $locId = $_POST['location_id'] ?? null;
     $proc = trim($_POST['processor'] ?? ''); $mem = trim($_POST['memory'] ?? '');
     $gpu = trim($_POST['gpu'] ?? ''); $storage = trim($_POST['storage'] ?? '');
 
     $db->beginTransaction();
-    $db->prepare("UPDATE tbl_equipment SET brand=:brand, serial_number=:serial, property_number=:prop, year_acquired=:year, employee_id=:eid WHERE equipment_id=:id AND type_id=:tid")
-       ->execute([':brand'=>$brand,':serial'=>$serial?:null,':prop'=>$prop?:null,':year'=>$year?:null,':eid'=>$empId?:null,':id'=>$id,':tid'=>$TYPE_ID]);
+    $db->prepare("UPDATE tbl_equipment SET brand=:brand, serial_number=:serial, property_number=:prop, year_acquired=:year, employee_id=:eid, location_id=:lid WHERE equipment_id=:id AND type_id=:tid")
+       ->execute([':brand'=>$brand,':serial'=>$serial?:null,':prop'=>$prop?:null,':year'=>$year?:null,':eid'=>$empId?:null,':lid'=>$locId?:null,':id'=>$id,':tid'=>$TYPE_ID]);
     saveSpecs($db, $id, ['Processor'=>$proc, 'Memory'=>$mem, 'GPU'=>$gpu, 'Storage'=>$storage]);
     $db->commit();
     logActivity(ACTION_UPDATE, MODULE_COMPUTERS, "Updated All-in-One (ID: {$id}) — Brand: {$brand}.");

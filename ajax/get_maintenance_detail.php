@@ -4,6 +4,7 @@
  * --------------------------
  * Returns detail data for either a schedule entry or a maintenance record.
  *
+require_once '../config/session-guard.php';
  * Modes (via ?type=):
  *   schedule  – detailed info about a scheduled maintenance entry  (?scheduleId=)
  *   record    – detailed info about a completed maintenance record (?recordId=)

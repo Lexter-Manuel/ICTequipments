@@ -1,4 +1,5 @@
 <?php
+require_once '../../config/session-guard.php';
 require_once '../../config/database.php';
 $db = getDB();
 $totalTemplates = $db->query("SELECT COUNT(*) FROM tbl_maintenance_template")->fetchColumn();

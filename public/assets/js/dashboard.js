@@ -15,6 +15,8 @@ class DashboardApp {
         this.pageCache = {}; // Cache loaded pages
         this._pendingRefresh = false; // True when a refresh is deferred
         this._pendingCategories = new Set(); // Categories queued while user is interacting
+        this._navigatingFromHistory = false; // True during popstate navigation
+        this._isInitialLoad = false; // True during the first page load
         
         this.init();
     }
@@ -36,9 +38,58 @@ class DashboardApp {
         this.setupNavigation();
         this.setupMobileMenu();
         this.setupProfileDropdown();
+        this.setupHistoryNavigation();
         this.loadInitialPage();
         this.setupAnimations();
         this.setupRealtime();
+    }
+
+    /**
+     * Setup browser history navigation (pushState / popState)
+     * Enables the browser's back and forward buttons to navigate between SPA pages.
+     */
+    setupHistoryNavigation() {
+        window.addEventListener('popstate', (e) => {
+            var state = e.state;
+            var page;
+
+            if (state && state.page && this.getPageMap()[state.page]) {
+                page = state.page;
+            } else {
+                // Fall back to URL hash
+                var hash = window.location.hash.replace('#', '');
+                page = (hash && this.getPageMap()[hash]) ? hash : 'home';
+            }
+
+            this._navigatingFromHistory = true;
+            this.updateSidebarActive(page);
+            this.loadPage(page, true);
+        });
+
+        // Detect BFCache restoration (e.g. back button after logout)
+        window.addEventListener('pageshow', (e) => {
+            if (e.persisted) {
+                this._verifySession();
+            }
+        });
+    }
+
+    /**
+     * Verify that the session is still valid (used after BFCache restoration).
+     * If the session has expired, redirect to the login page.
+     */
+    _verifySession() {
+        fetch('../ajax/check_updates.php', { credentials: 'same-origin' })
+            .then(function(r) {
+                if (r.status === 401) {
+                    sessionStorage.removeItem('nia-active-page');
+                    window.location.replace('/ictequipment/modules/auth/login.php');
+                }
+            })
+            .catch(function() {
+                sessionStorage.removeItem('nia-active-page');
+                window.location.replace('/ictequipment/modules/auth/login.php');
+            });
     }
 
     /**
@@ -274,6 +325,13 @@ class DashboardApp {
             
             // Fetch the page content
             var response = await fetch(pageUrl);
+
+            // Session expired — redirect to login
+            if (response.status === 401) {
+                sessionStorage.removeItem('nia-active-page');
+                window.location.replace('/ictequipment/modules/auth/login.php');
+                return;
+            }
             
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -317,8 +375,18 @@ class DashboardApp {
         this.contentArea.innerHTML = html;
         this.currentPage = pageName;
 
-        // Keep URL clean — persist page via sessionStorage only
-        history.replaceState({ page: pageName }, '');
+        // Manage browser history for back/forward navigation
+        if (this._navigatingFromHistory) {
+            // Triggered by popstate — don't push another state
+            this._navigatingFromHistory = false;
+        } else if (this._isInitialLoad) {
+            // First page load — replace current entry (no extra history)
+            this._isInitialLoad = false;
+            history.replaceState({ page: pageName }, '', '#' + pageName);
+        } else {
+            // Normal navigation — push new history entry
+            history.pushState({ page: pageName }, '', '#' + pageName);
+        }
         sessionStorage.setItem('nia-active-page', pageName);
         
         // Update sidebar active state
@@ -522,17 +590,20 @@ class DashboardApp {
     loadInitialPage() {
         var page = 'home';
 
-        // Restore last active page from sessionStorage
-        var saved = sessionStorage.getItem('nia-active-page');
-        if (saved && this.getPageMap()[saved]) {
-            page = saved;
+        // Check URL hash first (e.g. dashboard.php#employees)
+        var hash = window.location.hash.replace('#', '');
+        if (hash && this.getPageMap()[hash]) {
+            page = hash;
+        } else {
+            // Fall back to sessionStorage
+            var saved = sessionStorage.getItem('nia-active-page');
+            if (saved && this.getPageMap()[saved]) {
+                page = saved;
+            }
         }
 
-        // Strip any leftover hash from the URL
-        if (window.location.hash) {
-            history.replaceState(null, '', window.location.pathname);
-        }
-
+        // Initial load uses replaceState (not pushState)
+        this._isInitialLoad = true;
         this.loadPage(page);
     }
 

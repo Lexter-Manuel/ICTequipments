@@ -134,5 +134,10 @@ $csrf_token = generateCSRFToken();
     </div>
     
     <script src="../../public/assets/js/login.js?v=<?php echo time(); ?>"></script>
+    <script>
+        // Prevent back button from reaching dashboard after logout
+        sessionStorage.removeItem('nia-active-page');
+        history.replaceState(null, '', window.location.href);
+    </script>
 </body>
 </html>

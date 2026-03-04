@@ -1,5 +1,6 @@
 <?php
 // modules/reports/audit-trail.php
+require_once '../../config/session-guard.php';
 require_once '../../config/database.php';
 ?>
 

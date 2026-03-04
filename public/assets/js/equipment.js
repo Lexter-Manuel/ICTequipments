@@ -8,6 +8,96 @@ var equipmentTypesCache = [];       // Cached list from registry
 var typeDropdownActiveIdx = -1;     // Keyboard nav index
 
 // ============================================================
+// LOCATION MANAGERS FOR EQUIPMENT MODALS
+// Uses same pattern as employee form LocationHierarchy:
+//   Division > Section > Unit  (cascading, client-side filtered)
+//   Division > Unit            (units directly under division)
+//   Division > Section         (section with no units)
+// ============================================================
+var suLocationManager, monLocationManager, aioLocationManager, printerLocationManager;
+
+// Initialize immediately (not in DOMContentLoaded) so it works
+// when loaded via SPA/AJAX into the dashboard.
+(function initLocationManagers() {
+    if (typeof LocationManager === 'undefined') return;
+    if (document.getElementById('suLocDivision')) {
+        suLocationManager = new LocationManager({
+            divisionId: 'suLocDivision', sectionId: 'suLocSection',
+            unitId: 'suLocUnit', locationIdInput: 'suLocation'
+        });
+    }
+    if (document.getElementById('monLocDivision')) {
+        monLocationManager = new LocationManager({
+            divisionId: 'monLocDivision', sectionId: 'monLocSection',
+            unitId: 'monLocUnit', locationIdInput: 'monLocation'
+        });
+    }
+    if (document.getElementById('aioLocDivision')) {
+        aioLocationManager = new LocationManager({
+            divisionId: 'aioLocDivision', sectionId: 'aioLocSection',
+            unitId: 'aioLocUnit', locationIdInput: 'aioLocation'
+        });
+    }
+    if (document.getElementById('printerLocDivision')) {
+        printerLocationManager = new LocationManager({
+            divisionId: 'printerLocDivision', sectionId: 'printerLocSection',
+            unitId: 'printerLocUnit', locationIdInput: 'printerLocation'
+        });
+    }
+})();
+
+// ============================================================
+// ASSIGNMENT TYPE TOGGLES (Location vs Employee)
+// ============================================================
+function toggleSUAssignmentType() {
+    var isEmployee = document.getElementById('suTypeEmployee').checked;
+    document.getElementById('suLocationContainer').style.display = isEmployee ? 'none' : 'block';
+    document.getElementById('suEmployeeContainer').style.display = isEmployee ? 'block' : 'none';
+    if (isEmployee) {
+        document.getElementById('suLocation').value = '';
+    } else {
+        document.getElementById('suEmployee').value = '';
+        if (suLocationManager) suLocationManager.calculateFinalId();
+    }
+}
+
+function toggleMonAssignmentType() {
+    var isEmployee = document.getElementById('monTypeEmployee').checked;
+    document.getElementById('monLocationContainer').style.display = isEmployee ? 'none' : 'block';
+    document.getElementById('monEmployeeContainer').style.display = isEmployee ? 'block' : 'none';
+    if (isEmployee) {
+        document.getElementById('monLocation').value = '';
+    } else {
+        document.getElementById('monEmployee').value = '';
+        if (monLocationManager) monLocationManager.calculateFinalId();
+    }
+}
+
+function toggleAIOAssignmentType() {
+    var isEmployee = document.getElementById('aioTypeEmployee').checked;
+    document.getElementById('aioLocationContainer').style.display = isEmployee ? 'none' : 'block';
+    document.getElementById('aioEmployeeContainer').style.display = isEmployee ? 'block' : 'none';
+    if (isEmployee) {
+        document.getElementById('aioLocation').value = '';
+    } else {
+        document.getElementById('aioEmployee').value = '';
+        if (aioLocationManager) aioLocationManager.calculateFinalId();
+    }
+}
+
+function togglePrinterAssignmentType() {
+    var isEmployee = document.getElementById('printerTypeEmployee').checked;
+    document.getElementById('printerLocationContainer').style.display = isEmployee ? 'none' : 'block';
+    document.getElementById('printerEmployeeContainer').style.display = isEmployee ? 'block' : 'none';
+    if (isEmployee) {
+        document.getElementById('printerLocation').value = '';
+    } else {
+        document.getElementById('printerEmployee').value = '';
+        if (printerLocationManager) printerLocationManager.calculateFinalId();
+    }
+}
+
+// ============================================================
 // CATEGORY & SUB-TAB SWITCHING
 // ============================================================
 function switchCategory(name, btn) {
@@ -88,6 +178,11 @@ function openAddSystemUnit() {
     currentSystemUnitId = null;
     document.getElementById('systemunitModalTitle').textContent = 'Add New System Unit';
     document.getElementById('systemunitForm').reset();
+    document.getElementById('suEmployee').value = '';
+    document.getElementById('suLocation').value = '';
+    if (suLocationManager) suLocationManager.reset();
+    document.getElementById('suTypeLocation').checked = true;
+    toggleSUAssignmentType();
     new bootstrap.Modal(document.getElementById('systemunitModal')).show();
 }
 
@@ -107,7 +202,25 @@ function editSystemUnit(id) {
                 document.getElementById('suStorage').value = s.specificationStorage;
                 document.getElementById('suSerial').value = s.systemUnitSerial;
                 document.getElementById('suYear').value = s.yearAcquired;
-                empSearch.set('suEmployeeSearch', 'suEmployee', s.employeeId || '');
+                
+                // Handle location vs employee assignment
+                document.getElementById('suEmployee').value = '';
+                document.getElementById('suLocation').value = '';
+                if (suLocationManager) suLocationManager.reset();
+                
+                if (s.employeeId) {
+                    document.getElementById('suTypeEmployee').checked = true;
+                    toggleSUAssignmentType();
+                    empSearch.set('suEmployeeSearch', 'suEmployee', s.employeeId);
+                } else if (s.location_id) {
+                    document.getElementById('suTypeLocation').checked = true;
+                    toggleSUAssignmentType();
+                    if (suLocationManager) suLocationManager.setLocation(s.location_id);
+                } else {
+                    document.getElementById('suTypeLocation').checked = true;
+                    toggleSUAssignmentType();
+                }
+                
                 new bootstrap.Modal(document.getElementById('systemunitModal')).show();
             } else {
                 Alerts.error(data.message);
@@ -128,7 +241,15 @@ function saveSystemUnit() {
     formData.append('storage', document.getElementById('suStorage').value);
     formData.append('serial', document.getElementById('suSerial').value);
     formData.append('year', document.getElementById('suYear').value);
-    formData.append('employee_id', document.getElementById('suEmployee').value);
+    
+    // Handle location vs employee assignment
+    if (document.getElementById('suTypeEmployee').checked) {
+        formData.append('employee_id', document.getElementById('suEmployee').value);
+        formData.append('location_id', '');
+    } else {
+        formData.append('location_id', document.getElementById('suLocation').value);
+        formData.append('employee_id', '');
+    }
 
     fetch('../ajax/manage_systemunit.php', { method: 'POST', body: formData })
         .then(function(response) { return response.json(); })
@@ -210,6 +331,11 @@ function openAddMonitor() {
     currentMonitorId = null;
     document.getElementById('monitorModalTitle').textContent = 'Add New Monitor';
     document.getElementById('monitorForm').reset();
+    document.getElementById('monEmployee').value = '';
+    document.getElementById('monLocation').value = '';
+    if (monLocationManager) monLocationManager.reset();
+    document.getElementById('monTypeLocation').checked = true;
+    toggleMonAssignmentType();
     new bootstrap.Modal(document.getElementById('monitorModal')).show();
 }
 
@@ -225,7 +351,25 @@ function editMonitor(id) {
                 document.getElementById('monSize').value = m.monitorSize;
                 document.getElementById('monSerial').value = m.monitorSerial;
                 document.getElementById('monYear').value = m.yearAcquired;
-                empSearch.set('monEmployeeSearch', 'monEmployee', m.employeeId || '');
+                
+                // Handle location vs employee assignment
+                document.getElementById('monEmployee').value = '';
+                document.getElementById('monLocation').value = '';
+                if (monLocationManager) monLocationManager.reset();
+                
+                if (m.employeeId) {
+                    document.getElementById('monTypeEmployee').checked = true;
+                    toggleMonAssignmentType();
+                    empSearch.set('monEmployeeSearch', 'monEmployee', m.employeeId);
+                } else if (m.location_id) {
+                    document.getElementById('monTypeLocation').checked = true;
+                    toggleMonAssignmentType();
+                    if (monLocationManager) monLocationManager.setLocation(m.location_id);
+                } else {
+                    document.getElementById('monTypeLocation').checked = true;
+                    toggleMonAssignmentType();
+                }
+                
                 new bootstrap.Modal(document.getElementById('monitorModal')).show();
             } else { Alerts.error(data.message); }
         })
@@ -240,7 +384,15 @@ function saveMonitor() {
     formData.append('size', document.getElementById('monSize').value);
     formData.append('monitorSerial', document.getElementById('monSerial').value);
     formData.append('year', document.getElementById('monYear').value);
-    formData.append('employee_id', document.getElementById('monEmployee').value);
+    
+    // Handle location vs employee assignment
+    if (document.getElementById('monTypeEmployee').checked) {
+        formData.append('employee_id', document.getElementById('monEmployee').value);
+        formData.append('location_id', '');
+    } else {
+        formData.append('location_id', document.getElementById('monLocation').value);
+        formData.append('employee_id', '');
+    }
 
     fetch('../ajax/manage_monitor.php', { method: 'POST', body: formData })
         .then(function(response) { return response.json(); })
@@ -320,6 +472,11 @@ function openAddAllInOne() {
     currentAllInOneId = null;
     document.getElementById('allinoneModalTitle').textContent = 'Add New All-in-One';
     document.getElementById('allinoneForm').reset();
+    document.getElementById('aioEmployee').value = '';
+    document.getElementById('aioLocation').value = '';
+    if (aioLocationManager) aioLocationManager.reset();
+    document.getElementById('aioTypeLocation').checked = true;
+    toggleAIOAssignmentType();
     new bootstrap.Modal(document.getElementById('allinoneModal')).show();
 }
 
@@ -338,7 +495,25 @@ function editAllInOne(id) {
                 document.getElementById('aioGPU').value = a.specificationGPU;
                 document.getElementById('aioStorage').value = a.specificationStorage;
                 document.getElementById('aioYear').value = a.yearAcquired || '';
-                empSearch.set('aioEmployeeSearch', 'aioEmployee', a.employeeId || '');
+                
+                // Handle location vs employee assignment
+                document.getElementById('aioEmployee').value = '';
+                document.getElementById('aioLocation').value = '';
+                if (aioLocationManager) aioLocationManager.reset();
+                
+                if (a.employeeId) {
+                    document.getElementById('aioTypeEmployee').checked = true;
+                    toggleAIOAssignmentType();
+                    empSearch.set('aioEmployeeSearch', 'aioEmployee', a.employeeId);
+                } else if (a.location_id) {
+                    document.getElementById('aioTypeLocation').checked = true;
+                    toggleAIOAssignmentType();
+                    if (aioLocationManager) aioLocationManager.setLocation(a.location_id);
+                } else {
+                    document.getElementById('aioTypeLocation').checked = true;
+                    toggleAIOAssignmentType();
+                }
+                
                 new bootstrap.Modal(document.getElementById('allinoneModal')).show();
             } else { Alerts.error(data.message); }
         })
@@ -356,7 +531,15 @@ function saveAllInOne() {
     formData.append('gpu', document.getElementById('aioGPU').value);
     formData.append('storage', document.getElementById('aioStorage').value);
     formData.append('year_acquired', document.getElementById('aioYear').value);
-    formData.append('employee_id', document.getElementById('aioEmployee').value);
+    
+    // Handle location vs employee assignment
+    if (document.getElementById('aioTypeEmployee').checked) {
+        formData.append('employee_id', document.getElementById('aioEmployee').value);
+        formData.append('location_id', '');
+    } else {
+        formData.append('location_id', document.getElementById('aioLocation').value);
+        formData.append('employee_id', '');
+    }
 
     fetch('../ajax/manage_allinone.php', { method: 'POST', body: formData })
         .then(function(response) { return response.json(); })
@@ -600,8 +783,11 @@ function changePerPagePR() {
 }
 
 function applyPrinterTableState() {
-    var searchTerm   = document.getElementById('printerSearch').value.toLowerCase();
-    var statusFilter = document.getElementById('printerStatusFilter').value;
+    var searchEl     = document.getElementById('printerSearch');
+    var statusEl     = document.getElementById('printerStatusFilter');
+    if (!searchEl) return;
+    var searchTerm   = searchEl.value.toLowerCase();
+    var statusFilter = statusEl ? statusEl.value : '';
     var allRows      = Array.from(document.querySelectorAll('#printerTableBody tr[data-printer-id]'));
 
     printerFilteredRows = allRows.filter(function(row) {
@@ -648,6 +834,11 @@ function openAddPrinter() {
     currentPrinterId = null;
     document.getElementById('printerModalTitle').innerHTML = '<i class="fas fa-plus-circle"></i> Add New Printer';
     document.getElementById('printerForm').reset();
+    document.getElementById('printerEmployee').value = '';
+    document.getElementById('printerLocation').value = '';
+    if (printerLocationManager) printerLocationManager.reset();
+    document.getElementById('printerTypeLocation').checked = true;
+    togglePrinterAssignmentType();
     new bootstrap.Modal(document.getElementById('printerModal')).show();
 }
 
@@ -663,7 +854,28 @@ function editPrinter(id) {
                 document.getElementById('printerModel').value  = p.model || p.printerModel || '';
                 document.getElementById('printerSerial').value = p.serial_number || p.printerSerial || '';
                 document.getElementById('printerYear').value   = p.year_acquired || p.yearAcquired || '';
-                empSearch.set('printerEmployeeSearch', 'printerEmployee', p.employee_id || p.employeeId || '');
+                
+                // Handle location vs employee assignment
+                document.getElementById('printerEmployee').value = '';
+                document.getElementById('printerLocation').value = '';
+                if (printerLocationManager) printerLocationManager.reset();
+                
+                var empId = p.employee_id || p.employeeId || '';
+                var locId = p.location_id || '';
+                
+                if (empId) {
+                    document.getElementById('printerTypeEmployee').checked = true;
+                    togglePrinterAssignmentType();
+                    empSearch.set('printerEmployeeSearch', 'printerEmployee', empId);
+                } else if (locId) {
+                    document.getElementById('printerTypeLocation').checked = true;
+                    togglePrinterAssignmentType();
+                    if (printerLocationManager) printerLocationManager.setLocation(locId);
+                } else {
+                    document.getElementById('printerTypeLocation').checked = true;
+                    togglePrinterAssignmentType();
+                }
+                
                 new bootstrap.Modal(document.getElementById('printerModal')).show();
             } else { Alerts.error(data.message); }
         })
@@ -686,7 +898,15 @@ function savePrinter() {
     formData.append('model',         document.getElementById('printerModel').value);
     formData.append('serial_number', document.getElementById('printerSerial').value);
     formData.append('year_acquired', document.getElementById('printerYear').value);
-    formData.append('employee_id',   document.getElementById('printerEmployee').value);
+    
+    // Handle location vs employee assignment
+    if (document.getElementById('printerTypeEmployee').checked) {
+        formData.append('employee_id', document.getElementById('printerEmployee').value);
+        formData.append('location_id', '');
+    } else {
+        formData.append('location_id', document.getElementById('printerLocation').value);
+        formData.append('employee_id', '');
+    }
 
     fetch('../ajax/manage_printer.php', { method: 'POST', body: formData })
         .then(function(response) { return response.json(); })
@@ -737,8 +957,11 @@ function changePerPageOther() {
 }
 
 function applyOtherTableState() {
-    var searchTerm   = document.getElementById('otherSearch').value.toLowerCase();
-    var statusFilter = document.getElementById('otherStatusFilter').value;
+    var searchEl     = document.getElementById('otherSearch');
+    var statusEl     = document.getElementById('otherStatusFilter');
+    if (!searchEl) return;
+    var searchTerm   = searchEl.value.toLowerCase();
+    var statusFilter = statusEl ? statusEl.value : '';
     var allRows      = Array.from(document.querySelectorAll('#otherTableBody tr[data-equipment-id]'));
 
     otherFilteredRows = allRows.filter(function(row) {
@@ -823,16 +1046,23 @@ function editOtherEquipment(id) {
                 document.getElementById('otherSerial').value = o.serialNumber;
                 document.getElementById('otherYear').value = o.yearAcquired;
                 document.getElementById('otherStatus').value = o.status;
-                document.getElementById('otherLocation').value = o.location_id || '';
-                empSearch.set('otherEmployeeSearch', 'otherEmployee', o.employeeId || '');
+                document.getElementById('otherLocation').value = '';
                 document.getElementById('otherDetails').value = o.details;
 
-                if (data.data.location_id) {
-                    locationManager.setLocation(data.data.location_id);
+                // Handle location vs employee assignment (same pattern as SU/Monitor/AIO/Printer)
+                if (locationManager) locationManager.reset();
+
+                if (o.employeeId) {
+                    document.getElementById('typeEmployee').checked = true;
+                    toggleAssignmentType();
+                    empSearch.set('otherEmployeeSearch', 'otherEmployee', o.employeeId);
+                } else if (o.location_id) {
+                    document.getElementById('typeLocation').checked = true;
+                    toggleAssignmentType();
+                    if (locationManager) locationManager.setLocation(o.location_id);
                 } else {
                     document.getElementById('typeLocation').checked = true;
                     toggleAssignmentType();
-                    setLocationHierarchy(data.data.location_id);
                 }
 
                 new bootstrap.Modal(document.getElementById('otherModal')).show();
@@ -970,11 +1200,13 @@ function getStatusBadge(status, hasEmployee) {
 
 // ============================================================
 // LOCATION MANAGEMENT (OTHER EQUIPMENT)
+// Uses LocationManager (same as SU/Monitor/AIO/Printer) for
+// consistent Division > Section > Unit cascading behavior,
+// matching the employee form's LocationHierarchy pattern.
 // ============================================================
-var divSelect = document.getElementById('locDivision');
-
-if (divSelect) {
-    loadDivisions();
+(function initOtherLocationManager() {
+    var divSelect = document.getElementById('locDivision');
+    if (!divSelect) return;
 
     if (typeof LocationManager !== 'undefined') {
         locationManager = new LocationManager({
@@ -986,11 +1218,7 @@ if (divSelect) {
     } else {
         console.warn('LocationManager not found. Ensure location_manager.js is included.');
     }
-
-    divSelect.addEventListener('change', calculateFinalLocation);
-    document.getElementById('locSection').addEventListener('change', calculateFinalLocation);
-    document.getElementById('locUnit').addEventListener('change', calculateFinalLocation);
-}
+})();
 
 function toggleAssignmentType() {
     var isEmployee = document.getElementById('typeEmployee').checked;
@@ -999,108 +1227,11 @@ function toggleAssignmentType() {
 
     if (isEmployee) {
         document.getElementById('otherLocation').value = '';
+        if (locationManager) locationManager.reset();
     } else {
         empSearch.clear('otherEmployeeSearch', 'otherEmployee');
-        calculateFinalLocation();
+        if (locationManager) locationManager.calculateFinalId();
     }
-}
-
-function loadDivisions() {
-    fetch('../ajax/get_locations.php?type=1')
-        .then(function(res) { return res.json(); })
-        .then(function(data) {
-            var html = '<option value="">Select Division</option>';
-            data.forEach(function(d) { html += '<option value="' + d.location_id + '">' + d.location_name + '</option>'; });
-            document.getElementById('locDivision').innerHTML = html;
-        });
-}
-
-function loadLocationChildren(divisionId) {
-    var sectionSelect = document.getElementById('locSection');
-    var unitSelect = document.getElementById('locUnit');
-    sectionSelect.innerHTML = '<option value="">--</option>';
-    sectionSelect.disabled = true;
-    unitSelect.innerHTML = '<option value="">--</option>';
-    unitSelect.disabled = true;
-    if (!divisionId) return;
-
-    fetch('../ajax/get_locations.php?parent=' + divisionId)
-        .then(function(res) { return res.json(); })
-        .then(function(data) {
-            var sections = data.filter(function(x) { return x.location_type_id == 2; });
-            var units = data.filter(function(x) { return x.location_type_id == 3; });
-
-            if (sections.length > 0) {
-                var html = '<option value="">Select Section</option>';
-                sections.forEach(function(s) { html += '<option value="' + s.location_id + '">' + s.location_name + '</option>'; });
-                sectionSelect.innerHTML = html;
-                sectionSelect.disabled = false;
-            }
-            if (units.length > 0) {
-                var html2 = '<option value="">Select Unit</option>';
-                units.forEach(function(u) { html2 += '<option value="' + u.location_id + '">' + u.location_name + '</option>'; });
-                unitSelect.innerHTML = html2;
-                unitSelect.disabled = false;
-            }
-        });
-}
-
-function loadSectionUnits(sectionId) {
-    var unitSelect = document.getElementById('locUnit');
-    unitSelect.innerHTML = '<option value="">--</option>';
-    unitSelect.disabled = true;
-    if (!sectionId) {
-        var divId = document.getElementById('locDivision').value;
-        loadLocationChildren(divId);
-        return;
-    }
-
-    fetch('../ajax/get_locations.php?parent=' + sectionId + '&type=3')
-        .then(function(res) { return res.json(); })
-        .then(function(data) {
-            if (data.length > 0) {
-                var html = '<option value="">Select Unit</option>';
-                data.forEach(function(u) { html += '<option value="' + u.location_id + '">' + u.location_name + '</option>'; });
-                unitSelect.innerHTML = html;
-                unitSelect.disabled = false;
-            }
-        });
-}
-
-function calculateFinalLocation() {
-    var divId  = document.getElementById('locDivision').value;
-    var secId  = document.getElementById('locSection').value;
-    var unitId = document.getElementById('locUnit').value;
-    var final = '';
-    if (unitId)      final = unitId;
-    else if (secId)  final = secId;
-    else if (divId)  final = divId;
-    document.getElementById('otherLocation').value = final;
-}
-
-function setLocationHierarchy(locationId) {
-    if (!locationId) return;
-    fetch('../ajax/get_location_path.php?id=' + locationId)
-        .then(function(res) { return res.json(); })
-        .then(function(path) {
-            if (path.division_id) {
-                document.getElementById('locDivision').value = path.division_id;
-                loadLocationChildren(path.division_id);
-                setTimeout(function() {
-                    if (path.section_id) {
-                        document.getElementById('locSection').value = path.section_id;
-                        loadSectionUnits(path.section_id);
-                        setTimeout(function() {
-                            if (path.unit_id) document.getElementById('locUnit').value = path.unit_id;
-                            calculateFinalLocation();
-                        }, 200);
-                    } else if (path.unit_id) {
-                        document.getElementById('locUnit').value = path.unit_id;
-                        calculateFinalLocation();
-                    }
-                }, 200);
-            }
-        });
 }
 
 // ============================================================

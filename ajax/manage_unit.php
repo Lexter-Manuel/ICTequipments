@@ -1,6 +1,7 @@
 <?php
 // ajax/manage_unit.php
 // Prevent any output before JSON
+require_once '../config/session-guard.php';
 error_reporting(E_ALL);
 ini_set('display_errors', 0); // Don't display errors to output
 ini_set('log_errors', 1); // Log errors instead

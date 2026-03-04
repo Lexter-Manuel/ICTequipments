@@ -1,0 +1,2 @@
+# Disable directory listing in public/
+Options -Indexes

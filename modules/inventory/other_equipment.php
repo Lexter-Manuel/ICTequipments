@@ -90,7 +90,7 @@ $maintenanceCount = count(array_filter($equipment, fn($o) => $o['status'] == 'Un
         <h2 class="table-title"><i class="fas fa-list"></i> Equipment Inventory</h2>
         <div class="table-controls">
             <div class="filter-group">
-                <select id="statusFilter" onchange="filterOtherEquipment()">
+                <select id="otherStatusFilter" onchange="filterOtherEquipment()">
                     <option value="">All Statuses</option>
                     <option value="Operational">Operational</option>
                     <option value="For Replacement">For Replacement</option>

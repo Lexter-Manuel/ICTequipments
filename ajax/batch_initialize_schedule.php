@@ -4,6 +4,7 @@
  * ─────────────────────────────
  * Creates maintenance schedules for ALL equipment under a given
  * organizational node (unit or leaf-section). Equipment that already
+require_once '../config/session-guard.php';
  * has an active schedule is skipped.
  *
  * POST JSON:

@@ -1,6 +1,7 @@
 <?php
 // modules/organization/organization.php
 // Merged Organization page: Divisions, Sections, Units in one tabbed view
+require_once '../../config/session-guard.php';
 require_once '../../config/database.php';
 
 $db = Database::getInstance()->getConnection();

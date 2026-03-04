@@ -1,5 +1,5 @@
 <?php
-
+require_once '../../config/session-guard.php';
 ?>
 <link rel="stylesheet" href="assets/css/root.css">
 <link rel="stylesheet" href="assets/css/perform_maintenance.css?v=<?php echo time(); ?>">

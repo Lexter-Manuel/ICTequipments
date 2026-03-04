@@ -4,6 +4,7 @@
  * Returns equipment types from the registry.
  * Updated for unified tbl_equipment schema (tableName column removed).
  */
+require_once '../config/session-guard.php';
 require_once '../config/database.php';
 header('Content-Type: application/json');
 $db = getDB();

@@ -1,6 +1,13 @@
 RewriteEngine On
 RewriteBase /ictequipment/
 
+# Disable directory listing everywhere
+Options -Indexes
+
+# Custom error pages
+ErrorDocument 404 /ictequipment/modules/auth/404.php
+ErrorDocument 403 /ictequipment/modules/auth/unauthorized.php
+
 # Redirect direct hits to public/dashboard.php back to clean root URL
 RewriteCond %{THE_REQUEST} \s/ictequipment/public/dashboard\.php[\s?#] [NC]
 RewriteRule ^ /ictequipment/ [R=302,L]
@@ -12,3 +19,6 @@ RewriteRule ^(index\.php)?$ public/dashboard.php [L]
 RewriteCond %{REQUEST_FILENAME} -f [OR]
 RewriteCond %{REQUEST_FILENAME} -d
 RewriteRule ^ - [L]
+
+# Everything else that doesn't match a file → 404
+RewriteRule ^ modules/auth/404.php [L]

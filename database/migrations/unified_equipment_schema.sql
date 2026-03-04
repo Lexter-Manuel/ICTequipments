@@ -98,9 +98,9 @@ SELECT
     `employeeId`,
     (SELECT `e`.`location_id` FROM `tbl_employee` `e` WHERE `e`.`employeeId` = `a`.`employeeId` LIMIT 1),
     `allinoneBrand`,
-    NULL,
+    `allinoneSerial`,
     CASE WHEN `employeeId` IS NOT NULL THEN 'In Use' ELSE 'Available' END,
-    NULL,
+    `yearAcquired`,
     CURRENT_TIMESTAMP
 FROM `tbl_allinone` `a`;
 
