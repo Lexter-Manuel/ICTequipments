@@ -2,7 +2,7 @@
 /**
  * Printer Management Module - Database Integrated
  */
-
+require_once '../../config/session-guard.php';
 require_once '../../config/database.php';
 $db = getDB();
 
