@@ -8,6 +8,5 @@ if (!empty($_SESSION['user_id'])) {
     exit();
 }
 
-// Not logged in — send to unauthorized page
-header('Location: /ictequipment/modules/auth/unauthorized.php');
+header('Location: ' . BASE_URL . 'modules/auth/unauthorized.php');
 exit();

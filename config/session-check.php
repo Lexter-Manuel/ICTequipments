@@ -14,7 +14,7 @@ if (!isLoggedIn()) {
         // Auto-login succeeded – continue normally
     } else {
         $_SESSION['redirect_after_login'] = $_SERVER['REQUEST_URI'];
-        header('Location: /ictequipment/modules/auth/login.php');
+        header('Location: ' . BASE_URL . 'modules/auth/login.php');
         exit();
     }
 }
@@ -34,13 +34,13 @@ if (isset($_SESSION['last_activity'])) {
             if (validateRememberToken()) {
                 // Auto-login succeeded after timeout – continue
             } else {
-                header('Location: /ictequipment/modules/auth/login.php?timeout=1');
+                header('Location: ' . BASE_URL . 'modules/auth/login.php?timeout=1');
                 exit();
             }
         } else {
             session_unset();
             session_destroy();
-            header('Location: /ictequipment/modules/auth/login.php?timeout=1');
+            header('Location: ' . BASE_URL . 'modules/auth/login.php?timeout=1');
             exit();
         }
     }

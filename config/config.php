@@ -17,13 +17,28 @@ date_default_timezone_set('Asia/Manila');
 // ini_set('session.cookie_secure', 0);
 // ini_set('session.cookie_samesite', 'Strict');
 
+// 1. Parse the .env file
+$envPath = dirname(__DIR__) . '/config/.env';
+if (file_exists($envPath)) {
+    $env = parse_ini_file($envPath);
+    
+    // 2. Define standard environment constants
+    define('ENVIRONMENT', $env['APP_ENV'] ?? 'production');
+    define('BASE_URL', $env['BASE_URL']);
+    
+    // 3. Define Database Constants mapped from .env
+    define('DB_HOST', $env['DB_HOST']);
+    define('DB_PORT', $env['DB_PORT']);
+    define('DB_NAME', $env['DB_NAME']);
+    define('DB_USER', $env['DB_USER']);
+    define('DB_PASS', $env['DB_PASS']);
+} else {
+    die("Critical Error: .env file is missing.");
+}
+
 // Application Settings
 define('APP_NAME', 'NIA UPRIIS ICT Inventory System');
 define('APP_VERSION', '1.0.0');
-
-$protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
-$host = $_SERVER['HTTP_HOST'];
-define('BASE_URL', $protocol . "://" . $host . "/ictequipment/");
 
 // Session Settings
 define('SESSION_LIFETIME', 3600); // 1 hour
@@ -153,7 +168,8 @@ function isLoggedIn() {
 function requireLogin() {
     if (!isLoggedIn()) {
         $_SESSION['redirect_after_login'] = $_SERVER['REQUEST_URI'];
-        redirect('/ictequipment/modules/auth/login.php');
+        // Use BASE_URL instead of hardcoded string
+        redirect(BASE_URL . 'modules/auth/login.php'); 
     }
 }
 

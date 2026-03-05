@@ -111,7 +111,7 @@ async function handleSubmit(e) {
             
             // Small delay before redirect for better UX
             setTimeout(() => {
-                window.location.href = result.redirect || '/ictequipment/';
+                window.location.href = result.redirect || '/' + (window.BASE_FOLDER || 'iedevelopment') + '/';
             }, 1000);
         } else {
             showAlert(result.message || 'Login failed. Please try again.', 'error');

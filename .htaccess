@@ -1,18 +1,19 @@
 RewriteEngine On
-RewriteBase /ictequipment/
+RewriteBase /iedevelopment/
 
 # Disable directory listing everywhere
 Options -Indexes
 
 # Custom error pages
-ErrorDocument 404 /ictequipment/modules/auth/404.php
-ErrorDocument 403 /ictequipment/modules/auth/unauthorized.php
+ErrorDocument 404 /iedevelopment/modules/auth/404.php
+ErrorDocument 403 /iedevelopment/modules/auth/403.php
 
 # Redirect direct hits to public/dashboard.php back to clean root URL
-RewriteCond %{THE_REQUEST} \s/ictequipment/public/dashboard\.php[\s?#] [NC]
-RewriteRule ^ /ictequipment/ [R=302,L]
+# ENV:REDIRECT_STATUS prevents infinite redirect loops
+RewriteCond %{ENV:REDIRECT_STATUS} ^$
+RewriteRule ^public/dashboard\.php$ ./ [R=302,L]
 
-# Rewrite clean root URL to public/dashboard.php (BEFORE file/dir check)
+# Rewrite clean root URL to public/dashboard.php 
 RewriteRule ^(index\.php)?$ public/dashboard.php [L]
 
 # Don't rewrite other requests for actual files or directories

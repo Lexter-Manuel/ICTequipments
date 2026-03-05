@@ -83,12 +83,12 @@ class DashboardApp {
             .then(function(r) {
                 if (r.status === 401) {
                     sessionStorage.removeItem('nia-active-page');
-                    window.location.replace('/ictequipment/modules/auth/login.php');
+                    window.location.replace(BASE_URL + 'modules/auth/login.php');
                 }
             })
             .catch(function() {
                 sessionStorage.removeItem('nia-active-page');
-                window.location.replace('/ictequipment/modules/auth/login.php');
+                window.location.replace(BASE_URL + 'modules/auth/login.php');
             });
     }
 
@@ -329,7 +329,7 @@ class DashboardApp {
             // Session expired — redirect to login
             if (response.status === 401) {
                 sessionStorage.removeItem('nia-active-page');
-                window.location.replace('/ictequipment/modules/auth/login.php');
+                window.location.replace(BASE_URL + 'modules/auth/login.php');
                 return;
             }
             

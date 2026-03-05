@@ -7,13 +7,13 @@ require_once '../../config/config.php';
 
 // Redirect if already logged in
 if (isset($_SESSION['user_id'])) {
-    header('Location: /ictequipment/');
+    header('Location: /' . $env['BASE_FOLDER'] . '/');
     exit();
 }
 
 // Try auto-login via "Remember Me" cookie
 if (!empty($_COOKIE['remember_me']) && validateRememberToken()) {
-    header('Location: /ictequipment/');
+    header('Location: /' . $env['BASE_FOLDER'] . '/');
     exit();
 }
 
@@ -133,6 +133,7 @@ $csrf_token = generateCSRFToken();
         </div>
     </div>
     
+    <script>window.BASE_FOLDER = <?php echo json_encode($env['BASE_FOLDER'] ?? 'iedevelopment'); ?>;</script>
     <script src="../../public/assets/js/login.js?v=<?php echo time(); ?>"></script>
     <script>
         // Prevent back button from reaching dashboard after logout

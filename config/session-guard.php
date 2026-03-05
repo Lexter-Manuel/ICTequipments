@@ -45,5 +45,8 @@ if ($isAjax) {
 }
 
 // Direct browser access — redirect to the unauthorized page
-header('Location: /ictequipment/modules/auth/unauthorized.php');
+$_envPath = __DIR__ . '/.env';
+$_envData = file_exists($_envPath) ? parse_ini_file($_envPath) : [];
+$_baseFolder = $_envData['BASE_FOLDER'] ?? 'iedevelopment';
+header('Location: /' . $_baseFolder . '/modules/auth/unauthorized.php');
 exit();
