@@ -1,25 +1,16 @@
 RewriteEngine On
-RewriteBase /iedevelopment/
-
-# Disable directory listing everywhere
 Options -Indexes
 
-# Custom error pages
-ErrorDocument 404 /iedevelopment/modules/auth/404.php
-ErrorDocument 403 /iedevelopment/modules/auth/403.php
+ErrorDocument 404 /modules/auth/404.php
+ErrorDocument 403 /modules/auth/403.php
 
-# Redirect direct hits to public/dashboard.php back to clean root URL
-# ENV:REDIRECT_STATUS prevents infinite redirect loops
 RewriteCond %{ENV:REDIRECT_STATUS} ^$
 RewriteRule ^public/dashboard\.php$ ./ [R=302,L]
 
-# Rewrite clean root URL to public/dashboard.php 
 RewriteRule ^(index\.php)?$ public/dashboard.php [L]
 
-# Don't rewrite other requests for actual files or directories
 RewriteCond %{REQUEST_FILENAME} -f [OR]
 RewriteCond %{REQUEST_FILENAME} -d
 RewriteRule ^ - [L]
 
-# Everything else that doesn't match a file → 404
 RewriteRule ^ modules/auth/404.php [L]
