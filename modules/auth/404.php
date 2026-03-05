@@ -9,11 +9,13 @@ header('Pragma: no-cache');
 http_response_code(404);
 
 // Determine where to redirect based on session
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 $is_logged_in = !empty($_SESSION['user_id']);
 $redirect_url = $is_logged_in
-    ? '/ictequipment/public/dashboard.php'
-    : '/ictequipment/modules/auth/login.php';
+    ? '/iedevelopment/public/dashboard.php'
+    : '/iedevelopment/modules/auth/login.php';
 $redirect_label = $is_logged_in ? 'Go to Dashboard' : 'Go to Login';
 $redirect_icon  = $is_logged_in ? 'fa-house' : 'fa-right-to-bracket';
 ?>

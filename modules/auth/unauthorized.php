@@ -9,7 +9,7 @@
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 header('Pragma: no-cache');
 
-$redirect_url = '/'. $env['BASE_FOLDER'] . '    /modules/auth/login.php';
+$redirect_url = '/ictequipment/modules/auth/login.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">

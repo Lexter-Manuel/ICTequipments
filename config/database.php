@@ -2,17 +2,18 @@
 /**
  * Database Configuration and Connection Handler
  */
+require_once __DIR__ . '/config.php';
 
 class Database {
     private static $instance = null;
     private $connection;
     
     // Database configuration
-    private $host = 'localhost';
-    private $dbname = 'nia-inventory';
-    private $username = 'root';
-    private $password = '';
-    private $port = 3310; // Ensure this matches your MySQL port
+    private $host = DB_HOST;
+    private $dbname = DB_NAME;
+    private $username = DB_USER;
+    private $password = DB_PASS;
+    private $port = DB_PORT; 
     private $charset = 'utf8mb4';
     
     private function __construct() {
