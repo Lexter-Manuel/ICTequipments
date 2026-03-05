@@ -1,10 +1,4 @@
 <?php
-/**
- * Main Configuration File
- * NIA UPRIIS ICT Inventory System
- */
-
-// Timezone
 date_default_timezone_set('Asia/Manila');
 
 // Session Configuration — hardened (must be set before session_start)
@@ -37,6 +31,13 @@ if (file_exists($envPath)) {
     die("Critical Error: .env file is missing.");
 }
 
+
+$sessionName = (ENVIRONMENT === 'development') ? 'NIA_DEV_SESS' : 'NIA_PROD_SESS';
+session_name($sessionName);
+
+// Restrict the native PHP session cookie to this specific folder
+ini_set('session.cookie_path', parse_url(BASE_URL, PHP_URL_PATH));
+
 // Error Reporting — must come after ENVIRONMENT is defined
 if (defined('ENVIRONMENT') && ENVIRONMENT === 'development') {
     error_reporting(E_ALL);
@@ -66,6 +67,8 @@ define('ALLOWED_IMAGE_TYPES', ['image/jpeg', 'image/png', 'image/gif']);
 /**
  * Generate CSRF Token
  */
+
+
 function generateCSRFToken() {
     if (session_status() === PHP_SESSION_NONE) {
         session_start();
@@ -344,10 +347,6 @@ function jsonResponse($data, $statusCode = 200) {
     exit();
 }
 
-/**
- * Create a "Remember Me" token and set it as a cookie.
- * Uses a selector/validator split for security (no timing attacks).
- */
 function createRememberToken($userId) {
     try {
         $selector = bin2hex(random_bytes(16));   // public lookup key
@@ -367,11 +366,12 @@ function createRememberToken($userId) {
             VALUES (?, ?, ?, ?)
         ");
         $stmt->execute([$userId, $selector, $hashedValidator, $expires]);
+        $cookiePath = parse_url(BASE_URL, PHP_URL_PATH);
 
         // Set cookie  –  value is "selector:validator"
         setcookie('remember_me', $selector . ':' . $validator, [
             'expires'  => time() + REMEMBER_ME_LIFETIME,
-            'path'     => '/',
+            'path'     => $cookiePath,
             'httponly'  => true,
             'samesite' => 'Strict'
         ]);

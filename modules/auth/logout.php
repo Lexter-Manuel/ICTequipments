@@ -1,13 +1,10 @@
 <?php
-/**
- * Logout Script
- * NIA UPRIIS ICT Inventory System
- */
+require_once __DIR__ . '/../../config/config.php';
+require_once __DIR__ . '/../../config/database.php';
 
-session_start();
-
-require_once '../../config/database.php';
-require_once '../../config/config.php';
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 // Log logout activity
 if (isset($_SESSION['user_id'])) {

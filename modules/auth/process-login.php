@@ -1,17 +1,12 @@
 <?php
-/**
- * Process Login Script
- * NIA UPRIIS ICT Inventory System
- */
+require_once __DIR__ . '/../../config/config.php';
+require_once __DIR__ . '/../../config/database.php';
 
-// Start session FIRST before any other code
+// ALWAYS Start Session Second
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Include required files
-require_once '../../config/database.php';
-require_once '../../config/config.php';
 
 // Set JSON header
 header('Content-Type: application/json');

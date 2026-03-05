@@ -15,6 +15,9 @@
  *      Redirects to the unauthorized error page which then sends user to login.
  */
 
+// Load config first so the custom session name is set before session_start()
+require_once __DIR__ . '/config.php';
+
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }

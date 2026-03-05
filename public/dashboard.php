@@ -1,14 +1,20 @@
 <?php
-session_start();
-
+// 1. Configuration MUST load first so session rules are applied
+require_once '../config/config.php';
 require_once '../config/database.php';
+
+// 2. NOW we can safely start the session
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// 3. Run your guards
 require_once '../config/session-check.php';
 
 // Prevent back-forward cache from serving stale dashboard after logout
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 header('Pragma: no-cache');
 header('Expires: 0');
-
 ?>
 <!DOCTYPE html>
 <html lang="en">
