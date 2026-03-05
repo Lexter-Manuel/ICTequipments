@@ -162,7 +162,7 @@ try {
     $stmt->execute([$ipAddress]);
     
     // Check if there's a redirect URL
-    $redirect = $_SESSION['redirect_after_login'] ?? '/ictequipment/';
+    $redirect = $_SESSION['redirect_after_login'] ?? '/'. $env['BASE_FOLDER'] . '/';
     unset($_SESSION['redirect_after_login']);
     
     jsonResponse([

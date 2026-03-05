@@ -1,9 +1,4 @@
 <?php
-/**
- * Public directory index guard
- * Catches requests to /ictequipment/public/ (with or without hash fragment)
- * and redirects based on session status.
- */
 
 session_start();
 

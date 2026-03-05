@@ -7,13 +7,13 @@ require_once '../../config/config.php';
 
 // Redirect if already logged in
 if (isset($_SESSION['user_id'])) {
-    header('Location: /ictequipment/');
+    header('Location: /'. $env['BASE_FOLDER'] . '/');
     exit();
 }
 
 // Try auto-login via "Remember Me" cookie
 if (!empty($_COOKIE['remember_me']) && validateRememberToken()) {
-    header('Location: /ictequipment/');
+    header('Location: /'. $env['BASE_FOLDER'] . '/');
     exit();
 }
 
