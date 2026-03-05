@@ -133,7 +133,7 @@ $csrf_token = generateCSRFToken();
         </div>
     </div>
     
-    <script>window.BASE_FOLDER = <?php echo json_encode($env['BASE_FOLDER'] ?? 'iedevelopment'); ?>;</script>
+    <script>window.BASE_FOLDER = <?php echo json_encode($env['BASE_FOLDER']); ?>;</script>
     <script src="../../public/assets/js/login.js?v=<?php echo time(); ?>"></script>
     <script>
         // Prevent back button from reaching dashboard after logout
