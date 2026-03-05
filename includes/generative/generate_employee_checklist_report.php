@@ -6,7 +6,7 @@
  *
  * Usage: ?employeeId=123
  */
-
+require_once __DIR__ . '/../../config/session-guard.php';
 require_once __DIR__ . '/../../vendor/TCPDF/tcpdf.php';
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../config/config.php';

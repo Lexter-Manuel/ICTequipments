@@ -3,6 +3,7 @@
  * Equipment Summary — Excel Export
  * Exports all equipment summary data as a styled .xls file.
  */
+require_once __DIR__ . '/../../config/session-guard.php';
 require_once __DIR__ . '/../../config/database.php';
 
 try {

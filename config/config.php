@@ -4,18 +4,19 @@
  * NIA UPRIIS ICT Inventory System
  */
 
-// Error Reporting (disable in production)
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
 // Timezone
 date_default_timezone_set('Asia/Manila');
 
-// Session Configuration
-// ini_set('session.cookie_httponly', 1);
-// ini_set('session.use_only_cookies', 1);
-// ini_set('session.cookie_secure', 0);
-// ini_set('session.cookie_samesite', 'Strict');
+// Session Configuration — hardened (must be set before session_start)
+if (session_status() === PHP_SESSION_NONE) {
+    ini_set('session.cookie_httponly', 1);
+    ini_set('session.use_only_cookies', 1);
+    ini_set('session.cookie_secure', 0);  // Set to 1 when using HTTPS
+    ini_set('session.cookie_samesite', 'Strict');
+    ini_set('session.use_strict_mode', 1);
+    ini_set('session.sid_length', 48);
+    ini_set('session.sid_bits_per_character', 6);
+}
 
 // 1. Parse the .env file
 $envPath = dirname(__DIR__) . '/config/.env';
@@ -34,6 +35,16 @@ if (file_exists($envPath)) {
     define('DB_PASS', $env['DB_PASS']);
 } else {
     die("Critical Error: .env file is missing.");
+}
+
+// Error Reporting — must come after ENVIRONMENT is defined
+if (defined('ENVIRONMENT') && ENVIRONMENT === 'development') {
+    error_reporting(E_ALL);
+    ini_set('display_errors', 1);
+} else {
+    error_reporting(0);
+    ini_set('display_errors', 0);
+    ini_set('log_errors', 1);
 }
 
 // Application Settings
@@ -433,6 +444,12 @@ function validateRememberToken() {
     $_SESSION['logged_in_at']  = time();
     $_SESSION['last_activity'] = time();
     $_SESSION['created']       = time();
+    
+    // Set session fingerprint for hijack protection
+    $_SESSION['_fingerprint'] = hash('sha256',
+        ($_SERVER['HTTP_USER_AGENT'] ?? 'unknown')
+        . '|' . substr($_SERVER['REMOTE_ADDR'] ?? '0.0.0.0', 0, strrpos($_SERVER['REMOTE_ADDR'] ?? '0.0.0.0', '.'))
+    );
 
     // Rotate the token (one-time use) for extra security
     $newValidator = bin2hex(random_bytes(32));

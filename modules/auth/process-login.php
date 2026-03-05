@@ -135,6 +135,12 @@ try {
     $_SESSION['last_activity'] = time();
     $_SESSION['created'] = time();
     
+    // Set session fingerprint for hijack protection
+    $_SESSION['_fingerprint'] = hash('sha256',
+        ($_SERVER['HTTP_USER_AGENT'] ?? 'unknown')
+        . '|' . substr($_SERVER['REMOTE_ADDR'] ?? '0.0.0.0', 0, strrpos($_SERVER['REMOTE_ADDR'] ?? '0.0.0.0', '.'))
+    );
+    
     // Create persistent "Remember Me" token if requested
     if ($remember) {
         createRememberToken($user['id']);

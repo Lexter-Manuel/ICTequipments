@@ -1,5 +1,6 @@
 <?php
 // modules/organization/sections.php
+require_once '../../config/session-guard.php';
 require_once '../../config/database.php';
 
 $db = Database::getInstance()->getConnection();
