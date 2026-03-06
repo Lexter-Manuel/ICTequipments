@@ -9,11 +9,7 @@
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 header('Pragma: no-cache');
 
-// Parse .env for BASE_FOLDER
-$_envPath = dirname(__DIR__, 2) . '/config/.env';
-$_envData = file_exists($_envPath) ? parse_ini_file($_envPath) : [];
-$_baseFolder = $_envData['BASE_FOLDER'] ?? 'iedevelopment';
-$redirect_url = '/' . $_baseFolder . '/modules/auth/login.php';
+$redirect_url = '/ictequipment/modules/auth/login.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">
