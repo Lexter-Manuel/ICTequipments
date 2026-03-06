@@ -5,8 +5,12 @@ date_default_timezone_set('Asia/Manila');
 if (session_status() === PHP_SESSION_NONE) {
     ini_set('session.cookie_httponly', 1);
     ini_set('session.use_only_cookies', 1);
-    ini_set('session.cookie_secure', 0);  // Set to 1 when using HTTPS
-    ini_set('session.cookie_samesite', 'Strict');
+    // Auto-detect HTTPS (direct or behind reverse-proxy/tunnel)
+    $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+            || (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https')
+            || (!empty($_SERVER['SERVER_PORT']) && (int) $_SERVER['SERVER_PORT'] === 443);
+    ini_set('session.cookie_secure', $isHttps ? 1 : 0);
+    ini_set('session.cookie_samesite', 'Lax'); // Lax allows sessions through tunnels (ngrok, Tailscale)
     ini_set('session.use_strict_mode', 1);
     ini_set('session.sid_length', 48);
     ini_set('session.sid_bits_per_character', 6);
@@ -19,7 +23,21 @@ if (file_exists($envPath)) {
     
     // 2. Define standard environment constants
     define('ENVIRONMENT', $env['APP_ENV'] ?? 'production');
-    define('BASE_URL', $env['BASE_URL']);
+
+    // 3. Dynamic BASE_URL — auto-detect protocol + host from the request,
+    //    so the app works on localhost, ngrok, Tailscale, or any reverse-proxy
+    //    without editing .env each time.
+    $baseFolder = trim($env['BASE_FOLDER'] ?? 'ictequipment', '/');
+    if (!empty($_SERVER['HTTP_HOST'])) {
+        $proto = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+              || (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https')
+              || (!empty($_SERVER['SERVER_PORT']) && (int) $_SERVER['SERVER_PORT'] === 443)
+                 ? 'https' : 'http';
+        define('BASE_URL', $proto . '://' . $_SERVER['HTTP_HOST'] . '/' . $baseFolder . '/');
+    } else {
+        // CLI or fallback — use the value from .env
+        define('BASE_URL', $env['BASE_URL'] ?? 'http://localhost/' . $baseFolder . '/');
+    }
     
     // 3. Define Database Constants mapped from .env
     define('DB_HOST', $env['DB_HOST']);
