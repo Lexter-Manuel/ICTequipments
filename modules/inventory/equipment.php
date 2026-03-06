@@ -70,6 +70,8 @@ foreach ($allEquipment as $eq) {
                 'employeeId'             => $eq['employee_id'],
                 'employeeName'           => $eq['employeeName'],
                 'lastMaintenanceDate'    => $eq['lastMaintenanceDate'],
+                'location_id'            => $eq['location_id'],
+                'location_name'          => $eq['location_name'],
             ];
             break;
         case 'Monitor':
@@ -82,6 +84,8 @@ foreach ($allEquipment as $eq) {
                 'employeeId'          => $eq['employee_id'],
                 'employeeName'        => $eq['employeeName'],
                 'lastMaintenanceDate' => $eq['lastMaintenanceDate'],
+                'location_id'         => $eq['location_id'],
+                'location_name'       => $eq['location_name'],
             ];
             break;
         case 'All-in-One':
@@ -97,6 +101,8 @@ foreach ($allEquipment as $eq) {
                 'employeeId'             => $eq['employee_id'],
                 'employeeName'           => $eq['employeeName'],
                 'lastMaintenanceDate'    => $eq['lastMaintenanceDate'],
+                'location_id'            => $eq['location_id'],
+                'location_name'          => $eq['location_name'],
             ];
             break;
         case 'Printer':
@@ -109,6 +115,8 @@ foreach ($allEquipment as $eq) {
                 'employeeId'          => $eq['employee_id'],
                 'employeeName'        => $eq['employeeName'],
                 'lastMaintenanceDate' => $eq['lastMaintenanceDate'],
+                'location_id'         => $eq['location_id'],
+                'location_name'       => $eq['location_name'],
             ];
             break;
         default:
@@ -250,6 +258,7 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                         <th>Brand &amp; Category</th>
                         <th>Specifications</th>
                         <th>Year</th>
+                        <th>Location</th>
                         <th>Assigned To</th>
                         <th>Last Maintenance</th>
                         <th>Status</th>
@@ -267,6 +276,7 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                             data-memory="<?php echo strtolower(htmlspecialchars($s['specificationMemory'] ?? '')); ?>"
                             data-storage="<?php echo strtolower(htmlspecialchars($s['specificationStorage'] ?? '')); ?>"
                             data-year="<?php echo strtolower(htmlspecialchars($s['yearAcquired'] ?? '')); ?>"
+                            data-location="<?php echo strtolower(htmlspecialchars($s['location_name'] ?? '')); ?>"
                             data-employee="<?php echo strtolower(htmlspecialchars($s['employeeName'] ?? '')); ?>"
                             data-status="<?php echo $status; ?>">
                         <td class="row-counter"></td>
@@ -281,6 +291,13 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                             <div class="spec-item"><i class="fas fa-hdd"></i><span class="spec-value"><?php echo htmlspecialchars($s['specificationStorage']); ?></span></div>
                         </td>
                         <td><?php echo htmlspecialchars($s['yearAcquired'] ?? 'N/A'); ?></td>
+                        <td>
+                            <?php if ($s['location_name']): ?>
+                                <div class="location-badge"><i class="fas fa-map-marker-alt"></i> <?php echo htmlspecialchars($s['location_name']); ?></div>
+                            <?php else: ?>
+                                <span style="color:var(--text-light);font-style:italic">—</span>
+                            <?php endif; ?>
+                        </td>
                         <td>
                             <?php if ($s['employeeName']): ?>
                                 <div style="font-weight:600;color:var(--text-dark)"><?php echo htmlspecialchars($s['employeeName']); ?></div>
@@ -372,6 +389,7 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                         <th>Brand &amp; Model</th>
                         <th>Size</th>
                         <th>Year</th>
+                        <th>Location</th>
                         <th>Assigned To</th>
                         <th>Last Maintenance</th>
                         <th>Status</th>
@@ -386,6 +404,7 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                             data-brand="<?php echo strtolower(htmlspecialchars($m['monitorBrand'] ?? '')); ?>"
                             data-size="<?php echo strtolower(htmlspecialchars($m['monitorSize'] ?? '')); ?>"
                             data-year="<?php echo strtolower(htmlspecialchars($m['yearAcquired'] ?? '')); ?>"
+                            data-location="<?php echo strtolower(htmlspecialchars($m['location_name'] ?? '')); ?>"
                             data-employee="<?php echo strtolower(htmlspecialchars($m['employeeName'] ?? '')); ?>"
                             data-status="<?php echo $status; ?>">
                         <td class="row-counter"></td>
@@ -393,6 +412,13 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                         <td><div style="font-weight:600;color:var(--text-dark)"><?php echo htmlspecialchars($m['monitorBrand']); ?></div></td>
                         <td><?php echo htmlspecialchars($m['monitorSize'] ?? 'N/A'); ?></td>
                         <td><?php echo htmlspecialchars($m['yearAcquired'] ?? 'N/A'); ?></td>
+                        <td>
+                            <?php if ($m['location_name']): ?>
+                                <div class="location-badge"><i class="fas fa-map-marker-alt"></i> <?php echo htmlspecialchars($m['location_name']); ?></div>
+                            <?php else: ?>
+                                <span style="color:var(--text-light);font-style:italic">—</span>
+                            <?php endif; ?>
+                        </td>
                         <td>
                             <?php if ($m['employeeName']): ?>
                                 <div style="font-weight:600;color:var(--text-dark)"><?php echo htmlspecialchars($m['employeeName']); ?></div>
@@ -484,6 +510,7 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                         <th>Brand &amp; Model</th>
                         <th>Specifications</th>
                         <th>Year</th>
+                        <th>Location</th>
                         <th>Assigned To</th>
                         <th>Last Maintenance</th>
                         <th>Status</th>
@@ -500,6 +527,7 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                             data-memory="<?php echo strtolower(htmlspecialchars($a['specificationMemory'] ?? '')); ?>"
                             data-storage="<?php echo strtolower(htmlspecialchars($a['specificationStorage'] ?? '')); ?>"
                             data-year="<?php echo strtolower(htmlspecialchars($a['yearAcquired'] ?? '')); ?>"
+                            data-location="<?php echo strtolower(htmlspecialchars($a['location_name'] ?? '')); ?>"
                             data-employee="<?php echo strtolower(htmlspecialchars($a['employeeName'] ?? '')); ?>"
                             data-status="<?php echo $status; ?>">
                         <td class="row-counter"></td>
@@ -511,6 +539,13 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                             <div class="spec-item"><i class="fas fa-hdd"></i><span class="spec-value"><?php echo htmlspecialchars($a['specificationStorage']); ?></span></div>
                         </td>
                         <td><?php echo htmlspecialchars($a['yearAcquired'] ?? 'N/A'); ?></td>
+                        <td>
+                            <?php if ($a['location_name']): ?>
+                                <div class="location-badge"><i class="fas fa-map-marker-alt"></i> <?php echo htmlspecialchars($a['location_name']); ?></div>
+                            <?php else: ?>
+                                <span style="color:var(--text-light);font-style:italic">—</span>
+                            <?php endif; ?>
+                        </td>
                         <td>
                             <?php if ($a['employeeName']): ?>
                                 <div style="font-weight:600;color:var(--text-dark)"><?php echo htmlspecialchars($a['employeeName']); ?></div>
@@ -602,6 +637,7 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                         <th>Serial Number</th>
                         <th>Brand &amp; Model</th>
                         <th>Year Acquired</th>
+                        <th>Location</th>
                         <th>Assigned To</th>
                         <th>Last Maintenance</th>
                         <th>Status</th>
@@ -610,7 +646,7 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                 </thead>
                 <tbody id="printerTableBody">
                     <?php if (empty($printers)): ?>
-                    <tr><td colspan="8" class="empty-state"><i class="fas fa-inbox"></i><p>No printer records found</p></td></tr>
+                    <tr><td colspan="9" class="empty-state"><i class="fas fa-inbox"></i><p>No printer records found</p></td></tr>
                     <?php else: ?>
                         <?php foreach ($printers as $p):
                             $status = $p['employeeId'] ? 'Working' : 'Available';
@@ -621,6 +657,7 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                             data-brand="<?php echo strtolower($p['printerBrand'] . ' ' . $p['printerModel']); ?>"
                             data-employee="<?php echo strtolower($p['employeeName'] ?? ''); ?>"
                             data-year="<?php echo $p['yearAcquired'] ?? ''; ?>"
+                            data-location="<?php echo strtolower(htmlspecialchars($p['location_name'] ?? '')); ?>"
                             data-status="<?php echo $status; ?>">
                             <td class="row-counter"></td>
                             <td><span class="serial-number"><?php echo htmlspecialchars($p['printerSerial'] ?? 'N/A'); ?></span></td>
@@ -631,6 +668,13 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                                 </div>
                             </td>
                             <td><span class="year-acquired"><?php echo htmlspecialchars($p['yearAcquired'] ?? 'N/A'); ?></span></td>
+                            <td>
+                                <?php if ($p['location_name']): ?>
+                                    <div class="location-badge"><i class="fas fa-map-marker-alt"></i> <?php echo htmlspecialchars($p['location_name']); ?></div>
+                                <?php else: ?>
+                                    <span style="color:var(--text-light);font-style:italic">—</span>
+                                <?php endif; ?>
+                            </td>
                             <td>
                                 <?php if ($p['employeeName']): ?>
                                     <div class="assigned-employee"><i class="fas fa-user"></i><?php echo htmlspecialchars($p['employeeName']); ?></div>

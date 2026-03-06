@@ -154,7 +154,7 @@ function renderSystemUnits(units) {
     var tbody = document.getElementById('systemunitTableBody');
     tbody.innerHTML = '';
     if (units.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--text-medium);padding:20px">No system units found</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--text-medium);padding:20px">No system units found</td></tr>';
         return;
     }
     units.forEach(function(s) {
@@ -166,6 +166,7 @@ function renderSystemUnits(units) {
             '<td><div style="font-weight:600">' + escapeHtml(s.systemUnitBrand) + '</div><div style="font-size:12px;color:var(--text-light)"><i class="fas fa-tag"></i> ' + escapeHtml(s.systemUnitCategory) + '</div></td>' +
             '<td><div class="spec-item"><i class="fas fa-microchip"></i><span class="spec-value">' + escapeHtml(s.specificationProcessor) + '</span></div><div class="spec-item"><i class="fas fa-memory"></i><span class="spec-value">' + escapeHtml(s.specificationMemory) + '</span></div><div class="spec-item"><i class="fas fa-hdd"></i><span class="spec-value">' + escapeHtml(s.specificationStorage) + '</span></div></td>' +
             '<td>' + escapeHtml(s.yearAcquired) + '</td>' +
+            '<td>' + (s.location_name ? '<div class="location-badge"><i class="fas fa-map-marker-alt"></i> ' + escapeHtml(s.location_name) + '</div>' : '<span style="color:var(--text-light);font-style:italic">\u2014</span>') + '</td>' +
             '<td>' + (s.employeeName ? '<div style="font-weight:600">' + escapeHtml(s.employeeName) + '</div><div style="font-size:12px;color:var(--text-light)">ID: ' + escapeHtml(s.employeeId) + '</div>' : '<span style="color:var(--text-light);font-style:italic">Unassigned</span>') + '</td>' +
             '<td>' + (s.lastMaintenanceDate ? '<div class="maintenance-info"><i class="fas fa-tools"></i>' + escapeHtml(s.lastMaintenanceDate) + '</div>' : '<span class="text-muted"><i class="fas fa-clock"></i> No record</span>') + '</td>' +
             '<td><span class="status-badge status-' + cls + '">' + escapeHtml(s.status) + '</span></td>' +
@@ -307,7 +308,7 @@ function renderMonitors(monitors) {
     var tbody = document.getElementById('monitorTableBody');
     tbody.innerHTML = '';
     if (monitors.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--text-medium);padding:20px">No monitors found</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--text-medium);padding:20px">No monitors found</td></tr>';
         return;
     }
     monitors.forEach(function(m) {
@@ -319,6 +320,7 @@ function renderMonitors(monitors) {
             '<td><div style="font-weight:600">' + escapeHtml(m.monitorBrand) + '</div></td>' +
             '<td>' + escapeHtml(m.monitorSize) + '</td>' +
             '<td>' + escapeHtml(m.yearAcquired) + '</td>' +
+            '<td>' + (m.location_name ? '<div class="location-badge"><i class="fas fa-map-marker-alt"></i> ' + escapeHtml(m.location_name) + '</div>' : '<span style="color:var(--text-light);font-style:italic">\u2014</span>') + '</td>' +
             '<td>' + (m.employeeName ? '<div style="font-weight:600">' + escapeHtml(m.employeeName) + '</div><div style="font-size:12px;color:var(--text-light)">ID: ' + escapeHtml(m.employeeId) + '</div>' : '<span style="color:var(--text-light);font-style:italic">Unassigned</span>') + '</td>' +
             '<td>' + (m.lastMaintenanceDate ? '<div class="maintenance-info"><i class="fas fa-tools"></i>' + escapeHtml(m.lastMaintenanceDate) + '</div>' : '<span class="text-muted"><i class="fas fa-clock"></i> No record</span>') + '</td>' +
             '<td><span class="status-badge status-' + cls + '">' + escapeHtml(m.status) + '</span></td>' +
@@ -448,7 +450,7 @@ function renderAllInOnes(units) {
     var tbody = document.getElementById('allinoneTableBody');
     tbody.innerHTML = '';
     if (units.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--text-medium);padding:20px">No all-in-one PCs found</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--text-medium);padding:20px">No all-in-one PCs found</td></tr>';
         return;
     }
     units.forEach(function(a) {
@@ -460,6 +462,7 @@ function renderAllInOnes(units) {
             '<td><div style="font-weight:600">' + escapeHtml(a.allinoneBrand) + '</div></td>' +
             '<td><div class="spec-item"><i class="fas fa-microchip"></i><span class="spec-value">' + escapeHtml(a.specificationProcessor) + '</span></div><div class="spec-item"><i class="fas fa-memory"></i><span class="spec-value">' + escapeHtml(a.specificationMemory) + '</span></div><div class="spec-item"><i class="fas fa-hdd"></i><span class="spec-value">' + escapeHtml(a.specificationStorage) + '</span></div></td>' +
             '<td>' + escapeHtml(a.yearAcquired || 'N/A') + '</td>' +
+            '<td>' + (a.location_name ? '<div class="location-badge"><i class="fas fa-map-marker-alt"></i> ' + escapeHtml(a.location_name) + '</div>' : '<span style="color:var(--text-light);font-style:italic">\u2014</span>') + '</td>' +
             '<td>' + (a.employeeName ? '<div style="font-weight:600">' + escapeHtml(a.employeeName) + '</div><div style="font-size:12px;color:var(--text-light)">ID: ' + escapeHtml(a.employeeId) + '</div>' : '<span style="color:var(--text-light);font-style:italic">Unassigned</span>') + '</td>' +
             '<td>' + (a.lastMaintenanceDate ? '<div class="maintenance-info"><i class="fas fa-tools"></i>' + escapeHtml(a.lastMaintenanceDate) + '</div>' : '<span class="text-muted"><i class="fas fa-clock"></i> No record</span>') + '</td>' +
             '<td><span class="status-badge status-' + cls + '">' + escapeHtml(a.status) + '</span></td>' +
@@ -601,8 +604,9 @@ function applySystemUnitTableState() {
         var storage   = row.dataset.storage   || '';
         var year      = row.dataset.year      || '';
         var employee  = row.dataset.employee  || '';
+        var location  = row.dataset.location  || '';
         var status    = row.dataset.status    || '';
-        var matchesSearch = serial.includes(searchTerm) || brand.includes(searchTerm) || category.includes(searchTerm) || processor.includes(searchTerm) || memory.includes(searchTerm) || storage.includes(searchTerm) || year.includes(searchTerm) || employee.includes(searchTerm);
+        var matchesSearch = serial.includes(searchTerm) || brand.includes(searchTerm) || category.includes(searchTerm) || processor.includes(searchTerm) || memory.includes(searchTerm) || storage.includes(searchTerm) || year.includes(searchTerm) || employee.includes(searchTerm) || location.includes(searchTerm);
         var matchesStatus = !statusFilter || status === statusFilter;
         return matchesSearch && matchesStatus;
     });
@@ -664,8 +668,9 @@ function applyMonitorTableState() {
         var size     = row.dataset.size     || '';
         var year     = row.dataset.year     || '';
         var employee = row.dataset.employee || '';
+        var location = row.dataset.location || '';
         var status   = row.dataset.status   || '';
-        var matchesSearch = serial.includes(searchTerm) || brand.includes(searchTerm) || size.includes(searchTerm) || year.includes(searchTerm) || employee.includes(searchTerm);
+        var matchesSearch = serial.includes(searchTerm) || brand.includes(searchTerm) || size.includes(searchTerm) || year.includes(searchTerm) || employee.includes(searchTerm) || location.includes(searchTerm);
         var matchesStatus = !statusFilter || status === statusFilter;
         return matchesSearch && matchesStatus;
     });
@@ -729,8 +734,9 @@ function applyAIOTableState() {
         var storage   = row.dataset.storage   || '';
         var year      = row.dataset.year      || '';
         var employee  = row.dataset.employee  || '';
+        var location  = row.dataset.location  || '';
         var status    = row.dataset.status    || '';
-        var matchesSearch = serial.includes(searchTerm) || brand.includes(searchTerm) || processor.includes(searchTerm) || memory.includes(searchTerm) || storage.includes(searchTerm) || year.includes(searchTerm) || employee.includes(searchTerm);
+        var matchesSearch = serial.includes(searchTerm) || brand.includes(searchTerm) || processor.includes(searchTerm) || memory.includes(searchTerm) || storage.includes(searchTerm) || year.includes(searchTerm) || employee.includes(searchTerm) || location.includes(searchTerm);
         var matchesStatus = !statusFilter || status === statusFilter;
         return matchesSearch && matchesStatus;
     });
@@ -795,9 +801,10 @@ function applyPrinterTableState() {
         var brand    = row.dataset.brand    || '';
         var employee = row.dataset.employee || '';
         var year     = row.dataset.year     || '';
+        var location = row.dataset.location || '';
         var status   = row.dataset.status   || '';
 
-        var matchesSearch = serial.includes(searchTerm) || brand.includes(searchTerm) || employee.includes(searchTerm) || year.includes(searchTerm);
+        var matchesSearch = serial.includes(searchTerm) || brand.includes(searchTerm) || employee.includes(searchTerm) || year.includes(searchTerm) || location.includes(searchTerm);
         var matchesStatus = !statusFilter || status === statusFilter;
         return matchesSearch && matchesStatus;
     });
