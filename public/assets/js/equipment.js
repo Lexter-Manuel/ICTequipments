@@ -593,6 +593,7 @@ function changePerPageSU() {
 function applySystemUnitTableState() {
     var searchTerm = (document.getElementById('systemunitSearch') ? document.getElementById('systemunitSearch').value.toLowerCase() : '');
     var statusFilter = (document.getElementById('suStatusFilter') ? document.getElementById('suStatusFilter').value : '');
+    var assignFilter = (document.getElementById('suAssignFilter') ? document.getElementById('suAssignFilter').value : '');
     var allRows = Array.from(document.querySelectorAll('#systemunitTableBody tr[data-su-id]'));
 
     suFilteredRows = allRows.filter(function(row) {
@@ -606,9 +607,11 @@ function applySystemUnitTableState() {
         var employee  = row.dataset.employee  || '';
         var location  = row.dataset.location  || '';
         var status    = row.dataset.status    || '';
+        var assignType = row.dataset.assignType || '';
         var matchesSearch = serial.includes(searchTerm) || brand.includes(searchTerm) || category.includes(searchTerm) || processor.includes(searchTerm) || memory.includes(searchTerm) || storage.includes(searchTerm) || year.includes(searchTerm) || employee.includes(searchTerm) || location.includes(searchTerm);
         var matchesStatus = !statusFilter || status === statusFilter;
-        return matchesSearch && matchesStatus;
+        var matchesAssign = !assignFilter || assignType === assignFilter;
+        return matchesSearch && matchesStatus && matchesAssign;
     });
 
     var total      = suFilteredRows.length;
@@ -660,6 +663,7 @@ function changePerPageMon() {
 function applyMonitorTableState() {
     var searchTerm = (document.getElementById('monitorSearch') ? document.getElementById('monitorSearch').value.toLowerCase() : '');
     var statusFilter = (document.getElementById('monStatusFilter') ? document.getElementById('monStatusFilter').value : '');
+    var assignFilter = (document.getElementById('monAssignFilter') ? document.getElementById('monAssignFilter').value : '');
     var allRows = Array.from(document.querySelectorAll('#monitorTableBody tr[data-mon-id]'));
 
     monFilteredRows = allRows.filter(function(row) {
@@ -670,9 +674,11 @@ function applyMonitorTableState() {
         var employee = row.dataset.employee || '';
         var location = row.dataset.location || '';
         var status   = row.dataset.status   || '';
+        var assignType = row.dataset.assignType || '';
         var matchesSearch = serial.includes(searchTerm) || brand.includes(searchTerm) || size.includes(searchTerm) || year.includes(searchTerm) || employee.includes(searchTerm) || location.includes(searchTerm);
         var matchesStatus = !statusFilter || status === statusFilter;
-        return matchesSearch && matchesStatus;
+        var matchesAssign = !assignFilter || assignType === assignFilter;
+        return matchesSearch && matchesStatus && matchesAssign;
     });
 
     var total      = monFilteredRows.length;
@@ -724,6 +730,7 @@ function changePerPageAIO() {
 function applyAIOTableState() {
     var searchTerm = (document.getElementById('allinoneSearch') ? document.getElementById('allinoneSearch').value.toLowerCase() : '');
     var statusFilter = (document.getElementById('aioStatusFilter') ? document.getElementById('aioStatusFilter').value : '');
+    var assignFilter = (document.getElementById('aioAssignFilter') ? document.getElementById('aioAssignFilter').value : '');
     var allRows = Array.from(document.querySelectorAll('#allinoneTableBody tr[data-aio-id]'));
 
     aioFilteredRows = allRows.filter(function(row) {
@@ -736,9 +743,11 @@ function applyAIOTableState() {
         var employee  = row.dataset.employee  || '';
         var location  = row.dataset.location  || '';
         var status    = row.dataset.status    || '';
+        var assignType = row.dataset.assignType || '';
         var matchesSearch = serial.includes(searchTerm) || brand.includes(searchTerm) || processor.includes(searchTerm) || memory.includes(searchTerm) || storage.includes(searchTerm) || year.includes(searchTerm) || employee.includes(searchTerm) || location.includes(searchTerm);
         var matchesStatus = !statusFilter || status === statusFilter;
-        return matchesSearch && matchesStatus;
+        var matchesAssign = !assignFilter || assignType === assignFilter;
+        return matchesSearch && matchesStatus && matchesAssign;
     });
 
     var total      = aioFilteredRows.length;
@@ -791,9 +800,11 @@ function changePerPagePR() {
 function applyPrinterTableState() {
     var searchEl     = document.getElementById('printerSearch');
     var statusEl     = document.getElementById('printerStatusFilter');
+    var assignEl     = document.getElementById('printerAssignFilter');
     if (!searchEl) return;
     var searchTerm   = searchEl.value.toLowerCase();
     var statusFilter = statusEl ? statusEl.value : '';
+    var assignFilter = assignEl ? assignEl.value : '';
     var allRows      = Array.from(document.querySelectorAll('#printerTableBody tr[data-printer-id]'));
 
     printerFilteredRows = allRows.filter(function(row) {
@@ -803,10 +814,12 @@ function applyPrinterTableState() {
         var year     = row.dataset.year     || '';
         var location = row.dataset.location || '';
         var status   = row.dataset.status   || '';
+        var assignType = row.dataset.assignType || '';
 
         var matchesSearch = serial.includes(searchTerm) || brand.includes(searchTerm) || employee.includes(searchTerm) || year.includes(searchTerm) || location.includes(searchTerm);
         var matchesStatus = !statusFilter || status === statusFilter;
-        return matchesSearch && matchesStatus;
+        var matchesAssign = !assignFilter || assignType === assignFilter;
+        return matchesSearch && matchesStatus && matchesAssign;
     });
 
     var total      = printerFilteredRows.length;
@@ -966,9 +979,11 @@ function changePerPageOther() {
 function applyOtherTableState() {
     var searchEl     = document.getElementById('otherSearch');
     var statusEl     = document.getElementById('otherStatusFilter');
+    var assignEl     = document.getElementById('otherAssignFilter');
     if (!searchEl) return;
     var searchTerm   = searchEl.value.toLowerCase();
     var statusFilter = statusEl ? statusEl.value : '';
+    var assignFilter = assignEl ? assignEl.value : '';
     var allRows      = Array.from(document.querySelectorAll('#otherTableBody tr[data-equipment-id]'));
 
     otherFilteredRows = allRows.filter(function(row) {
@@ -979,10 +994,12 @@ function applyOtherTableState() {
         var employee = row.dataset.employee || '';
         var year     = row.dataset.year     || '';
         var status   = row.dataset.status   || '';
+        var assignType = row.dataset.assignType || '';
 
         var matchesSearch = serial.includes(searchTerm) || type.includes(searchTerm) || brand.includes(searchTerm) || location.includes(searchTerm) || employee.includes(searchTerm) || year.includes(searchTerm);
         var matchesStatus = !statusFilter || status === statusFilter;
-        return matchesSearch && matchesStatus;
+        var matchesAssign = !assignFilter || assignType === assignFilter;
+        return matchesSearch && matchesStatus && matchesAssign;
     });
 
     var total      = otherFilteredRows.length;

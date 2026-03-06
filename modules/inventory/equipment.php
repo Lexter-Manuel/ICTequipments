@@ -232,12 +232,12 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                 <h2 class="table-title"><i class="fas fa-list"></i> System Unit Inventory</h2>
                 <div class="table-controls">
                     <div class="filter-group">
-                        <!-- <select id="suStatusFilter" onchange="filterSystemUnits()">
-                            <option value="">All Statuses</option>
-                            <option value="Operational">Operational</option>
-                            <option value="For Replacement">For Replacement</option>
-                            <option value="Disposed">Disposed</option>
-                        </select> -->
+                        <select id="suAssignFilter" onchange="filterSystemUnits()">
+                            <option value="">All Assignments</option>
+                            <option value="employee">Assigned to Employee</option>
+                            <option value="location">Assigned to Location</option>
+                            <option value="unassigned">Unassigned</option>
+                        </select>
                     </div>
                     <div class="search-box">
                         <i class="fas fa-search"></i>
@@ -268,7 +268,11 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                 <tbody id="systemunitTableBody">
                     <?php foreach ($systemUnits as $s): ?>
                     <?php $status = $s['employeeId'] ? 'Active' : 'Available'; ?>
+                    <?php
+                        $suAssignType = $s['employeeId'] ? 'employee' : ($s['location_id'] ? 'location' : 'unassigned');
+                    ?>
                     <tr data-su-id="<?php echo $s['systemunitId']; ?>"
+                            data-assign-type="<?php echo $suAssignType; ?>"
                             data-serial="<?php echo strtolower(htmlspecialchars($s['systemUnitSerial'] ?? '')); ?>"
                             data-brand="<?php echo strtolower(htmlspecialchars($s['systemUnitBrand'] ?? '')); ?>"
                             data-category="<?php echo strtolower(htmlspecialchars($s['systemUnitCategory'] ?? '')); ?>"
@@ -363,12 +367,12 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                 <h2 class="table-title"><i class="fas fa-list"></i> Monitor Inventory</h2>
                 <div class="table-controls">
                     <div class="filter-group">
-                        <!-- <select id="monStatusFilter" onchange="filterMonitors()">
-                            <option value="">All Statuses</option>
-                            <option value="Operational">Operational</option>
-                            <option value="For Replacement">For Replacement</option>
-                            <option value="Disposed">Disposed</option>
-                        </select> -->
+                        <select id="monAssignFilter" onchange="filterMonitors()">
+                            <option value="">All Assignments</option>
+                            <option value="employee">Assigned to Employee</option>
+                            <option value="location">Assigned to Location</option>
+                            <option value="unassigned">Unassigned</option>
+                        </select>
                     </div>
                     <div class="search-box">
                         <i class="fas fa-search"></i>
@@ -398,8 +402,12 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                 </thead>
                 <tbody id="monitorTableBody">
                     <?php foreach ($monitors as $m): ?>
-                    <?php $status = $m['employeeId'] ? 'Active' : 'Available'; ?>
+                    <?php
+                        $status = $m['employeeId'] ? 'Active' : 'Available';
+                        $monAssignType = $m['employeeId'] ? 'employee' : ($m['location_id'] ? 'location' : 'unassigned');
+                    ?>
                     <tr data-mon-id="<?php echo $m['monitorId']; ?>"
+                            data-assign-type="<?php echo $monAssignType; ?>"
                             data-serial="<?php echo strtolower(htmlspecialchars($m['monitorSerial'] ?? '')); ?>"
                             data-brand="<?php echo strtolower(htmlspecialchars($m['monitorBrand'] ?? '')); ?>"
                             data-size="<?php echo strtolower(htmlspecialchars($m['monitorSize'] ?? '')); ?>"
@@ -484,12 +492,12 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                 <h2 class="table-title"><i class="fas fa-list"></i> All-in-One Inventory</h2>
                 <div class="table-controls">
                     <div class="filter-group">
-                        <!-- <select id="aioStatusFilter" onchange="filterAllInOnes()">
-                            <option value="">All Statuses</option>
-                            <option value="Operational">Operational</option>
-                            <option value="For Replacement">For Replacement</option>
-                            <option value="Disposed">Disposed</option>
-                        </select> -->
+                        <select id="aioAssignFilter" onchange="filterAllInOnes()">
+                            <option value="">All Assignments</option>
+                            <option value="employee">Assigned to Employee</option>
+                            <option value="location">Assigned to Location</option>
+                            <option value="unassigned">Unassigned</option>
+                        </select>
                     </div>
                     <div class="search-box">
                         <i class="fas fa-search"></i>
@@ -519,8 +527,12 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                 </thead>
                 <tbody id="allinoneTableBody">
                     <?php foreach ($allInOnes as $a): ?>
-                    <?php $status = $a['employeeId'] ? 'Active' : 'Available'; ?>
+                    <?php
+                        $status = $a['employeeId'] ? 'Active' : 'Available';
+                        $aioAssignType = $a['employeeId'] ? 'employee' : ($a['location_id'] ? 'location' : 'unassigned');
+                    ?>
                     <tr data-aio-id="<?php echo $a['allinoneId']; ?>"
+                            data-assign-type="<?php echo $aioAssignType; ?>"
                             data-serial="<?php echo strtolower(htmlspecialchars($a['allinoneSerial'] ?? '')); ?>"
                             data-brand="<?php echo strtolower(htmlspecialchars($a['allinoneBrand'] ?? '')); ?>"
                             data-processor="<?php echo strtolower(htmlspecialchars($a['specificationProcessor'] ?? '')); ?>"
@@ -614,12 +626,12 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
             <h2 class="table-title"><i class="fas fa-list"></i> Printer Inventory</h2>
             <div class="table-controls">
                 <div class="filter-group">
-                    <!-- <select id="printerStatusFilter" onchange="filterPrinters()">
-                        <option value="">All Statuses</option>
-                        <option value="Operational">Operational</option>
-                        <option value="For Replacement">For Replacement</option>
-                        <option value="Disposed">Disposed</option>
-                    </select> -->
+                    <select id="printerAssignFilter" onchange="filterPrinters()">
+                        <option value="">All Assignments</option>
+                        <option value="employee">Assigned to Employee</option>
+                        <option value="location">Assigned to Location</option>
+                        <option value="unassigned">Unassigned</option>
+                    </select>
                 </div>
                 <div class="search-box">
                     <i class="fas fa-search"></i>
@@ -652,7 +664,9 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                             $status = $p['employeeId'] ? 'Working' : 'Available';
                             $statusClass = $status === 'Working' ? 'in-use' : 'available';
                         ?>
+                        <?php $prAssignType = $p['employeeId'] ? 'employee' : ($p['location_id'] ? 'location' : 'unassigned'); ?>
                         <tr data-printer-id="<?php echo $p['printerId']; ?>"
+                            data-assign-type="<?php echo $prAssignType; ?>"
                             data-serial="<?php echo strtolower($p['printerSerial'] ?? ''); ?>"
                             data-brand="<?php echo strtolower($p['printerBrand'] . ' ' . $p['printerModel']); ?>"
                             data-employee="<?php echo strtolower($p['employeeName'] ?? ''); ?>"
@@ -747,12 +761,12 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
             <h2 class="table-title"><i class="fas fa-list"></i> Equipment Inventory</h2>
             <div class="table-controls">
                 <div class="filter-group">
-                    <!-- <select id="otherStatusFilter" onchange="filterOtherEquipment()">
-                        <option value="">All Statuses</option>
-                        <option value="Operational">Operational</option>
-                        <option value="For Replacement">For Replacement</option>
-                        <option value="Disposed">Disposed</option>
-                    </select> -->
+                    <select id="otherAssignFilter" onchange="filterOtherEquipment()">
+                        <option value="">All Assignments</option>
+                        <option value="employee">Assigned to Employee</option>
+                        <option value="location">Assigned to Location</option>
+                        <option value="unassigned">Unassigned</option>
+                    </select>
                 </div>
                 <div class="search-box">
                     <i class="fas fa-search"></i>
@@ -793,7 +807,9 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                                 default            => 'available'
                             };
                         ?>
+                        <?php $otherAssignType = $o['employeeId'] ? 'employee' : ($o['location_id'] ? 'location' : 'unassigned'); ?>
                         <tr data-equipment-id="<?php echo $o['otherEquipmentId']; ?>"
+                            data-assign-type="<?php echo $otherAssignType; ?>"
                             data-serial="<?php echo strtolower($o['serialNumber']); ?>"
                             data-type="<?php echo strtolower($o['equipmentType']); ?>"
                             data-brand="<?php echo strtolower($o['brand'] . ' ' . $o['model']); ?>"
