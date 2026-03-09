@@ -1,10 +1,10 @@
 <?php
 /**
- * Unified Equipment Inventory Module
- * Combines: Computer (System Units, Monitors, All-in-One), Printers, Other Equipment
+ * Unified Equipment Inventory Module — Redesigned
+ * Single table with filter dropdowns replacing multi-tab layout.
+ * Views: All Equipment, By Type, By Location (with batch maintenance scheduling)
  */
 require_once '../../config/session-guard.php';
-
 require_once '../../config/database.php';
 $db = getDB();
 
@@ -20,13 +20,12 @@ $stmtAll = $db->query("
            eq.status, eq.year_acquired, eq.acquisition_date, eq.is_archived,
            CONCAT_WS(' ', e.firstName, e.middleName, e.lastName) AS employeeName,
            r.typeName,
-           ms.lastMaintenanceDate,
-           l.location_name
+           COALESCE(l.location_name, el.location_name) AS location_name
     FROM tbl_equipment eq
     INNER JOIN tbl_equipment_type_registry r ON eq.type_id = r.typeId
     LEFT JOIN tbl_employee e ON eq.employee_id = e.employeeId
-    LEFT JOIN tbl_maintenance_schedule ms ON (eq.equipment_id = ms.equipmentId AND eq.type_id = ms.equipmentType AND ms.isActive = 1)
     LEFT JOIN location l ON eq.location_id = l.location_id
+    LEFT JOIN location el ON e.location_id = el.location_id
     WHERE eq.is_archived = 0
     ORDER BY eq.equipment_id DESC
 ");
@@ -44,98 +43,40 @@ if (!empty($allIds)) {
     }
 }
 
-// Split into legacy arrays with backward-compatible column names for templates
-$systemUnits = [];
-$monitors = [];
-$allInOnes = [];
-$printers = [];
-$otherEquipment = [];
-
+// Build unified flat array for JS
+$unifiedRows = [];
 foreach ($allEquipment as $eq) {
     $specs = $specsMap[$eq['equipment_id']] ?? [];
-    $eqId = $eq['equipment_id'];
-    
-    switch ($eq['typeName']) {
-        case 'System Unit':
-            $systemUnits[] = [
-                'systemunitId'           => $eqId,
-                'systemUnitBrand'        => $eq['brand'],
-                'systemUnitSerial'       => $eq['serial_number'],
-                'systemUnitCategory'     => $specs['Category'] ?? 'Pre-Built',
-                'specificationProcessor' => $specs['Processor'] ?? '',
-                'specificationMemory'    => $specs['Memory'] ?? '',
-                'specificationGPU'       => $specs['GPU'] ?? '',
-                'specificationStorage'   => $specs['Storage'] ?? '',
-                'yearAcquired'           => $eq['year_acquired'],
-                'employeeId'             => $eq['employee_id'],
-                'employeeName'           => $eq['employeeName'],
-                'lastMaintenanceDate'    => $eq['lastMaintenanceDate'],
-                'location_id'            => $eq['location_id'],
-                'location_name'          => $eq['location_name'],
-            ];
-            break;
-        case 'Monitor':
-            $monitors[] = [
-                'monitorId'           => $eqId,
-                'monitorBrand'        => $eq['brand'],
-                'monitorSerial'       => $eq['serial_number'],
-                'monitorSize'         => $specs['Monitor Size'] ?? '',
-                'yearAcquired'        => $eq['year_acquired'],
-                'employeeId'          => $eq['employee_id'],
-                'employeeName'        => $eq['employeeName'],
-                'lastMaintenanceDate' => $eq['lastMaintenanceDate'],
-                'location_id'         => $eq['location_id'],
-                'location_name'       => $eq['location_name'],
-            ];
-            break;
-        case 'All-in-One':
-            $allInOnes[] = [
-                'allinoneId'             => $eqId,
-                'allinoneBrand'          => $eq['brand'],
-                'allinoneSerial'         => $eq['serial_number'],
-                'specificationProcessor' => $specs['Processor'] ?? '',
-                'specificationMemory'    => $specs['Memory'] ?? '',
-                'specificationGPU'       => $specs['GPU'] ?? '',
-                'specificationStorage'   => $specs['Storage'] ?? '',
-                'yearAcquired'           => $eq['year_acquired'],
-                'employeeId'             => $eq['employee_id'],
-                'employeeName'           => $eq['employeeName'],
-                'lastMaintenanceDate'    => $eq['lastMaintenanceDate'],
-                'location_id'            => $eq['location_id'],
-                'location_name'          => $eq['location_name'],
-            ];
-            break;
-        case 'Printer':
-            $printers[] = [
-                'printerId'           => $eqId,
-                'printerBrand'        => $eq['brand'],
-                'printerModel'        => $eq['model'],
-                'printerSerial'       => $eq['serial_number'],
-                'yearAcquired'        => $eq['year_acquired'],
-                'employeeId'          => $eq['employee_id'],
-                'employeeName'        => $eq['employeeName'],
-                'lastMaintenanceDate' => $eq['lastMaintenanceDate'],
-                'location_id'         => $eq['location_id'],
-                'location_name'       => $eq['location_name'],
-            ];
-            break;
-        default:
-            $otherEquipment[] = [
-                'otherEquipmentId' => $eqId,
-                'equipmentType'    => $eq['typeName'],
-                'brand'            => $eq['brand'],
-                'model'            => $eq['model'],
-                'serialNumber'     => $eq['serial_number'],
-                'yearAcquired'     => $eq['year_acquired'],
-                'status'           => $eq['status'],
-                'employeeId'       => $eq['employee_id'],
-                'employeeName'     => $eq['employeeName'],
-                'location_id'      => $eq['location_id'],
-                'location_name'    => $eq['location_name'],
-            ];
-            break;
-    }
+    $assignStatus = $eq['employee_id'] ? 'Active' : ($eq['status'] ?: 'Available');
+    $unifiedRows[] = [
+        'id'            => (int)$eq['equipment_id'],
+        'type_id'       => (int)$eq['type_id'],
+        'typeName'      => $eq['typeName'],
+        'brand'         => $eq['brand'],
+        'model'         => $eq['model'],
+        'serial'        => $eq['serial_number'],
+        'property_no'   => $eq['property_number'],
+        'status'        => $assignStatus,
+        'year'          => $eq['year_acquired'],
+        'employee_id'   => $eq['employee_id'],
+        'employeeName'  => $eq['employeeName'],
+        'location_id'   => $eq['location_id'],
+        'location_name' => $eq['location_name'],
+        'lastMaint'     => $specs['Maintenance Date'] ?? null,
+        'nextDue'       => $specs['Next Maintenance Date'] ?? null,
+        'specs'         => $specs,
+    ];
 }
+
+// Collect unique type names for dropdown
+$typeNames = array_values(array_unique(array_column($allEquipment, 'typeName')));
+sort($typeNames);
+
+// Stats
+$totalEquip = count($unifiedRows);
+$totalActive = count(array_filter($unifiedRows, fn($r) => $r['employee_id'] != null));
+$totalAvailable = count(array_filter($unifiedRows, fn($r) => $r['employee_id'] == null && $r['status'] === 'Available'));
+$totalMaint = count(array_filter($unifiedRows, fn($r) => $r['status'] === 'Under Maintenance'));
 
 // ── Fetch Employees ──
 $stmtEmployees = $db->query("SELECT employeeId, CONCAT_WS(' ', firstName, middleName, lastName) as fullName FROM tbl_employee WHERE is_archive = '0' ORDER BY firstName, lastName");
@@ -145,20 +86,19 @@ $employees = $stmtEmployees->fetchAll();
 $stmtLoc = $db->query("SELECT location_id, location_name FROM location WHERE is_deleted = '0' ORDER BY location_name ASC");
 $locations = $stmtLoc->fetchAll();
 
-// ── Stats ──
-$totalPrinters   = count($printers);
-$printerInUse    = count(array_filter($printers, fn($p) => $p['employeeId'] != null));
-$printerAvail    = count(array_filter($printers, fn($p) => $p['employeeId'] == null));
-
-$totalOther      = count($otherEquipment);
-$otherInUse      = count(array_filter($otherEquipment, fn($o) => $o['employeeId'] != null || $o['status'] == 'In Use'));
-$otherAvail      = count(array_filter($otherEquipment, fn($o) => $o['employeeId'] == null && $o['status'] == 'Available'));
-$otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] == 'Under Maintenance'));
+// ── Fetch Divisions for By-Location view (location_type_id = 1 = Division) ──
+$stmtDiv = $db->query("
+    SELECT l.location_id, l.location_name,
+           (SELECT COUNT(*) FROM location c WHERE c.parent_location_id = l.location_id AND c.is_deleted = '0') as child_count
+    FROM location l
+    WHERE l.location_type_id = 1 AND l.is_deleted = '0'
+    ORDER BY l.location_name
+");
+$divisions = $stmtDiv->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <?php include '../../includes/components/location_loader.php'; ?>
 
-<link rel="stylesheet" href="assets/css/tabs.css?v=<?php echo time()?>">
 <link rel="stylesheet" href="assets/css/inventory.css?v=<?php echo time()?>">
 <link rel="stylesheet" href="assets/css/equipment.css?v=<?php echo time()?>">
 <link rel="stylesheet" href="assets/css/autocomplete.css?v=<?php echo time()?>">
@@ -172,715 +112,207 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
         </div>
         <div>
             <h1 class="page-title">Equipment Inventory</h1>
+            <p class="page-subtitle" id="viewSubtitle">All equipment across all categories</p>
         </div>
     </div>
-
     <div class="header-actions">
-        <!-- ══════════════════════════════════════════
-        TOP-LEVEL CATEGORY TABS
-        ══════════════════════════════════════════ -->
-        <div class="toggle-nav equip-toggle-nav" id="categoryTabs">
-            <button class="toggle-btn active" onclick="switchCategory('computers', this)">
-                <i class="fas fa-desktop"></i> Computers
-            </button>
-            <button class="toggle-btn" onclick="switchCategory('printers', this)">
-                <i class="fas fa-print"></i> Printers
-            </button>
-            <button class="toggle-btn" onclick="switchCategory('other', this)">
-                <i class="fas fa-server"></i> Other Equipment
-            </button>
-        </div>
         <button class="btn btn-secondary exportEquipment"><i class="fas fa-download"></i> Export</button>
     </div>
 </div>
 
-<!-- COMPUTERS CATEGORY -->
-<div class="category-content active" id="category-computers">
-
-    <!-- Sub-tabs for computer types -->
-    <div class="subtoggle-nav equip-subtoggle-nav">
-        <button class="subtoggle-btn active" onclick="switchSubTab('systemunits', this)">
-            <i class="fas fa-tower-broadcast"></i> System Units
-        </button>
-        <button class="subtoggle-btn" onclick="switchSubTab('monitors', this)">
-            <i class="fas fa-tv"></i> Monitors
-        </button>
-        <button class="subtoggle-btn" onclick="switchSubTab('allinone', this)">
-            <i class="fas fa-computer"></i> All-in-One PCs
-        </button>
+<!-- ══════════════════════════════════════════
+     STATS ROW (updates dynamically)
+     ══════════════════════════════════════════ -->
+<div class="stats-grid" id="statsRow" style="grid-template-columns: repeat(4,1fr); margin-bottom: var(--space-5);">
+    <div class="stat-card">
+        <i class="stat-icon fas fa-desktop"></i>
+        <div class="stat-label">Total Equipment<div class="stat-value" id="statTotal"><?php echo $totalEquip; ?></div></div>
+        
     </div>
-
-    <!-- ── SYSTEM UNITS TAB ── -->
-    <div class="sub-tab-content active" id="subtab-systemunits">
-        <div class="stats-grid" style="grid-template-columns: repeat(3,1fr); margin-bottom: var(--space-5);">
-            <div class="stat-item">
-                <div class="stat-label">Total System Units</div>
-                <div class="stat-value"><?php echo count($systemUnits); ?></div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-label">Active</div>
-                <div class="stat-value"><?php echo count(array_filter($systemUnits, fn($s) => $s['employeeId'] != null)); ?></div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-label">Available</div>
-                <div class="stat-value"><?php echo count(array_filter($systemUnits, fn($s) => $s['employeeId'] == null)); ?></div>
-            </div>
-        </div>
-
-        <div class="data-table-container">
-            <div class="table-header">
-                <h2 class="table-title"><i class="fas fa-list"></i> System Unit Inventory</h2>
-                <div class="table-controls">
-                    <div class="filter-group">
-                        <select id="suAssignFilter" onchange="filterSystemUnits()">
-                            <option value="">All Assignments</option>
-                            <option value="employee">Assigned to Employee</option>
-                            <option value="location">Assigned to Location</option>
-                            <option value="unassigned">Unassigned</option>
-                        </select>
-                    </div>
-                    <div class="search-box">
-                        <i class="fas fa-search"></i>
-                        <input type="text" id="systemunitSearch" placeholder="Search serial, brand, processor..." oninput="filterSystemUnits()">
-                    </div>
-                    <button class="btn btn-primary" onclick="openAddSystemUnit()">
-                        <i class="fas fa-plus"></i> Add System Unit
-                    </button>
-                </div>
-            </div>
-
-        <div class="data-table">
-            <table>
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Serial Number</th>
-                        <th>Brand &amp; Category</th>
-                        <th>Specifications</th>
-                        <th>Year</th>
-                        <th>Location</th>
-                        <th>Assigned To</th>
-                        <th>Last Maintenance</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="systemunitTableBody">
-                    <?php foreach ($systemUnits as $s): ?>
-                    <?php $status = $s['employeeId'] ? 'Active' : 'Available'; ?>
-                    <?php
-                        $suAssignType = $s['employeeId'] ? 'employee' : ($s['location_id'] ? 'location' : 'unassigned');
-                    ?>
-                    <tr data-su-id="<?php echo $s['systemunitId']; ?>"
-                            data-assign-type="<?php echo $suAssignType; ?>"
-                            data-serial="<?php echo strtolower(htmlspecialchars($s['systemUnitSerial'] ?? '')); ?>"
-                            data-brand="<?php echo strtolower(htmlspecialchars($s['systemUnitBrand'] ?? '')); ?>"
-                            data-category="<?php echo strtolower(htmlspecialchars($s['systemUnitCategory'] ?? '')); ?>"
-                            data-processor="<?php echo strtolower(htmlspecialchars($s['specificationProcessor'] ?? '')); ?>"
-                            data-memory="<?php echo strtolower(htmlspecialchars($s['specificationMemory'] ?? '')); ?>"
-                            data-storage="<?php echo strtolower(htmlspecialchars($s['specificationStorage'] ?? '')); ?>"
-                            data-year="<?php echo strtolower(htmlspecialchars($s['yearAcquired'] ?? '')); ?>"
-                            data-location="<?php echo strtolower(htmlspecialchars($s['location_name'] ?? '')); ?>"
-                            data-employee="<?php echo strtolower(htmlspecialchars($s['employeeName'] ?? '')); ?>"
-                            data-status="<?php echo $status; ?>">
-                        <td class="row-counter"></td>
-                        <td><span class="serial-number"><?php echo htmlspecialchars($s['systemUnitSerial']); ?></span></td>
-                        <td>
-                            <div style="font-weight:600;color:var(--text-dark)"><?php echo htmlspecialchars($s['systemUnitBrand']); ?></div>
-                            <div style="font-size:12px;color:var(--text-light)"><i class="fas fa-tag"></i> <?php echo htmlspecialchars($s['systemUnitCategory'] ?? 'Pre-Built'); ?></div>
-                        </td>
-                        <td>
-                            <div class="spec-item"><i class="fas fa-microchip"></i><span class="spec-value"><?php echo htmlspecialchars($s['specificationProcessor']); ?></span></div>
-                            <div class="spec-item"><i class="fas fa-memory"></i><span class="spec-value"><?php echo htmlspecialchars($s['specificationMemory']); ?></span></div>
-                            <div class="spec-item"><i class="fas fa-hdd"></i><span class="spec-value"><?php echo htmlspecialchars($s['specificationStorage']); ?></span></div>
-                        </td>
-                        <td><?php echo htmlspecialchars($s['yearAcquired'] ?? 'N/A'); ?></td>
-                        <td>
-                            <?php if ($s['location_name']): ?>
-                                <div class="location-badge"><i class="fas fa-map-marker-alt"></i> <?php echo htmlspecialchars($s['location_name']); ?></div>
-                            <?php else: ?>
-                                <span style="color:var(--text-light);font-style:italic">—</span>
-                            <?php endif; ?>
-                        </td>
-                        <td>
-                            <?php if ($s['employeeName']): ?>
-                                <div style="font-weight:600;color:var(--text-dark)"><?php echo htmlspecialchars($s['employeeName']); ?></div>
-                                <div style="font-size:12px;color:var(--text-light)">ID: <?php echo htmlspecialchars($s['employeeId']); ?></div>
-                            <?php else: ?>
-                                <span style="color:var(--text-light);font-style:italic">Unassigned</span>
-                            <?php endif; ?>
-                        </td>
-                        <td>
-                            <?php if (!empty($s['lastMaintenanceDate'])): ?>
-                                <div class="maintenance-info"><i class="fas fa-tools"></i><?php echo date('M d, Y', strtotime($s['lastMaintenanceDate'])); ?></div>
-                            <?php else: ?>
-                                <span class="text-muted"><i class="fas fa-clock"></i> No record</span>
-                            <?php endif; ?>
-                        </td>
-                        <td><span class="status-badge status-<?php echo strtolower($status); ?>"><?php echo $status; ?></span></td>
-                        <td>
-                            <div class="action-buttons">
-                                <button class="btn-icon" title="Edit" onclick="editSystemUnit(<?php echo $s['systemunitId']; ?>)"><i class="fas fa-edit"></i></button>
-                                <button class="btn-icon btn-danger" title="Delete" onclick="deleteSystemUnit(<?php echo $s['systemunitId']; ?>)"><i class="fas fa-trash"></i></button>
-                            </div>
-                        </td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
-
-        <div class="table-footer">
-            <div class="footer-info"><span id="suRecordCount"></span></div>
-            <div class="pagination-controls" id="suPaginationControls"></div>
-            <div class="per-page-control">
-                <label>Rows:
-                    <select id="suPerPageSelect" onchange="changePerPageSU()">
-                        <option value="10">10</option><option value="25" selected>25</option>
-                        <option value="50">50</option><option value="100">100</option>
-                    </select>
-                </label>
-            </div>
-        </div>
-        </div>
+    <div class="stat-card">
+        <i class="stat-icon fas fa-user"></i>
+        <div class="stat-label">Active / In Use<div class="stat-value" id="statActive"><?php echo $totalActive; ?></div></div>
+        
     </div>
-
-    <!-- ── MONITORS TAB ── -->
-    <div class="sub-tab-content" id="subtab-monitors">
-        <div class="stats-grid" style="grid-template-columns: repeat(3,1fr); margin-bottom: var(--space-5);">
-            <div class="stat-item">
-                <div class="stat-label">Total Monitors</div>
-                <div class="stat-value"><?php echo count($monitors); ?></div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-label">Active</div>
-                <div class="stat-value"><?php echo count(array_filter($monitors, fn($m) => $m['employeeId'] != null)); ?></div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-label">Available</div>
-                <div class="stat-value"><?php echo count(array_filter($monitors, fn($m) => $m['employeeId'] == null)); ?></div>
-            </div>
-        </div>
-
-        <div class="data-table-container">
-            <div class="table-header">
-                <h2 class="table-title"><i class="fas fa-list"></i> Monitor Inventory</h2>
-                <div class="table-controls">
-                    <div class="filter-group">
-                        <select id="monAssignFilter" onchange="filterMonitors()">
-                            <option value="">All Assignments</option>
-                            <option value="employee">Assigned to Employee</option>
-                            <option value="location">Assigned to Location</option>
-                            <option value="unassigned">Unassigned</option>
-                        </select>
-                    </div>
-                    <div class="search-box">
-                        <i class="fas fa-search"></i>
-                        <input type="text" id="monitorSearch" placeholder="Search serial, brand, size..." oninput="filterMonitors()">
-                    </div>
-                    <button class="btn btn-primary" onclick="openAddMonitor()">
-                        <i class="fas fa-plus"></i> Add Monitor
-                    </button>
-                </div>
-            </div>
-
-        <div class="data-table">
-            <table>
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Serial Number</th>
-                        <th>Brand &amp; Model</th>
-                        <th>Size</th>
-                        <th>Year</th>
-                        <th>Location</th>
-                        <th>Assigned To</th>
-                        <th>Last Maintenance</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="monitorTableBody">
-                    <?php foreach ($monitors as $m): ?>
-                    <?php
-                        $status = $m['employeeId'] ? 'Active' : 'Available';
-                        $monAssignType = $m['employeeId'] ? 'employee' : ($m['location_id'] ? 'location' : 'unassigned');
-                    ?>
-                    <tr data-mon-id="<?php echo $m['monitorId']; ?>"
-                            data-assign-type="<?php echo $monAssignType; ?>"
-                            data-serial="<?php echo strtolower(htmlspecialchars($m['monitorSerial'] ?? '')); ?>"
-                            data-brand="<?php echo strtolower(htmlspecialchars($m['monitorBrand'] ?? '')); ?>"
-                            data-size="<?php echo strtolower(htmlspecialchars($m['monitorSize'] ?? '')); ?>"
-                            data-year="<?php echo strtolower(htmlspecialchars($m['yearAcquired'] ?? '')); ?>"
-                            data-location="<?php echo strtolower(htmlspecialchars($m['location_name'] ?? '')); ?>"
-                            data-employee="<?php echo strtolower(htmlspecialchars($m['employeeName'] ?? '')); ?>"
-                            data-status="<?php echo $status; ?>">
-                        <td class="row-counter"></td>
-                        <td><span class="serial-number"><?php echo htmlspecialchars($m['monitorSerial']); ?></span></td>
-                        <td><div style="font-weight:600;color:var(--text-dark)"><?php echo htmlspecialchars($m['monitorBrand']); ?></div></td>
-                        <td><?php echo htmlspecialchars($m['monitorSize'] ?? 'N/A'); ?></td>
-                        <td><?php echo htmlspecialchars($m['yearAcquired'] ?? 'N/A'); ?></td>
-                        <td>
-                            <?php if ($m['location_name']): ?>
-                                <div class="location-badge"><i class="fas fa-map-marker-alt"></i> <?php echo htmlspecialchars($m['location_name']); ?></div>
-                            <?php else: ?>
-                                <span style="color:var(--text-light);font-style:italic">—</span>
-                            <?php endif; ?>
-                        </td>
-                        <td>
-                            <?php if ($m['employeeName']): ?>
-                                <div style="font-weight:600;color:var(--text-dark)"><?php echo htmlspecialchars($m['employeeName']); ?></div>
-                                <div style="font-size:12px;color:var(--text-light)">ID: <?php echo htmlspecialchars($m['employeeId']); ?></div>
-                            <?php else: ?>
-                                <span style="color:var(--text-light);font-style:italic">Unassigned</span>
-                            <?php endif; ?>
-                        </td>
-                        <td>
-                            <?php if (!empty($m['lastMaintenanceDate'])): ?>
-                                <div class="maintenance-info"><i class="fas fa-tools"></i><?php echo date('M d, Y', strtotime($m['lastMaintenanceDate'])); ?></div>
-                            <?php else: ?>
-                                <span class="text-muted"><i class="fas fa-clock"></i> No record</span>
-                            <?php endif; ?>
-                        </td>
-                        <td><span class="status-badge status-<?php echo strtolower($status); ?>"><?php echo $status; ?></span></td>
-                        <td>
-                            <div class="action-buttons">
-                                <button class="btn-icon" title="Edit" onclick="editMonitor(<?php echo $m['monitorId']; ?>)"><i class="fas fa-edit"></i></button>
-                                <button class="btn-icon btn-danger" title="Delete" onclick="deleteMonitor(<?php echo $m['monitorId']; ?>)"><i class="fas fa-trash"></i></button>
-                            </div>
-                        </td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
-
-        <div class="table-footer">
-            <div class="footer-info"><span id="monRecordCount"></span></div>
-            <div class="pagination-controls" id="monPaginationControls"></div>
-            <div class="per-page-control">
-                <label>Rows:
-                    <select id="monPerPageSelect" onchange="changePerPageMon()">
-                        <option value="10">10</option><option value="25" selected>25</option>
-                        <option value="50">50</option><option value="100">100</option>
-                    </select>
-                </label>
-            </div>
-        </div>
-        </div>
+    <div class="stat-card">
+        <i class="stat-icon fas fa-check-circle"></i>
+        <div class="stat-label">Available<div class="stat-value" id="statAvailable"><?php echo $totalAvailable; ?></div></div>
+        
     </div>
-
-    <!-- ── ALL-IN-ONE TAB ── -->
-    <div class="sub-tab-content" id="subtab-allinone">
-        <div class="stats-grid" style="grid-template-columns: repeat(3,1fr); margin-bottom: var(--space-5);">
-            <div class="stat-item">
-                <div class="stat-label">Total All-in-One</div>
-                <div class="stat-value"><?php echo count($allInOnes); ?></div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-label">Active</div>
-                <div class="stat-value"><?php echo count(array_filter($allInOnes, fn($a) => $a['employeeId'] != null)); ?></div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-label">Available</div>
-                <div class="stat-value"><?php echo count(array_filter($allInOnes, fn($a) => $a['employeeId'] == null)); ?></div>
-            </div>
-        </div>
-
-        <div class="data-table-container">
-            <div class="table-header">
-                <h2 class="table-title"><i class="fas fa-list"></i> All-in-One Inventory</h2>
-                <div class="table-controls">
-                    <div class="filter-group">
-                        <select id="aioAssignFilter" onchange="filterAllInOnes()">
-                            <option value="">All Assignments</option>
-                            <option value="employee">Assigned to Employee</option>
-                            <option value="location">Assigned to Location</option>
-                            <option value="unassigned">Unassigned</option>
-                        </select>
-                    </div>
-                    <div class="search-box">
-                        <i class="fas fa-search"></i>
-                        <input type="text" id="allinoneSearch" placeholder="Search brand, processor..." oninput="filterAllInOnes()">
-                    </div>
-                    <button class="btn btn-primary" onclick="openAddAllInOne()">
-                        <i class="fas fa-plus"></i> Add All-in-One
-                    </button>
-                </div>
-            </div>
-
-        <div class="data-table">
-            <table>
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Serial Number</th>
-                        <th>Brand &amp; Model</th>
-                        <th>Specifications</th>
-                        <th>Year</th>
-                        <th>Location</th>
-                        <th>Assigned To</th>
-                        <th>Last Maintenance</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="allinoneTableBody">
-                    <?php foreach ($allInOnes as $a): ?>
-                    <?php
-                        $status = $a['employeeId'] ? 'Active' : 'Available';
-                        $aioAssignType = $a['employeeId'] ? 'employee' : ($a['location_id'] ? 'location' : 'unassigned');
-                    ?>
-                    <tr data-aio-id="<?php echo $a['allinoneId']; ?>"
-                            data-assign-type="<?php echo $aioAssignType; ?>"
-                            data-serial="<?php echo strtolower(htmlspecialchars($a['allinoneSerial'] ?? '')); ?>"
-                            data-brand="<?php echo strtolower(htmlspecialchars($a['allinoneBrand'] ?? '')); ?>"
-                            data-processor="<?php echo strtolower(htmlspecialchars($a['specificationProcessor'] ?? '')); ?>"
-                            data-memory="<?php echo strtolower(htmlspecialchars($a['specificationMemory'] ?? '')); ?>"
-                            data-storage="<?php echo strtolower(htmlspecialchars($a['specificationStorage'] ?? '')); ?>"
-                            data-year="<?php echo strtolower(htmlspecialchars($a['yearAcquired'] ?? '')); ?>"
-                            data-location="<?php echo strtolower(htmlspecialchars($a['location_name'] ?? '')); ?>"
-                            data-employee="<?php echo strtolower(htmlspecialchars($a['employeeName'] ?? '')); ?>"
-                            data-status="<?php echo $status; ?>">
-                        <td class="row-counter"></td>
-                        <td><span class="serial-number"><?php echo htmlspecialchars($a['allinoneSerial'] ?? 'N/A'); ?></span></td>
-                        <td><div style="font-weight:600;color:var(--text-dark)"><?php echo htmlspecialchars($a['allinoneBrand']); ?></div></td>
-                        <td>
-                            <div class="spec-item"><i class="fas fa-microchip"></i><span class="spec-value"><?php echo htmlspecialchars($a['specificationProcessor']); ?></span></div>
-                            <div class="spec-item"><i class="fas fa-memory"></i><span class="spec-value"><?php echo htmlspecialchars($a['specificationMemory']); ?></span></div>
-                            <div class="spec-item"><i class="fas fa-hdd"></i><span class="spec-value"><?php echo htmlspecialchars($a['specificationStorage']); ?></span></div>
-                        </td>
-                        <td><?php echo htmlspecialchars($a['yearAcquired'] ?? 'N/A'); ?></td>
-                        <td>
-                            <?php if ($a['location_name']): ?>
-                                <div class="location-badge"><i class="fas fa-map-marker-alt"></i> <?php echo htmlspecialchars($a['location_name']); ?></div>
-                            <?php else: ?>
-                                <span style="color:var(--text-light);font-style:italic">—</span>
-                            <?php endif; ?>
-                        </td>
-                        <td>
-                            <?php if ($a['employeeName']): ?>
-                                <div style="font-weight:600;color:var(--text-dark)"><?php echo htmlspecialchars($a['employeeName']); ?></div>
-                                <div style="font-size:12px;color:var(--text-light)">ID: <?php echo htmlspecialchars($a['employeeId']); ?></div>
-                            <?php else: ?>
-                                <span style="color:var(--text-light);font-style:italic">Unassigned</span>
-                            <?php endif; ?>
-                        </td>
-                        <td>
-                            <?php if (!empty($a['lastMaintenanceDate'])): ?>
-                                <div class="maintenance-info"><i class="fas fa-tools"></i><?php echo date('M d, Y', strtotime($a['lastMaintenanceDate'])); ?></div>
-                            <?php else: ?>
-                                <span class="text-muted"><i class="fas fa-clock"></i> No record</span>
-                            <?php endif; ?>
-                        </td>
-                        <td><span class="status-badge status-<?php echo strtolower($status); ?>"><?php echo $status; ?></span></td>
-                        <td>
-                            <div class="action-buttons">
-                                <button class="btn-icon" title="Edit" onclick="editAllInOne(<?php echo $a['allinoneId']; ?>)"><i class="fas fa-edit"></i></button>
-                                <button class="btn-icon btn-danger" title="Delete" onclick="deleteAllInOne(<?php echo $a['allinoneId']; ?>)"><i class="fas fa-trash"></i></button>
-                            </div>
-                        </td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
-
-        <div class="table-footer">
-            <div class="footer-info"><span id="aioRecordCount"></span></div>
-            <div class="pagination-controls" id="aioPaginationControls"></div>
-            <div class="per-page-control">
-                <label>Rows:
-                    <select id="aioPerPageSelect" onchange="changePerPageAIO()">
-                        <option value="10">10</option><option value="25" selected>25</option>
-                        <option value="50">50</option><option value="100">100</option>
-                    </select>
-                </label>
-            </div>
-        </div>
-        </div>
+    <div class="stat-card">
+        <i class="stat-icon fas fa-tools"></i>
+        <div class="stat-label">Under Maintenance<div class="stat-value" id="statMaint"><?php echo $totalMaint; ?></div></div>
+        
     </div>
 </div>
 
-<!-- ╔══════════════════════════════════════════╗
-     ║  PRINTERS CATEGORY                       ║
-     ╚══════════════════════════════════════════╝ -->
-<div class="category-content" id="category-printers">
-    <div class="stats-grid">
-        <div class="stat-card">
-            <i class="fas fa-print stat-icon"></i>
-            <div><div class="stat-label">Total Printers</div><div class="stat-value"><?php echo $totalPrinters; ?></div></div>
-        </div>
-        <div class="stat-card">
-            <i class="fas fa-check-circle stat-icon"></i>
-            <div><div class="stat-label">In Use</div><div class="stat-value"><?php echo $printerInUse; ?></div></div>
-        </div>
-        <div class="stat-card">
-            <i class="fas fa-box-open stat-icon"></i>
-            <div><div class="stat-label">Available</div><div class="stat-value"><?php echo $printerAvail; ?></div></div>
-        </div>
-    </div>
-
-    <div class="data-table-container">
-        <div class="table-header">
-            <h2 class="table-title"><i class="fas fa-list"></i> Printer Inventory</h2>
-            <div class="table-controls">
-                <div class="filter-group">
-                    <select id="printerAssignFilter" onchange="filterPrinters()">
-                        <option value="">All Assignments</option>
-                        <option value="employee">Assigned to Employee</option>
-                        <option value="location">Assigned to Location</option>
-                        <option value="unassigned">Unassigned</option>
-                    </select>
-                </div>
-                <div class="search-box">
-                    <i class="fas fa-search"></i>
-                    <input type="text" id="printerSearch" placeholder="Search serial, brand, model..." oninput="filterPrinters()">
-                </div>
-                <button class="btn btn-primary" onclick="openAddPrinter()"><i class="fas fa-plus"></i> Add Printer</button>
+<!-- ══════════════════════════════════════════
+     UNIFIED TOOLBAR
+     ══════════════════════════════════════════ -->
+<div class="data-table-container">
+    <div class="table-header">
+        <h2 class="table-title"><i class="fas fa-list"></i> <span id="tableTitle">Equipment List</span></h2>
+        <div class="table-controls">
+            <!-- View Selector -->
+            <div class="filter-group" style="min-width:170px;flex:0 0 auto;">
+                <select id="viewSelector" onchange="EqUnified.switchView(this.value)">
+                    <option value="all">All Equipment</option>
+                    <option value="computers">Computers</option>
+                    <option value="printers">Printers</option>
+                    <option value="other">Other Equipment</option>
+                    <option value="location">By Location</option>
+                </select>
             </div>
-        </div>
 
-        <div class="data-table">
-            <table id="printerTable">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Serial Number</th>
-                        <th>Brand &amp; Model</th>
-                        <th>Year Acquired</th>
-                        <th>Location</th>
-                        <th>Assigned To</th>
-                        <th>Last Maintenance</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="printerTableBody">
-                    <?php if (empty($printers)): ?>
-                    <tr><td colspan="9" class="empty-state"><i class="fas fa-inbox"></i><p>No printer records found</p></td></tr>
-                    <?php else: ?>
-                        <?php foreach ($printers as $p):
-                            $status = $p['employeeId'] ? 'Working' : 'Available';
-                            $statusClass = $status === 'Working' ? 'in-use' : 'available';
-                        ?>
-                        <?php $prAssignType = $p['employeeId'] ? 'employee' : ($p['location_id'] ? 'location' : 'unassigned'); ?>
-                        <tr data-printer-id="<?php echo $p['printerId']; ?>"
-                            data-assign-type="<?php echo $prAssignType; ?>"
-                            data-serial="<?php echo strtolower($p['printerSerial'] ?? ''); ?>"
-                            data-brand="<?php echo strtolower($p['printerBrand'] . ' ' . $p['printerModel']); ?>"
-                            data-employee="<?php echo strtolower($p['employeeName'] ?? ''); ?>"
-                            data-year="<?php echo $p['yearAcquired'] ?? ''; ?>"
-                            data-location="<?php echo strtolower(htmlspecialchars($p['location_name'] ?? '')); ?>"
-                            data-status="<?php echo $status; ?>">
-                            <td class="row-counter"></td>
-                            <td><span class="serial-number"><?php echo htmlspecialchars($p['printerSerial'] ?? 'N/A'); ?></span></td>
-                            <td>
-                                <div class="brand-model">
-                                    <strong><?php echo htmlspecialchars($p['printerBrand']); ?></strong>
-                                    <span><i class="fas fa-tag" style="font-size:11px;margin-right:4px;color:var(--text-light)"></i><?php echo htmlspecialchars($p['printerModel']); ?></span>
-                                </div>
-                            </td>
-                            <td><span class="year-acquired"><?php echo htmlspecialchars($p['yearAcquired'] ?? 'N/A'); ?></span></td>
-                            <td>
-                                <?php if ($p['location_name']): ?>
-                                    <div class="location-badge"><i class="fas fa-map-marker-alt"></i> <?php echo htmlspecialchars($p['location_name']); ?></div>
-                                <?php else: ?>
-                                    <span style="color:var(--text-light);font-style:italic">—</span>
-                                <?php endif; ?>
-                            </td>
-                            <td>
-                                <?php if ($p['employeeName']): ?>
-                                    <div class="assigned-employee"><i class="fas fa-user"></i><?php echo htmlspecialchars($p['employeeName']); ?></div>
-                                    <div style="font-size:12px;color:var(--text-light);margin-top:2px;padding-left:18px">ID: <?php echo htmlspecialchars($p['employeeId']); ?></div>
-                                <?php else: ?>
-                                    <span class="text-muted">Unassigned</span>
-                                <?php endif; ?>
-                            </td>
-                            <td>
-                                <?php if (!empty($p['lastMaintenanceDate'])): ?>
-                                    <div class="maintenance-info"><i class="fas fa-tools"></i><?php echo date('M d, Y', strtotime($p['lastMaintenanceDate'])); ?></div>
-                                <?php else: ?>
-                                    <span class="text-muted"><i class="fas fa-clock"></i> No record</span>
-                                <?php endif; ?>
-                            </td>
-                            <td><span class="status-badge status-<?php echo $statusClass; ?>"><?php echo $status; ?></span></td>
-                            <td>
-                                <div class="action-buttons">
-                                    <button class="btn-action btn-edit" title="Edit" onclick="editPrinter(<?php echo $p['printerId']; ?>)"><i class="fas fa-edit"></i></button>
-                                    <button class="btn-action btn-delete" title="Delete" onclick="deletePrinter(<?php echo $p['printerId']; ?>)"><i class="fas fa-trash"></i></button>
-                                </div>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </tbody>
-            </table>
-        </div>
-
-        <div class="table-footer">
-            <div class="footer-info"><span id="prRecordCount"></span></div>
-            <div class="pagination-controls" id="prPaginationControls"></div>
-            <div class="per-page-control">
-                <label>Rows:
-                    <select id="prPerPageSelect" onchange="changePerPagePR()">
-                        <option value="10">10</option><option value="25" selected>25</option>
-                        <option value="50">50</option><option value="100">100</option>
-                    </select>
-                </label>
+            <!-- Type Filter (hidden in By Location view) -->
+            <div class="filter-group" id="typeFilterGroup" style="min-width:160px;flex:0 0 auto;">
+                <select id="typeFilter" onchange="EqUnified.applyFilters()">
+                    <option value="">All Types</option>
+                    <?php foreach ($typeNames as $tn): ?>
+                        <option value="<?php echo htmlspecialchars($tn); ?>"><?php echo htmlspecialchars($tn); ?></option>
+                    <?php endforeach; ?>
+                </select>
             </div>
-        </div>
-    </div>
-</div>
 
-<!-- ╔══════════════════════════════════════════╗
-     ║  OTHER EQUIPMENT CATEGORY                ║
-     ╚══════════════════════════════════════════╝ -->
-<div class="category-content" id="category-other">
-    <div class="stats-grid">
-        <div class="stat-card">
-            <i class="fas fa-box stat-icon"></i>
-            <div><div class="stat-label">Total Items</div><div class="stat-value"><?php echo $totalOther; ?></div></div>
-        </div>
-        <div class="stat-card">
-            <i class="fas fa-check-circle stat-icon"></i>
-            <div><div class="stat-label">In Use</div><div class="stat-value"><?php echo $otherInUse; ?></div></div>
-        </div>
-        <div class="stat-card">
-            <i class="fas fa-box-open stat-icon"></i>
-            <div><div class="stat-label">Available</div><div class="stat-value"><?php echo $otherAvail; ?></div></div>
-        </div>
-        <div class="stat-card">
-            <i class="fas fa-tools stat-icon"></i>
-            <div><div class="stat-label">Under Maintenance</div><div class="stat-value"><?php echo $otherMaint; ?></div></div>
-        </div>
-    </div>
+            <!-- Status Filter -->
+            <div class="filter-group" id="statusFilterGroup" style="min-width:140px;flex:0 0 auto;">
+                <select id="statusFilter" onchange="EqUnified.applyFilters()">
+                    <option value="">All Statuses</option>
+                    <option value="Active">Active</option>
+                    <option value="Available">Available</option>
+                    <option value="In Use">In Use</option>
+                    <option value="Under Maintenance">Under Maintenance</option>
+                </select>
+            </div>
 
-    <div class="data-table-container">
-        <div class="table-header">
-            <h2 class="table-title"><i class="fas fa-list"></i> Equipment Inventory</h2>
-            <div class="table-controls">
-                <div class="filter-group">
-                    <select id="otherAssignFilter" onchange="filterOtherEquipment()">
-                        <option value="">All Assignments</option>
-                        <option value="employee">Assigned to Employee</option>
-                        <option value="location">Assigned to Location</option>
-                        <option value="unassigned">Unassigned</option>
-                    </select>
-                </div>
-                <div class="search-box">
-                    <i class="fas fa-search"></i>
-                    <input type="text" id="otherSearch" placeholder="Search equipment..." oninput="filterOtherEquipment()">
-                </div>
-                <button class="btn btn-primary" onclick="openAddOtherEquipment()">
-                    <i class="fas fa-plus"></i> Add Equipment
+            <!-- Search -->
+            <div class="search-box" id="searchGroup">
+                <i class="fas fa-search"></i>
+                <input type="text" id="unifiedSearch" placeholder="Search serial, brand, employee, location..." oninput="EqUnified.applyFilters()">
+            </div>
+
+            <!-- Add Button -->
+            <div class="dropdown" id="addBtnGroup">
+                <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    <i class="fas fa-plus"></i> Add
                 </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="#" onclick="openAddSystemUnit(); return false;"><i class="fas fa-tower-broadcast"></i> System Unit</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="openAddMonitor(); return false;"><i class="fas fa-tv"></i> Monitor</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="openAddAllInOne(); return false;"><i class="fas fa-computer"></i> All-in-One PC</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="#" onclick="openAddPrinter(); return false;"><i class="fas fa-print"></i> Printer</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="#" onclick="openAddOtherEquipment(); return false;"><i class="fas fa-server"></i> Other Equipment</a></li>
+                </ul>
             </div>
         </div>
+    </div>
 
+    <!-- ══════════════════════════════════════════
+         ALL/FILTERED TABLE VIEW
+         ══════════════════════════════════════════ -->
+    <div id="tableView">
         <div class="data-table">
-            <table id="otherTable">
+            <table>
                 <thead>
                     <tr>
                         <th>#</th>
+                        <th>Type</th>
                         <th>Serial Number</th>
-                        <th>Equipment Type</th>
-                        <th>Brand &amp; Model</th>
+                        <th>Brand / Model</th>
+                        <th>Specs</th>
+                        <th>Year</th>
                         <th>Location</th>
                         <th>Assigned To</th>
+                        <th>Last Maintenance</th>
                         <th>Status</th>
-                        <th>Year Acquired</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
-                <tbody id="otherTableBody">
-                    <?php if (empty($otherEquipment)): ?>
-                    <tr><td colspan="9" class="empty-state"><i class="fas fa-inbox"></i><p>No equipment records found</p></td></tr>
-                    <?php else: ?>
-                        <?php foreach ($otherEquipment as $o):
-                            $displayStatus = $o['employeeId'] ? 'In Use' : $o['status'];
-                            $statusClass = match($displayStatus) {
-                                'Available'        => 'available',
-                                'In Use'           => 'in-use',
-                                'Under Maintenance'=> 'maintenance',
-                                'Disposed'         => 'disposed',
-                                default            => 'available'
-                            };
-                        ?>
-                        <?php $otherAssignType = $o['employeeId'] ? 'employee' : ($o['location_id'] ? 'location' : 'unassigned'); ?>
-                        <tr data-equipment-id="<?php echo $o['otherEquipmentId']; ?>"
-                            data-assign-type="<?php echo $otherAssignType; ?>"
-                            data-serial="<?php echo strtolower($o['serialNumber']); ?>"
-                            data-type="<?php echo strtolower($o['equipmentType']); ?>"
-                            data-brand="<?php echo strtolower($o['brand'] . ' ' . $o['model']); ?>"
-                            data-location="<?php echo strtolower($o['location_name']); ?>"
-                            data-employee="<?php echo strtolower($o['employeeName'] ?? ''); ?>"
-                            data-status="<?php echo $displayStatus; ?>"
-                            data-year="<?php echo $o['yearAcquired']; ?>">
-                            <td class="row-counter"></td>
-                            <td><span class="serial-number"><?php echo htmlspecialchars($o['serialNumber']); ?></span></td>
-                            <td>
-                                <div class="equipment-type">
-                                    <i class="fas fa-tag"></i>
-                                    <?php echo htmlspecialchars($o['equipmentType']); ?>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="brand-model">
-                                    <strong><?php echo htmlspecialchars($o['brand']); ?></strong>
-                                    <span><?php echo htmlspecialchars($o['model']); ?></span>
-                                </div>
-                                <?php if($o['details']): ?>
-                                    <div class="equipment-details"><?php echo htmlspecialchars(substr($o['details'], 0, 50)) . (strlen($o['details']) > 50 ? '...' : ''); ?></div>
-                                <?php endif; ?>
-                            </td>
-                            <td>
-                                <div class="location-badge">
-                                    <i class="fas fa-map-marker-alt"></i>
-                                    <?php echo htmlspecialchars($o['location_name']); ?>
-                                </div>
-                            </td>
-                            <td>
-                                <?php if ($o['employeeName']): ?>
-                                    <div class="assigned-employee"><i class="fas fa-user"></i><?php echo htmlspecialchars($o['employeeName']); ?></div>
-                                <?php else: ?>
-                                    <span class="text-muted">Unassigned</span>
-                                <?php endif; ?>
-                            </td>
-                            <td><span class="status-badge status-<?php echo $statusClass; ?>"><?php echo $displayStatus; ?></span></td>
-                            <td><span class="year-acquired"><?php echo htmlspecialchars($o['yearAcquired']); ?></span></td>
-                            <td>
-                                <div class="action-buttons">
-                                    <button class="btn-action btn-view" title="View Details" onclick="viewOtherEquipment(<?php echo $o['otherEquipmentId']; ?>)"><i class="fas fa-eye"></i></button>
-                                    <button class="btn-action btn-edit" title="Edit" onclick="editOtherEquipment(<?php echo $o['otherEquipmentId']; ?>)"><i class="fas fa-edit"></i></button>
-                                    <button class="btn-action btn-delete" title="Delete" onclick="deleteOtherEquipment(<?php echo $o['otherEquipmentId']; ?>)"><i class="fas fa-trash"></i></button>
-                                </div>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
+                <tbody id="unifiedTableBody">
                 </tbody>
             </table>
         </div>
 
         <div class="table-footer">
-            <div class="footer-info"><span id="otherRecordCount"></span></div>
-            <div class="pagination-controls" id="otherPaginationControls"></div>
+            <div class="footer-info"><span id="unifiedRecordCount"></span></div>
+            <div class="pagination-controls" id="unifiedPagination"></div>
             <div class="per-page-control">
                 <label>Rows:
-                    <select id="otherPerPageSelect" onchange="changePerPageOther()">
-                        <option value="10">10</option><option value="25" selected>25</option>
+                    <select id="unifiedPerPage" onchange="EqUnified.changePerPage()">
+                        <option value="10">10</option><option value="25">25</option>
                         <option value="50">50</option><option value="100">100</option>
                     </select>
                 </label>
             </div>
         </div>
     </div>
+
+    <!-- ══════════════════════════════════════════
+         BY LOCATION VIEW
+         ══════════════════════════════════════════ -->
+    <div id="locationView" style="display:none;">
+        <!-- Division selector -->
+        <div class="loc-view-toolbar">
+            <div class="loc-view-selector">
+                <label><i class="fas fa-building"></i> Division:</label>
+                <select id="locDivisionSelect" onchange="EqUnified.loadLocationTree()">
+                    <option value="">Select a Division</option>
+                    <?php foreach ($divisions as $div): ?>
+                        <option value="<?php echo $div['location_id']; ?>"><?php echo htmlspecialchars($div['location_name']); ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="loc-view-search">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="locSearch" placeholder="Search within location..." oninput="EqUnified.filterLocationResults()">
+                </div>
+            </div>
+        </div>
+
+        <!-- Location tree content -->
+        <div id="locationContent">
+            <div class="loc-empty-state">
+                <i class="fas fa-map-marked-alt"></i>
+                <h3>Select a Division</h3>
+                <p>Choose a division above to see equipment grouped by section and unit.</p>
+            </div>
+        </div>
+    </div>
 </div>
 
-<!-- ╔══════════════════════════════════════════╗
-     ║  MODALS                                  ║
-     ╚══════════════════════════════════════════╝ -->
+<!-- ══════════════════════════════════════════
+     VIEW EQUIPMENT DETAIL MODAL
+     ══════════════════════════════════════════ -->
+<div class="modal fade" id="viewEquipmentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content view-equipment-modal">
+            <div class="modal-header view-modal-header">
+                <div class="view-modal-title-wrap">
+                    <span class="view-modal-icon" id="viewEquipmentIcon"><i class="fas fa-info-circle"></i></span>
+                    <div>
+                        <h5 class="modal-title" id="viewEquipmentModalTitle">Equipment Details</h5>
+                        <span class="view-modal-subtitle" id="viewEquipmentSubtitle"></span>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-0" id="viewEquipmentContent">
+                <div class="text-center py-5"><i class="fas fa-spinner fa-spin fa-2x text-muted"></i></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="fas fa-times"></i> Close</button>
+                <button type="button" class="btn btn-primary" id="viewEquipmentEditBtn"><i class="fas fa-edit"></i> Edit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     EXISTING MODALS (keep all CRUD modals)
+     ══════════════════════════════════════════ -->
 
 <!-- System Unit Modal -->
 <div class="modal fade" id="systemunitModal" tabindex="-1" aria-labelledby="systemunitModalTitle" aria-hidden="true">
@@ -928,7 +360,7 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                                 <input type="text" class="form-control" id="suStorage" required placeholder="e.g., 512GB NVMe SSD">
                             </div>
                         </div>
-                        <div class="row mb-0">
+                        <div class="row mb-3">
                             <div class="col-md-6">
                                 <label for="suSerial" class="form-label">Serial Number *</label>
                                 <input type="text" class="form-control" id="suSerial" required>
@@ -936,6 +368,18 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                             <div class="col-md-6">
                                 <label for="suYear" class="form-label">Year Acquired *</label>
                                 <input type="number" class="form-control" id="suYear" required min="2000" max="2030">
+                            </div>
+                        </div>
+                        <div class="row mb-0">
+                            <div class="col-md-6">
+                                <label for="suMaintenanceDate" class="form-label">Last Maintenance Date</label>
+                                <input type="date" class="form-control" id="suMaintenanceDate">
+                                <small class="form-text text-muted">Optional — leave blank if none</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="suNextMaintenanceDate" class="form-label">Next Maintenance Date</label>
+                                <input type="date" class="form-control" id="suNextMaintenanceDate">
+                                <small class="form-text text-muted">Optional — schedule next maintenance</small>
                             </div>
                         </div>
                     </div>
@@ -963,15 +407,11 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                                 </div>
                                 <div class="col-md-6">
                                     <label class="small text-muted">Section</label>
-                                    <select class="form-select" id="suLocSection" disabled>
-                                        <option value="">Select Section</option>
-                                    </select>
+                                    <select class="form-select" id="suLocSection" disabled><option value="">Select Section</option></select>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="small text-muted">Unit</label>
-                                    <select class="form-select" id="suLocUnit" disabled>
-                                        <option value="">Select Unit</option>
-                                    </select>
+                                    <select class="form-select" id="suLocUnit" disabled><option value="">Select Unit</option></select>
                                 </div>
                             </div>
                             <input type="hidden" id="suLocation" name="location_id">
@@ -1016,7 +456,7 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                                 <input type="text" class="form-control" id="monSize" required placeholder="e.g., 24 inches">
                             </div>
                         </div>
-                        <div class="row mb-0">
+                        <div class="row mb-3">
                             <div class="col-md-6">
                                 <label for="monSerial" class="form-label">Serial Number *</label>
                                 <input type="text" class="form-control" id="monSerial" required>
@@ -1024,6 +464,18 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                             <div class="col-md-6">
                                 <label for="monYear" class="form-label">Year Acquired *</label>
                                 <input type="number" class="form-control" id="monYear" required min="2000" max="2030">
+                            </div>
+                        </div>
+                        <div class="row mb-0">
+                            <div class="col-md-6">
+                                <label for="monMaintenanceDate" class="form-label">Last Maintenance Date</label>
+                                <input type="date" class="form-control" id="monMaintenanceDate">
+                                <small class="form-text text-muted">Optional — leave blank if none</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="monNextMaintenanceDate" class="form-label">Next Maintenance Date</label>
+                                <input type="date" class="form-control" id="monNextMaintenanceDate">
+                                <small class="form-text text-muted">Optional — schedule next maintenance</small>
                             </div>
                         </div>
                     </div>
@@ -1051,15 +503,11 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                                 </div>
                                 <div class="col-md-6">
                                     <label class="small text-muted">Section</label>
-                                    <select class="form-select" id="monLocSection" disabled>
-                                        <option value="">Select Section</option>
-                                    </select>
+                                    <select class="form-select" id="monLocSection" disabled><option value="">Select Section</option></select>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="small text-muted">Unit</label>
-                                    <select class="form-select" id="monLocUnit" disabled>
-                                        <option value="">Select Unit</option>
-                                    </select>
+                                    <select class="form-select" id="monLocUnit" disabled><option value="">Select Unit</option></select>
                                 </div>
                             </div>
                             <input type="hidden" id="monLocation" name="location_id">
@@ -1124,12 +572,23 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                                 <input type="text" class="form-control" id="aioStorage" required placeholder="e.g., 512GB SSD">
                             </div>
                         </div>
-                        <div class="row mb-0">
+                        <div class="row mb-3">
                             <div class="col-md-6">
                                 <label for="aioYear" class="form-label">Year Acquired *</label>
                                 <input type="text" class="form-control" id="aioYear" required placeholder="e.g., 2023">
                             </div>
-
+                            <div class="col-md-6">
+                                <label for="aioMaintenanceDate" class="form-label">Last Maintenance Date</label>
+                                <input type="date" class="form-control" id="aioMaintenanceDate">
+                                <small class="form-text text-muted">Optional</small>
+                            </div>
+                        </div>
+                        <div class="row mb-0">
+                            <div class="col-md-6">
+                                <label for="aioNextMaintenanceDate" class="form-label">Next Maintenance Date</label>
+                                <input type="date" class="form-control" id="aioNextMaintenanceDate">
+                                <small class="form-text text-muted">Optional — schedule next maintenance</small>
+                            </div>
                         </div>
                     </div>
                     <div class="form-section">
@@ -1156,15 +615,11 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                                 </div>
                                 <div class="col-md-6">
                                     <label class="small text-muted">Section</label>
-                                    <select class="form-select" id="aioLocSection" disabled>
-                                        <option value="">Select Section</option>
-                                    </select>
+                                    <select class="form-select" id="aioLocSection" disabled><option value="">Select Section</option></select>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="small text-muted">Unit</label>
-                                    <select class="form-select" id="aioLocUnit" disabled>
-                                        <option value="">Select Unit</option>
-                                    </select>
+                                    <select class="form-select" id="aioLocUnit" disabled><option value="">Select Unit</option></select>
                                 </div>
                             </div>
                             <input type="hidden" id="aioLocation" name="location_id">
@@ -1209,7 +664,7 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                                 <input type="text" class="form-control" id="printerModel" required placeholder="Enter model number">
                             </div>
                         </div>
-                        <div class="row mb-0">
+                        <div class="row mb-3">
                             <div class="col-md-6">
                                 <label class="form-label">Serial Number <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="printerSerial" required>
@@ -1217,6 +672,18 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                             <div class="col-md-6">
                                 <label class="form-label">Year Acquired <span class="text-danger">*</span></label>
                                 <input type="number" class="form-control" id="printerYear" required min="2000" max="2030" placeholder="YYYY">
+                            </div>
+                        </div>
+                        <div class="row mb-0">
+                            <div class="col-md-6">
+                                <label for="printerMaintenanceDate" class="form-label">Last Maintenance Date</label>
+                                <input type="date" class="form-control" id="printerMaintenanceDate">
+                                <small class="form-text text-muted">Optional</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="printerNextMaintenanceDate" class="form-label">Next Maintenance Date</label>
+                                <input type="date" class="form-control" id="printerNextMaintenanceDate">
+                                <small class="form-text text-muted">Optional — schedule next maintenance</small>
                             </div>
                         </div>
                     </div>
@@ -1244,15 +711,11 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
                                 </div>
                                 <div class="col-md-6">
                                     <label class="small text-muted">Section</label>
-                                    <select class="form-select" id="printerLocSection" disabled>
-                                        <option value="">Select Section</option>
-                                    </select>
+                                    <select class="form-select" id="printerLocSection" disabled><option value="">Select Section</option></select>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="small text-muted">Unit</label>
-                                    <select class="form-select" id="printerLocUnit" disabled>
-                                        <option value="">Select Unit</option>
-                                    </select>
+                                    <select class="form-select" id="printerLocUnit" disabled><option value="">Select Unit</option></select>
                                 </div>
                             </div>
                             <input type="hidden" id="printerLocation" name="location_id">
@@ -1279,17 +742,16 @@ $otherMaint      = count(array_filter($otherEquipment, fn($o) => $o['status'] ==
 <!-- Other Equipment Modals -->
 <?php include '../../includes/components/other_equipment_modals.php'; ?>
 
-
 <!-- Pass data to JS -->
 <script>
     var defaultPerPage     = <?php echo $defaultPerPage; ?>;
-    var printerData        = <?php echo json_encode($printers); ?>;
-    var otherEquipmentData = <?php echo json_encode($otherEquipment); ?>;
+    var allEquipmentData   = <?php echo json_encode($unifiedRows, JSON_HEX_TAG | JSON_HEX_AMP); ?>;
+    var equipmentTypeNames = <?php echo json_encode($typeNames); ?>;
     var locationsData      = <?php echo json_encode($locations); ?>;
-    // Use window.employeesData so it's accessible even when loaded as a dashboard module
     window.employeesData   = <?php echo json_encode($employees); ?>;
 </script>
 
 <script src="assets/js/location_manager.js?v=<?php echo time()?>"></script>
 <script src="assets/js/autocomplete.js?v=<?php echo time()?>"></script>
 <script src="assets/js/equipment.js?v=<?php echo time()?>"></script>
+<script src="assets/js/equipment-unified.js?v=<?php echo time()?>"></script>

@@ -132,6 +132,18 @@
                                 <input type="number" class="form-control" id="otherYear" required min="2000" max="2030" placeholder="YYYY">
                             </div>
                         </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Last Maintenance Date</label>
+                                <input type="date" class="form-control" id="otherMaintenanceDate">
+                                <small class="form-text text-muted">Optional — leave blank if none</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Next Maintenance Date</label>
+                                <input type="date" class="form-control" id="otherNextMaintenanceDate">
+                                <small class="form-text text-muted">Optional — schedule next maintenance</small>
+                            </div>
+                        </div>
                     </div>
                 </form>
             </div>

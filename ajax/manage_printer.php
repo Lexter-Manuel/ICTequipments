@@ -70,11 +70,14 @@ function getItem($db) {
     $stmt->execute([':id' => $id, ':tid' => $TYPE_ID]);
     $r = $stmt->fetch(PDO::FETCH_ASSOC);
     if (!$r) throw new Exception('Printer not found');
+    $sp = getSpecs($db, $id);
     echo json_encode(['success' => true, 'data' => [
         'printerId' => $r['equipment_id'], 'printerBrand' => $r['brand'],
         'printerModel' => $r['model'], 'printerSerial' => $r['serial_number'],
         'yearAcquired' => $r['year_acquired'], 'employeeId' => $r['employee_id'],
         'employeeName' => $r['employeeName'], 'location_id' => $r['location_id'],
+        'maintenanceDate' => $sp['Maintenance Date'] ?? null,
+        'nextMaintenanceDate' => $sp['Next Maintenance Date'] ?? null,
         'status' => $r['employee_id'] ? 'Active' : 'Available',
     ]]);
 }
@@ -85,13 +88,15 @@ function createItem($db) {
     $serial = trim($_POST['serial_number'] ?? $_POST['serial'] ?? ''); $year = $_POST['year_acquired'] ?? $_POST['year'] ?? null;
     $empId = $_POST['employee_id'] ?? null;
     $locId = $_POST['location_id'] ?? null;
+    $maintDate = trim($_POST['maintenance_date'] ?? '');
+    $nextMaintDate = trim($_POST['next_maintenance_date'] ?? '');
     if (empty($brand)) throw new Exception('Brand is required');
 
     $db->beginTransaction();
     $stmt = $db->prepare("INSERT INTO tbl_equipment (type_id, employee_id, location_id, brand, model, serial_number, status, year_acquired) VALUES (:tid,:eid,:lid,:brand,:model,:serial,'Active',:year)");
     $stmt->execute([':tid'=>$TYPE_ID,':eid'=>$empId?:null,':lid'=>$locId?:null,':brand'=>$brand,':model'=>$model?:null,':serial'=>$serial?:null,':year'=>$year?:null]);
     $newId = $db->lastInsertId();
-    try { $m = new MaintenanceHelper($db); $m->initScheduleByTypeId($TYPE_ID, $newId); } catch (Exception $e) { error_log($e->getMessage()); }
+    saveSpecs($db, $newId, ['Maintenance Date' => $maintDate, 'Next Maintenance Date' => $nextMaintDate]);
     $db->commit();
     logActivity(ACTION_CREATE, MODULE_COMPUTERS, "Added Printer — Brand: {$brand}, Model: {$model}.");
     echo json_encode(['success' => true, 'message' => 'Printer added successfully', 'printer_id' => $newId]);
@@ -104,9 +109,12 @@ function updateItem($db) {
     $serial = trim($_POST['serial_number'] ?? $_POST['serial'] ?? ''); $year = $_POST['year_acquired'] ?? $_POST['year'] ?? null;
     $empId = $_POST['employee_id'] ?? null;
     $locId = $_POST['location_id'] ?? null;
+    $maintDate = trim($_POST['maintenance_date'] ?? '');
+    $nextMaintDate = trim($_POST['next_maintenance_date'] ?? '');
 
     $db->prepare("UPDATE tbl_equipment SET brand=:brand, model=:model, serial_number=:serial, year_acquired=:year, employee_id=:eid, location_id=:lid WHERE equipment_id=:id AND type_id=:tid")
        ->execute([':brand'=>$brand,':model'=>$model?:null,':serial'=>$serial?:null,':year'=>$year?:null,':eid'=>$empId?:null,':lid'=>$locId?:null,':id'=>$id,':tid'=>$TYPE_ID]);
+    saveSpecs($db, $id, ['Maintenance Date' => $maintDate, 'Next Maintenance Date' => $nextMaintDate]);
     logActivity(ACTION_UPDATE, MODULE_COMPUTERS, "Updated Printer (ID: {$id}) — Brand: {$brand}.");
     echo json_encode(['success' => true, 'message' => 'Printer updated successfully']);
 }
@@ -122,3 +130,6 @@ function deleteItem($db) {
     logActivity(ACTION_DELETE, MODULE_COMPUTERS, "Deleted Printer (ID: {$id}).");
     echo json_encode(['success' => true, 'message' => 'Printer deleted successfully']);
 }
+
+function getSpecs($db, $id) { $s = $db->prepare("SELECT spec_key, spec_value FROM tbl_equipment_specs WHERE equipment_id = :id"); $s->execute([':id'=>$id]); return $s->fetchAll(PDO::FETCH_KEY_PAIR); }
+function saveSpecs($db, $id, $specs) { $db->prepare("DELETE FROM tbl_equipment_specs WHERE equipment_id = :id")->execute([':id'=>$id]); $s = $db->prepare("INSERT INTO tbl_equipment_specs (equipment_id, spec_key, spec_value) VALUES (:id,:k,:v)"); foreach ($specs as $k => $v) { if (trim($v) !== '') $s->execute([':id'=>$id,':k'=>$k,':v'=>trim($v)]); } }

@@ -222,6 +222,8 @@ function editSystemUnit(id) {
                     toggleSUAssignmentType();
                 }
                 
+                document.getElementById('suMaintenanceDate').value = s.maintenanceDate || '';
+                document.getElementById('suNextMaintenanceDate').value = s.nextMaintenanceDate || '';
                 new bootstrap.Modal(document.getElementById('systemunitModal')).show();
             } else {
                 Alerts.error(data.message);
@@ -242,6 +244,8 @@ function saveSystemUnit() {
     formData.append('storage', document.getElementById('suStorage').value);
     formData.append('serial', document.getElementById('suSerial').value);
     formData.append('year', document.getElementById('suYear').value);
+    formData.append('maintenance_date', document.getElementById('suMaintenanceDate').value);
+    formData.append('next_maintenance_date', document.getElementById('suNextMaintenanceDate').value);
     
     // Handle location vs employee assignment
     if (document.getElementById('suTypeEmployee').checked) {
@@ -372,6 +376,8 @@ function editMonitor(id) {
                     toggleMonAssignmentType();
                 }
                 
+                document.getElementById('monMaintenanceDate').value = m.maintenanceDate || '';
+                document.getElementById('monNextMaintenanceDate').value = m.nextMaintenanceDate || '';
                 new bootstrap.Modal(document.getElementById('monitorModal')).show();
             } else { Alerts.error(data.message); }
         })
@@ -386,6 +392,8 @@ function saveMonitor() {
     formData.append('size', document.getElementById('monSize').value);
     formData.append('monitorSerial', document.getElementById('monSerial').value);
     formData.append('year', document.getElementById('monYear').value);
+    formData.append('maintenance_date', document.getElementById('monMaintenanceDate').value);
+    formData.append('next_maintenance_date', document.getElementById('monNextMaintenanceDate').value);
     
     // Handle location vs employee assignment
     if (document.getElementById('monTypeEmployee').checked) {
@@ -517,6 +525,8 @@ function editAllInOne(id) {
                     toggleAIOAssignmentType();
                 }
                 
+                document.getElementById('aioMaintenanceDate').value = a.maintenanceDate || '';
+                document.getElementById('aioNextMaintenanceDate').value = a.nextMaintenanceDate || '';
                 new bootstrap.Modal(document.getElementById('allinoneModal')).show();
             } else { Alerts.error(data.message); }
         })
@@ -534,6 +544,8 @@ function saveAllInOne() {
     formData.append('gpu', document.getElementById('aioGPU').value);
     formData.append('storage', document.getElementById('aioStorage').value);
     formData.append('year_acquired', document.getElementById('aioYear').value);
+    formData.append('maintenance_date', document.getElementById('aioMaintenanceDate').value);
+    formData.append('next_maintenance_date', document.getElementById('aioNextMaintenanceDate').value);
     
     // Handle location vs employee assignment
     if (document.getElementById('aioTypeEmployee').checked) {
@@ -896,6 +908,8 @@ function editPrinter(id) {
                     togglePrinterAssignmentType();
                 }
                 
+                document.getElementById('printerMaintenanceDate').value = p.maintenanceDate || '';
+                document.getElementById('printerNextMaintenanceDate').value = p.nextMaintenanceDate || '';
                 new bootstrap.Modal(document.getElementById('printerModal')).show();
             } else { Alerts.error(data.message); }
         })
@@ -918,6 +932,8 @@ function savePrinter() {
     formData.append('model',         document.getElementById('printerModel').value);
     formData.append('serial_number', document.getElementById('printerSerial').value);
     formData.append('year_acquired', document.getElementById('printerYear').value);
+    formData.append('maintenance_date', document.getElementById('printerMaintenanceDate').value);
+    formData.append('next_maintenance_date', document.getElementById('printerNextMaintenanceDate').value);
     
     // Handle location vs employee assignment
     if (document.getElementById('printerTypeEmployee').checked) {
@@ -1089,6 +1105,8 @@ function editOtherEquipment(id) {
                     toggleAssignmentType();
                 }
 
+                document.getElementById('otherMaintenanceDate').value = o.maintenanceDate || '';
+                document.getElementById('otherNextMaintenanceDate').value = o.nextMaintenanceDate || '';
                 new bootstrap.Modal(document.getElementById('otherModal')).show();
             } else { Alerts.error(data.message); }
         })
@@ -1115,6 +1133,8 @@ function saveOtherEquipment() {
     if (!formData.get('year'))    formData.append('year', document.getElementById('otherYear').value);
     if (!formData.get('status'))  formData.append('status', document.getElementById('otherStatus').value);
     if (!formData.get('details')) formData.append('details', document.getElementById('otherDetails').value);
+    formData.append('maintenance_date', document.getElementById('otherMaintenanceDate').value);
+    formData.append('next_maintenance_date', document.getElementById('otherNextMaintenanceDate').value);
 
     var locId = document.getElementById('otherLocation').value;
     var empId = document.getElementById('otherEmployee').value;

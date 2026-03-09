@@ -82,6 +82,8 @@ function getItem($db) {
         'specificationGpu' => $sp['GPU'] ?? '', 'specificationStorage' => $sp['Storage'] ?? '',
         'yearAcquired' => $r['year_acquired'], 'employeeId' => $r['employee_id'],
         'employeeName' => $r['employeeName'], 'location_id' => $r['location_id'],
+        'maintenanceDate' => $sp['Maintenance Date'] ?? null,
+        'nextMaintenanceDate' => $sp['Next Maintenance Date'] ?? null,
         'status' => $r['employee_id'] ? 'Active' : 'Available',
     ]]);
 }
@@ -94,14 +96,15 @@ function createItem($db) {
     $locId = $_POST['location_id'] ?? null;
     $proc = trim($_POST['processor'] ?? ''); $mem = trim($_POST['memory'] ?? '');
     $gpu = trim($_POST['gpu'] ?? ''); $storage = trim($_POST['storage'] ?? '');
+    $maintDate = trim($_POST['maintenance_date'] ?? '');
+    $nextMaintDate = trim($_POST['next_maintenance_date'] ?? '');
     if (empty($brand)) throw new Exception('Brand is required');
 
     $db->beginTransaction();
     $stmt = $db->prepare("INSERT INTO tbl_equipment (type_id, employee_id, location_id, brand, serial_number, property_number, status, year_acquired) VALUES (:tid,:eid,:lid,:brand,:serial,:prop,'Active',:year)");
     $stmt->execute([':tid'=>$TYPE_ID,':eid'=>$empId?:null,':lid'=>$locId?:null,':brand'=>$brand,':serial'=>$serial?:null,':prop'=>$prop?:null,':year'=>$year?:null]);
     $newId = $db->lastInsertId();
-    saveSpecs($db, $newId, ['Processor'=>$proc, 'Memory'=>$mem, 'GPU'=>$gpu, 'Storage'=>$storage]);
-    try { $m = new MaintenanceHelper($db); $m->initScheduleByTypeId($TYPE_ID, $newId); } catch (Exception $e) { error_log($e->getMessage()); }
+    saveSpecs($db, $newId, ['Processor'=>$proc, 'Memory'=>$mem, 'GPU'=>$gpu, 'Storage'=>$storage, 'Maintenance Date'=>$maintDate, 'Next Maintenance Date'=>$nextMaintDate]);
     $db->commit();
     logActivity(ACTION_CREATE, MODULE_COMPUTERS, "Added All-in-One — Brand: {$brand}, Serial: {$serial}.");
     echo json_encode(['success' => true, 'message' => 'All-in-One added successfully', 'allinone_id' => $newId]);
@@ -116,11 +119,13 @@ function updateItem($db) {
     $locId = $_POST['location_id'] ?? null;
     $proc = trim($_POST['processor'] ?? ''); $mem = trim($_POST['memory'] ?? '');
     $gpu = trim($_POST['gpu'] ?? ''); $storage = trim($_POST['storage'] ?? '');
+    $maintDate = trim($_POST['maintenance_date'] ?? '');
+    $nextMaintDate = trim($_POST['next_maintenance_date'] ?? '');
 
     $db->beginTransaction();
     $db->prepare("UPDATE tbl_equipment SET brand=:brand, serial_number=:serial, property_number=:prop, year_acquired=:year, employee_id=:eid, location_id=:lid WHERE equipment_id=:id AND type_id=:tid")
        ->execute([':brand'=>$brand,':serial'=>$serial?:null,':prop'=>$prop?:null,':year'=>$year?:null,':eid'=>$empId?:null,':lid'=>$locId?:null,':id'=>$id,':tid'=>$TYPE_ID]);
-    saveSpecs($db, $id, ['Processor'=>$proc, 'Memory'=>$mem, 'GPU'=>$gpu, 'Storage'=>$storage]);
+    saveSpecs($db, $id, ['Processor'=>$proc, 'Memory'=>$mem, 'GPU'=>$gpu, 'Storage'=>$storage, 'Maintenance Date'=>$maintDate, 'Next Maintenance Date'=>$nextMaintDate]);
     $db->commit();
     logActivity(ACTION_UPDATE, MODULE_COMPUTERS, "Updated All-in-One (ID: {$id}) — Brand: {$brand}.");
     echo json_encode(['success' => true, 'message' => 'All-in-One updated successfully']);

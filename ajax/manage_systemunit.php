@@ -105,6 +105,8 @@ function getItem($db) {
         'employeeId' => $r['employee_id'],
         'employeeName' => $r['employeeName'],
         'location_id' => $r['location_id'],
+        'maintenanceDate' => $sp['Maintenance Date'] ?? null,
+        'nextMaintenanceDate' => $sp['Next Maintenance Date'] ?? null,
         'status' => $r['employee_id'] ? 'Active' : 'Available',
     ]]);
 }
@@ -121,6 +123,8 @@ function createItem($db) {
     $memory = trim($_POST['memory'] ?? '');
     $gpu = trim($_POST['gpu'] ?? '');
     $storage = trim($_POST['storage'] ?? '');
+    $maintDate = trim($_POST['maintenance_date'] ?? '');
+    $nextMaintDate = trim($_POST['next_maintenance_date'] ?? '');
 
     if (empty($brand)) throw new Exception('Brand is required');
     if (empty($serial)) throw new Exception('Serial number is required');
@@ -131,10 +135,9 @@ function createItem($db) {
     $stmt->execute([':tid' => $TYPE_ID, ':eid' => $empId ?: null, ':lid' => $locId ?: null, ':brand' => $brand, ':serial' => $serial, ':year' => $year ?: null]);
     $newId = $db->lastInsertId();
 
-    $specData = ['Category' => $category, 'Processor' => $processor, 'Memory' => $memory, 'GPU' => $gpu, 'Storage' => $storage];
+    $specData = ['Category' => $category, 'Processor' => $processor, 'Memory' => $memory, 'GPU' => $gpu, 'Storage' => $storage, 'Maintenance Date' => $maintDate, 'Next Maintenance Date' => $nextMaintDate];
     saveSpecs($db, $newId, $specData);
 
-    try { $m = new MaintenanceHelper($db); $m->initScheduleByTypeId($TYPE_ID, $newId); } catch (Exception $e) { error_log($e->getMessage()); }
     $db->commit();
 
     logActivity(ACTION_CREATE, MODULE_COMPUTERS, "Added System Unit — Brand: {$brand}, Serial: {$serial}.");
@@ -156,13 +159,15 @@ function updateItem($db) {
     $memory = trim($_POST['memory'] ?? '');
     $gpu = trim($_POST['gpu'] ?? '');
     $storage = trim($_POST['storage'] ?? '');
+    $maintDate = trim($_POST['maintenance_date'] ?? '');
+    $nextMaintDate = trim($_POST['next_maintenance_date'] ?? '');
 
     $db->beginTransaction();
     $stmt = $db->prepare("UPDATE tbl_equipment SET brand = :brand, serial_number = :serial, year_acquired = :year, employee_id = :eid, location_id = :lid
         WHERE equipment_id = :id AND type_id = :tid");
     $stmt->execute([':brand' => $brand, ':serial' => $serial, ':year' => $year ?: null, ':eid' => $empId ?: null, ':lid' => $locId ?: null, ':id' => $id, ':tid' => $TYPE_ID]);
 
-    $specData = ['Category' => $category, 'Processor' => $processor, 'Memory' => $memory, 'GPU' => $gpu, 'Storage' => $storage];
+    $specData = ['Category' => $category, 'Processor' => $processor, 'Memory' => $memory, 'GPU' => $gpu, 'Storage' => $storage, 'Maintenance Date' => $maintDate, 'Next Maintenance Date' => $nextMaintDate];
     saveSpecs($db, $id, $specData);
     $db->commit();
 

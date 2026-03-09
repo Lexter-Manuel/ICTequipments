@@ -78,6 +78,8 @@ function getItem($db) {
         'monitorSerial' => $r['serial_number'], 'monitorSize' => $sp['Monitor Size'] ?? '',
         'yearAcquired' => $r['year_acquired'], 'employeeId' => $r['employee_id'],
         'employeeName' => $r['employeeName'], 'location_id' => $r['location_id'],
+        'maintenanceDate' => $sp['Maintenance Date'] ?? null,
+        'nextMaintenanceDate' => $sp['Next Maintenance Date'] ?? null,
         'status' => $r['employee_id'] ? 'Active' : 'Available',
     ]]);
 }
@@ -88,14 +90,15 @@ function createItem($db) {
     $year = $_POST['year'] ?? null; $empId = $_POST['employee_id'] ?? null;
     $locId = $_POST['location_id'] ?? null;
     $size = trim($_POST['size'] ?? $_POST['monitor_size'] ?? '');
+    $maintDate = trim($_POST['maintenance_date'] ?? '');
+    $nextMaintDate = trim($_POST['next_maintenance_date'] ?? '');
     if (empty($brand)) throw new Exception('Brand is required');
 
     $db->beginTransaction();
     $stmt = $db->prepare("INSERT INTO tbl_equipment (type_id, employee_id, location_id, brand, serial_number, status, year_acquired) VALUES (:tid,:eid,:lid,:brand,:serial,'Active',:year)");
     $stmt->execute([':tid'=>$TYPE_ID,':eid'=>$empId?:null,':lid'=>$locId?:null,':brand'=>$brand,':serial'=>$serial?:null,':year'=>$year?:null]);
     $newId = $db->lastInsertId();
-    saveSpecs($db, $newId, ['Monitor Size' => $size]);
-    try { $m = new MaintenanceHelper($db); $m->initScheduleByTypeId($TYPE_ID, $newId); } catch (Exception $e) { error_log($e->getMessage()); }
+    saveSpecs($db, $newId, ['Monitor Size' => $size, 'Maintenance Date' => $maintDate, 'Next Maintenance Date' => $nextMaintDate]);
     $db->commit();
     logActivity(ACTION_CREATE, MODULE_COMPUTERS, "Added Monitor — Brand: {$brand}, Serial: {$serial}.");
     echo json_encode(['success' => true, 'message' => 'Monitor added successfully', 'monitor_id' => $newId]);
@@ -108,11 +111,13 @@ function updateItem($db) {
     $year = $_POST['year'] ?? null; $empId = $_POST['employee_id'] ?? null;
     $locId = $_POST['location_id'] ?? null;
     $size = trim($_POST['size'] ?? $_POST['monitor_size'] ?? '');
+    $maintDate = trim($_POST['maintenance_date'] ?? '');
+    $nextMaintDate = trim($_POST['next_maintenance_date'] ?? '');
 
     $db->beginTransaction();
     $db->prepare("UPDATE tbl_equipment SET brand=:brand, serial_number=:serial, year_acquired=:year, employee_id=:eid, location_id=:lid WHERE equipment_id=:id AND type_id=:tid")
        ->execute([':brand'=>$brand,':serial'=>$serial?:null,':year'=>$year?:null,':eid'=>$empId?:null,':lid'=>$locId?:null,':id'=>$id,':tid'=>$TYPE_ID]);
-    saveSpecs($db, $id, ['Monitor Size' => $size]);
+    saveSpecs($db, $id, ['Monitor Size' => $size, 'Maintenance Date' => $maintDate, 'Next Maintenance Date' => $nextMaintDate]);
     $db->commit();
     logActivity(ACTION_UPDATE, MODULE_COMPUTERS, "Updated Monitor (ID: {$id}) — Brand: {$brand}.");
     echo json_encode(['success' => true, 'message' => 'Monitor updated successfully']);

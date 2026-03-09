@@ -147,6 +147,8 @@ function getEquipment($db) {
         'location_name' => $r['location_name'],
         'employeeId' => $r['employee_id'],
         'employeeName' => $r['employeeName'],
+        'maintenanceDate' => $sp['Maintenance Date'] ?? null,
+        'nextMaintenanceDate' => $sp['Next Maintenance Date'] ?? null,
     ]]);
 }
 
@@ -178,9 +180,10 @@ function createEquipment($db) {
     $stmt = $db->prepare("INSERT INTO tbl_equipment (type_id, employee_id, location_id, brand, model, serial_number, status, year_acquired) VALUES (:tid,:eid,:lid,:brand,:model,:serial,:status,:year)");
     $stmt->execute([':tid'=>$typeId, ':eid'=>$employeeId, ':lid'=>$locationId?:null, ':brand'=>$brand, ':model'=>$model?:null, ':serial'=>$serial?:null, ':status'=>$status, ':year'=>$year]);
     $newId = $db->lastInsertId();
-    saveSpecs($db, $newId, ['Details' => $details]);
+    $maintDate = trim($_POST['maintenance_date'] ?? '');
+    $nextMaintDate = trim($_POST['next_maintenance_date'] ?? '');
+    saveSpecs($db, $newId, ['Details' => $details, 'Maintenance Date' => $maintDate, 'Next Maintenance Date' => $nextMaintDate]);
 
-    try { $m = new MaintenanceHelper($db); $m->initScheduleByTypeId($typeId, $newId); } catch (Exception $e) { error_log("Maintenance Schedule Error: " . $e->getMessage()); }
     $db->commit();
 
     logActivity(ACTION_CREATE, MODULE_OTHER_EQUIPMENT,
@@ -219,7 +222,9 @@ function updateEquipment($db) {
     if ($typeId) { $sql .= ", type_id=:tid"; $params[':tid'] = $typeId; }
     $sql .= " WHERE equipment_id=:id";
     $db->prepare($sql)->execute($params);
-    saveSpecs($db, $id, ['Details' => $details]);
+    $maintDate = trim($_POST['maintenance_date'] ?? '');
+    $nextMaintDate = trim($_POST['next_maintenance_date'] ?? '');
+    saveSpecs($db, $id, ['Details' => $details, 'Maintenance Date' => $maintDate, 'Next Maintenance Date' => $nextMaintDate]);
     $db->commit();
 
     logActivity(ACTION_UPDATE, MODULE_OTHER_EQUIPMENT,
