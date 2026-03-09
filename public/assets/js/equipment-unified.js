@@ -1,8 +1,4 @@
-/**
- * equipment-unified.js — Unified Equipment Table & By-Location View
- * Replaces the multi-tab layout with a single filterable table + location grouping.
- * Depends on: utils.js (escapeHtml, renderPaginationControls, updateRowCounters), equipment.js (CRUD functions)
- */
+
 var EqUnified = (function() {
     'use strict';
 
