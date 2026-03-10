@@ -8,6 +8,7 @@ require_once '../config/session-guard.php';
 require_once '../config/database.php';
 require_once '../config/config.php';
 require_once '../includes/maintenanceHelper.php';
+require_once '../includes/assignmentHistoryHelper.php';
 
 header('Content-Type: application/json');
 if (session_status() === PHP_SESSION_NONE) session_start();
@@ -149,6 +150,12 @@ function updateItem($db) {
     $id = $_POST['systemunit_id'] ?? null;
     if (!$id) throw new Exception('System unit ID is required');
 
+    // Fetch old employee_id for history tracking
+    $oldStmt = $db->prepare("SELECT employee_id FROM tbl_equipment WHERE equipment_id = ?");
+    $oldStmt->execute([$id]);
+    $oldRow = $oldStmt->fetch(PDO::FETCH_ASSOC);
+    $oldEmployeeId = $oldRow ? ($oldRow['employee_id'] ? (int)$oldRow['employee_id'] : null) : null;
+
     $brand = trim($_POST['brand'] ?? '');
     $serial = trim($_POST['serial'] ?? '');
     $year = $_POST['year'] ?? null;
@@ -169,6 +176,10 @@ function updateItem($db) {
 
     $specData = ['Category' => $category, 'Processor' => $processor, 'Memory' => $memory, 'GPU' => $gpu, 'Storage' => $storage, 'Maintenance Date' => $maintDate, 'Next Maintenance Date' => $nextMaintDate];
     saveSpecs($db, $id, $specData);
+
+    $newEmployeeId = $empId ? (int)$empId : null;
+    recordAssignmentChange($db, (int)$id, $oldEmployeeId, $newEmployeeId);
+
     $db->commit();
 
     logActivity(ACTION_UPDATE, MODULE_COMPUTERS, "Updated System Unit (ID: {$id}) — Brand: {$brand}, Serial: {$serial}.");

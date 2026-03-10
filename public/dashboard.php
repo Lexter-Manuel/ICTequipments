@@ -276,12 +276,13 @@ header('Expires: 0');
         };
     </script>
     <script src="assets/bootstrap/bootstrap.bundle.min.js"></script>
-    <script src="../vendor/node_modules/cropperjs/dist/cropper.min.js"></script>
+    <script src="assets/vendor/cropper.min.js"></script>
     <script src="assets/js/alerts.js?v=<?php echo time()?>"></script>
     <script src="assets/js/utils.js?v=<?php echo time()?>"></script>
     <!-- <script src="assets/js/realtime.js?v="></script> -->
     <script src="assets/js/dashboard.js?v=<?php echo time()?>"></script>
     <script src="assets/js/maintenance-conductor.js?v=<?php echo time(); ?>"></script>
+    <script src="assets/js/settings.js?v=<?php echo time(); ?>"></script>
 
     <!-- Dark mode toggle -->
     <script>

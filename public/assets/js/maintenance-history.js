@@ -295,7 +295,7 @@ function renderDivisionCards(divisions) {
             </div>
             <div class="mnt-summary-body">${bodyHtml}</div>
             <div class="mnt-summary-card-footer">
-                <button class="btn btn-outline-primary w-100 btn-sm" onclick="viewDivisionHistory(${div.location_id})">
+                <button class="btn btn-outline-primary w-100 btn-sm" style="color: var(--bg-white);" onclick="viewDivisionHistory(${div.location_id})">
                     <i class="fas fa-arrow-right"></i> View Division History
                 </button>
             </div>
@@ -393,7 +393,12 @@ function backToDivisionsHistory() {
    ========================================================= */
 function switchHistSubtab(tab) {
     activeHistSubtab = tab;
-    document.getElementById('dvHistTabGrouped').classList.toggle('active',   tab === 'grouped');
+
+    // Guard: these elements only exist when a division detail panel is open
+    var tabGrouped = document.getElementById('dvHistTabGrouped');
+    if (!tabGrouped) return; // panel not rendered yet, just save the tab state
+
+    tabGrouped.classList.toggle('active', tab === 'grouped');
     document.getElementById('dvHistTabAll').classList.toggle('active',        tab === 'all');
     document.getElementById('dvHistTabEmp').classList.toggle('active',        tab === 'employees');
     document.getElementById('dvHistPanelGrouped').classList.toggle('dv-panel-active',   tab === 'grouped');

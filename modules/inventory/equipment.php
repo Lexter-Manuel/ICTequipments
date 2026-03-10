@@ -267,7 +267,7 @@ $divisions = $stmtDiv->fetchAll(PDO::FETCH_ASSOC);
             <div class="loc-view-search">
                 <div class="search-box">
                     <i class="fas fa-search"></i>
-                    <input type="text" id="locSearch" placeholder="Search within location..." oninput="EqUnified.filterLocationResults()">
+                    <input type="text" id="locSearch" placeholder="Search serial, brand, employee, section, unit..." oninput="EqUnified.filterLocationResults()">
                 </div>
             </div>
         </div>
@@ -741,6 +741,63 @@ $divisions = $stmtDiv->fetchAll(PDO::FETCH_ASSOC);
 
 <!-- Other Equipment Modals -->
 <?php include '../../includes/components/other_equipment_modals.php'; ?>
+
+<!-- ══════════════════════════════════════════
+     BATCH SCHEDULE MAINTENANCE MODAL (Location View)
+     ══════════════════════════════════════════ -->
+<div class="modal fade" id="locBatchScheduleModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: var(--radius-xl); overflow: hidden;">
+            <div class="modal-header" style="background: var(--primary-green); color: #fff; border: none; padding: var(--space-4) var(--space-5);">
+                <h5 class="modal-title" id="locBatchTitle">
+                    <i class="fas fa-calendar-check me-2"></i> Schedule Maintenance
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" style="padding: var(--space-5);">
+                <!-- Step 1: Configure -->
+                <div id="locBatchConfig">
+                    <div id="locBatchInfo" style="background: var(--bg-light); border-radius: var(--radius-lg); padding: var(--space-4); margin-bottom: var(--space-4);"></div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Start Date (Shared Due Date)</label>
+                            <input type="date" class="form-control" id="locBatchStartDate">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Frequency</label>
+                            <select class="form-select" id="locBatchFrequency">
+                                <option value="Monthly">Monthly (30 days)</option>
+                                <option value="Quarterly">Quarterly (90 days)</option>
+                                <option value="Semi-Annual" selected>Semi-Annual (180 days)</option>
+                                <option value="Annual">Annual (365 days)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info" style="font-size: var(--text-sm);">
+                        <i class="fas fa-info-circle me-1"></i>
+                        All unscheduled equipment under this location will share the same due date.
+                        Equipment that already has an active schedule will be skipped.
+                    </div>
+                </div>
+
+                <!-- Step 2: Result -->
+                <div id="locBatchResult" style="display: none;">
+                    <div id="locBatchResultContent" class="text-center py-4">
+                        <span class="spinner-border spinner-border-sm"></span> Processing…
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid var(--border-color); padding: var(--space-3) var(--space-5);">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" id="locBatchCancelBtn">Cancel</button>
+                <button type="button" class="btn btn-success" id="locBatchConfirmBtn" onclick="EqUnified.executeBatchSchedule()">
+                    <i class="fas fa-check"></i> Create Schedules
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- Pass data to JS -->
 <script>

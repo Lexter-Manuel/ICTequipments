@@ -269,7 +269,7 @@ async function loadSummaryView() {
                     </div>
                     <div class="mnt-summary-body">${sectionsHtml}</div>
                     <div class="mnt-summary-card-footer">
-                        <button class="btn btn-outline-primary w-100 btn-sm" onclick="viewDivisionSchedule('${div.divisionId}','${escAttr(div.divisionName)}')">
+                        <button class="btn btn-outline-primary w-100 btn-sm" style="color: var(--bg-white);" onclick="viewDivisionSchedule('${div.divisionId}','${escAttr(div.divisionName)}')">
                             <i class="fas fa-arrow-right"></i> View Division Assets
                         </button>
                     </div>
@@ -388,7 +388,12 @@ async function onDvUnitFilterChange() {
    ========================================================= */
 function switchSchedSubtab(tab) {
     activeSchedSubtab = tab;
-    document.getElementById('dvSchedTabGrouped').classList.toggle('active', tab === 'grouped');
+
+    // Guard: these elements only exist when a division detail panel is open
+    var tabGrouped = document.getElementById('dvSchedTabGrouped');
+    if (!tabGrouped) return; // panel not rendered yet, just save the tab state
+
+    tabGrouped.classList.toggle('active', tab === 'grouped');
     document.getElementById('dvSchedTabAll').classList.toggle('active',     tab === 'all');
     document.getElementById('dvSchedTabEmp').classList.toggle('active',     tab === 'employees');
     document.getElementById('dvSchedPanelGrouped').classList.toggle('dv-panel-active', tab === 'grouped');

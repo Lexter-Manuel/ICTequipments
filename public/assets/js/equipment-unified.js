@@ -306,6 +306,11 @@ var EqUnified = (function() {
             });
     }
 
+    // State for batch scheduling
+    var batchScheduleLocationId = null;
+    var batchScheduleLocationName = '';
+    var batchScheduleStats = null;
+
     function renderLocationTree(data) {
         var content = document.getElementById('locationContent');
         var sections = data.sections || [];
@@ -330,12 +335,19 @@ var EqUnified = (function() {
             });
 
             html += '<div class="loc-section" data-section-name="' + escapeHtml(section.name).toLowerCase() + '">';
-            html += '<div class="loc-section-header" onclick="EqUnified.toggleSection(this)">';
-            html += '<div class="loc-section-title">';
+            html += '<div class="loc-section-header">';
+            html += '<div class="loc-section-title" onclick="EqUnified.toggleSection(this.parentElement)">';
             html += '<i class="fas fa-chevron-right loc-chevron"></i>';
             html += '<i class="fas fa-sitemap"></i> ' + escapeHtml(section.name);
             html += '<span class="loc-count-badge">' + sectionTotal + ' equipment</span>';
+            var secStats = section.schedule_stats || {};
+            if (secStats.unscheduled > 0) {
+                html += '<span class="loc-count-badge" style="background:var(--color-warning);color:#000;">' + secStats.unscheduled + ' unscheduled</span>';
+            }
             html += '</div>';
+            html += '<button class="btn btn-sm btn-outline-success loc-schedule-btn" onclick="event.stopPropagation(); EqUnified.openBatchSchedule(' + section.location_id + ', \'' + escapeHtml(section.name).replace(/'/g, "\\'") + '\')" title="Schedule maintenance for this section">';
+            html += '<i class="fas fa-calendar-check"></i> Schedule';
+            html += '</button>';
             html += '</div>';
             html += '<div class="loc-section-body" style="display:none;">';
 
@@ -352,7 +364,16 @@ var EqUnified = (function() {
                 html += '<div class="loc-unit-title">';
                 html += '<i class="fas fa-folder"></i> ' + escapeHtml(unit.name);
                 html += '<span class="loc-count-badge">' + unitEquip.length + '</span>';
+                var unitStats = unit.schedule_stats || {};
+                if (unitStats.unscheduled > 0) {
+                    html += '<span class="loc-count-badge" style="background:var(--color-warning);color:#000;">' + unitStats.unscheduled + ' unscheduled</span>';
+                }
                 html += '</div>';
+                if (unitEquip.length > 0) {
+                    html += '<button class="btn btn-sm btn-outline-success loc-schedule-btn" onclick="event.stopPropagation(); EqUnified.openBatchSchedule(' + unit.location_id + ', \'' + escapeHtml(unit.name).replace(/'/g, "\\'") + '\')" title="Schedule maintenance for this unit">';
+                    html += '<i class="fas fa-calendar-check"></i> Schedule';
+                    html += '</button>';
+                }
                 html += '</div>';
                 if (unitEquip.length > 0) {
                     html += buildLocationEquipmentTable(unitEquip, unit.name);
@@ -420,10 +441,19 @@ var EqUnified = (function() {
             var sectionMatch = sectionName.indexOf(term) !== -1;
             var anyUnitMatch = false;
 
+            // Also check equipment rows within the section's own table (not inside units)
+            var sectionTables = sec.querySelectorAll(':scope > .loc-section-body > .loc-equip-table');
+            var anySecRowMatch = filterEquipmentRows(sectionTables, term);
+
             units.forEach(function(u) {
                 var unitName = u.dataset.unitName || '';
                 var unitMatch = unitName.indexOf(term) !== -1;
-                if (unitMatch || sectionMatch || !term) {
+
+                // Check equipment rows within this unit
+                var unitTables = u.querySelectorAll('.loc-equip-table');
+                var anyRowMatch = filterEquipmentRows(unitTables, term);
+
+                if (unitMatch || anyRowMatch || sectionMatch || !term) {
                     u.style.display = '';
                     anyUnitMatch = true;
                 } else {
@@ -431,10 +461,10 @@ var EqUnified = (function() {
                 }
             });
 
-            sec.style.display = (sectionMatch || anyUnitMatch || !term) ? '' : 'none';
+            sec.style.display = (sectionMatch || anyUnitMatch || anySecRowMatch || !term) ? '' : 'none';
 
             // Auto-expand matching sections
-            if (term && (sectionMatch || anyUnitMatch)) {
+            if (term && (sectionMatch || anyUnitMatch || anySecRowMatch)) {
                 var body = sec.querySelector('.loc-section-body');
                 var chevron = sec.querySelector('.loc-chevron');
                 if (body) body.style.display = 'block';
@@ -444,6 +474,142 @@ var EqUnified = (function() {
                 }
                 sec.classList.add('loc-section-open');
             }
+        });
+    }
+
+    function filterEquipmentRows(tables, term) {
+        var anyMatch = false;
+        tables.forEach(function(table) {
+            var rows = table.querySelectorAll('tbody tr');
+            rows.forEach(function(row) {
+                if (!term) {
+                    row.style.display = '';
+                    anyMatch = true;
+                    return;
+                }
+                var text = (row.textContent || '').toLowerCase();
+                if (text.indexOf(term) !== -1) {
+                    row.style.display = '';
+                    anyMatch = true;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+        return anyMatch;
+    }
+
+    // ─── BATCH SCHEDULE FOR LOCATION ────────────────
+    function openBatchSchedule(locationId, locationName) {
+        batchScheduleLocationId = locationId;
+        batchScheduleLocationName = locationName;
+        batchScheduleStats = null;
+
+        // Show config step, hide result
+        document.getElementById('locBatchConfig').style.display = 'block';
+        document.getElementById('locBatchResult').style.display = 'none';
+        document.getElementById('locBatchConfirmBtn').style.display = 'inline-flex';
+        document.getElementById('locBatchCancelBtn').textContent = 'Cancel';
+
+        document.getElementById('locBatchTitle').innerHTML = '<i class="fas fa-calendar-check me-2"></i> Schedule Maintenance — ' + escapeHtml(locationName);
+
+        // Set default start date to 7 days from now
+        var defaultDate = new Date();
+        defaultDate.setDate(defaultDate.getDate() + 7);
+        document.getElementById('locBatchStartDate').value = defaultDate.toISOString().split('T')[0];
+
+        // Load stats for this location
+        var infoEl = document.getElementById('locBatchInfo');
+        infoEl.innerHTML = '<div class="text-center"><span class="spinner-border spinner-border-sm"></span> Loading stats…</div>';
+
+        var modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('locBatchScheduleModal'));
+        modal.show();
+
+        fetch('../ajax/get_location_equipment.php?location_stats=' + encodeURIComponent(locationId))
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (!data.success) {
+                    infoEl.innerHTML = '<div class="text-danger"><i class="fas fa-exclamation-triangle"></i> ' + escapeHtml(data.message) + '</div>';
+                    return;
+                }
+                batchScheduleStats = data;
+                infoEl.innerHTML = '<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">'
+                    + '<div>'
+                    + '<div style="font-size:var(--text-base); font-weight:600; color:var(--text-dark);"><i class="fas fa-map-marker-alt" style="color:var(--primary-green);"></i> ' + escapeHtml(locationName) + '</div>'
+                    + '</div>'
+                    + '<div style="display:flex; gap:12px; font-size:var(--text-sm);">'
+                    + '<span><strong>' + data.total + '</strong> total</span>'
+                    + '<span style="color:var(--color-success);"><strong>' + data.scheduled + '</strong> scheduled</span>'
+                    + '<span style="color:var(--color-warning);"><strong>' + data.unscheduled + '</strong> unscheduled</span>'
+                    + '</div>'
+                    + '</div>';
+            })
+            .catch(function(err) {
+                infoEl.innerHTML = '<div class="text-danger"><i class="fas fa-exclamation-triangle"></i> Error loading stats</div>';
+            });
+    }
+
+    function executeBatchSchedule() {
+        if (!batchScheduleLocationId) return;
+
+        var startDate = document.getElementById('locBatchStartDate').value;
+        var frequency = document.getElementById('locBatchFrequency').value;
+
+        if (!startDate) {
+            if (typeof Alerts !== 'undefined') {
+                Alerts.warning('Please select a start date.');
+            } else {
+                alert('Please select a start date.');
+            }
+            return;
+        }
+
+        // Switch to result view
+        document.getElementById('locBatchConfig').style.display = 'none';
+        document.getElementById('locBatchResult').style.display = 'block';
+        document.getElementById('locBatchConfirmBtn').style.display = 'none';
+        document.getElementById('locBatchResultContent').innerHTML = '<div class="text-center py-4"><span class="spinner-border spinner-border-sm me-2"></span> Creating schedules…</div>';
+
+        fetch('../ajax/batch_initialize_schedule.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                locationId: batchScheduleLocationId,
+                startDate: startDate,
+                frequency: frequency
+            })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(j) {
+            if (!j.success) {
+                document.getElementById('locBatchResultContent').innerHTML = '<div class="text-center py-4">'
+                    + '<div style="font-size:48px; color:var(--color-danger); margin-bottom:12px;"><i class="fas fa-times-circle"></i></div>'
+                    + '<h5 style="color:var(--text-dark);">Failed</h5>'
+                    + '<p style="color:var(--text-light);">' + escapeHtml(j.message) + '</p>'
+                    + '</div>';
+                return;
+            }
+
+            document.getElementById('locBatchResultContent').innerHTML = '<div class="text-center py-4">'
+                + '<div style="font-size:48px; color:var(--color-success); margin-bottom:12px;"><i class="fas fa-check-circle"></i></div>'
+                + '<h5 style="color:var(--text-dark);">Schedules Created!</h5>'
+                + '<p style="color:var(--text-light); margin-bottom:16px;">' + escapeHtml(j.message) + '</p>'
+                + '<div style="display:flex; justify-content:center; gap:24px; font-size:var(--text-sm);">'
+                + '<div><span style="font-size:24px; font-weight:700; color:var(--color-success);">' + j.created + '</span><br>Created</div>'
+                + '<div><span style="font-size:24px; font-weight:700; color:var(--text-light);">' + j.skipped + '</span><br>Skipped</div>'
+                + '<div><span style="font-size:24px; font-weight:700; color:var(--primary-green);">' + j.total + '</span><br>Total</div>'
+                + '</div>'
+                + '</div>';
+
+            document.getElementById('locBatchCancelBtn').textContent = 'Close';
+
+            // Refresh the location tree to update schedule counts
+            loadLocationTree();
+        })
+        .catch(function(e) {
+            document.getElementById('locBatchResultContent').innerHTML = '<div class="text-center py-4 text-danger">'
+                + '<i class="fas fa-exclamation-triangle"></i> Network error: ' + escapeHtml(e.message || String(e))
+                + '</div>';
         });
     }
 
@@ -462,15 +628,9 @@ var EqUnified = (function() {
         var iconClass = typeIcons[typeName] || 'fa-server';
         iconEl.innerHTML = '<i class="fas ' + iconClass + '"></i>';
 
-        // Determine which endpoint & param to use
-        var endpoint, param;
-        switch (typeName) {
-            case 'System Unit': endpoint = 'manage_systemunit.php'; param = 'systemunit_id'; break;
-            case 'Monitor':     endpoint = 'manage_monitor.php';    param = 'monitor_id'; break;
-            case 'All-in-One':  endpoint = 'manage_allinone.php';   param = 'allinone_id'; break;
-            case 'Printer':     endpoint = 'manage_printer.php';    param = 'printer_id'; break;
-            default:            endpoint = 'manage_otherequipment.php'; param = 'id'; break;
-        }
+        // Use unified equipment endpoint
+        var endpoint = 'manage_equipment.php';
+        var param = 'equipment_id';
 
         // Wire Edit button
         editBtn.onclick = function() {
@@ -491,10 +651,11 @@ var EqUnified = (function() {
             .then(function(data) {
                 if (!data.success) { contentEl.innerHTML = '<div class="p-4 text-danger"><i class="fas fa-exclamation-triangle"></i> ' + escapeHtml(data.message) + '</div>'; return; }
                 var d = data.data;
-                var brand = d.systemUnitBrand || d.monitorBrand || d.allinoneBrand || d.printerBrand || d.brand || '';
-                var serial = d.systemUnitSerial || d.monitorSerial || d.allinoneSerial || d.printerSerial || d.serialNumber || '';
+                var brand = d.brand || '';
+                var serial = d.serial_number || '';
                 subtitleEl.textContent = brand + (serial ? ' · ' + serial : '');
                 contentEl.innerHTML = buildViewDetailHtml(d, typeName);
+                loadAssignmentHistory(d.equipment_id || id);
             })
             .catch(function(err) {
                 contentEl.innerHTML = '<div class="p-4 text-danger"><i class="fas fa-exclamation-triangle"></i> Error loading details</div>';
@@ -502,10 +663,10 @@ var EqUnified = (function() {
     }
 
     function buildViewDetailHtml(d, typeName) {
-        var brand = d.systemUnitBrand || d.monitorBrand || d.allinoneBrand || d.printerBrand || d.brand || '';
-        var model = d.printerModel || d.model || '';
-        var serial = d.systemUnitSerial || d.monitorSerial || d.allinoneSerial || d.printerSerial || d.serialNumber || '';
-        var year = d.yearAcquired || '';
+        var brand = d.brand || '';
+        var model = d.model || '';
+        var serial = d.serial_number || '';
+        var year = d.year_acquired || '';
         var status = d.status || 'N/A';
         var statusClass = status.toLowerCase().replace(/\s+/g, '-');
 
@@ -516,8 +677,8 @@ var EqUnified = (function() {
         html += '<span class="status-badge status-' + statusClass + '" style="font-size:13px;padding:5px 14px;">' + escapeHtml(status) + '</span>';
         if (d.employeeName) {
             html += '<span class="view-assigned-to"><i class="fas fa-user"></i> ' + escapeHtml(d.employeeName) + '</span>';
-        } else if (d.location_name) {
-            html += '<span class="view-assigned-to"><i class="fas fa-map-marker-alt"></i> ' + escapeHtml(d.location_name) + '</span>';
+        } else if (d.locationName || d.location_name) {
+            html += '<span class="view-assigned-to"><i class="fas fa-map-marker-alt"></i> ' + escapeHtml(d.locationName || d.location_name) + '</span>';
         } else {
             html += '<span class="view-assigned-to text-muted"><i class="fas fa-minus-circle"></i> Unassigned</span>';
         }
@@ -539,15 +700,20 @@ var EqUnified = (function() {
         }
         html += '</div>';
 
-        // ── Specifications Section (type-specific) ──
+        // ── Specifications Section (from unified specs object) ──
         var specs = [];
-        if (d.systemUnitCategory) specs.push({icon: 'fa-layer-group', label: 'Category', value: d.systemUnitCategory});
-        if (d.specificationProcessor) specs.push({icon: 'fa-microchip', label: 'Processor', value: d.specificationProcessor});
-        if (d.specificationMemory) specs.push({icon: 'fa-memory', label: 'Memory', value: d.specificationMemory});
-        if (d.specificationGPU || d.specificationGpu) specs.push({icon: 'fa-display', label: 'GPU', value: d.specificationGPU || d.specificationGpu});
-        if (d.specificationStorage) specs.push({icon: 'fa-hdd', label: 'Storage', value: d.specificationStorage});
-        if (d.monitorSize) specs.push({icon: 'fa-expand', label: 'Screen Size', value: d.monitorSize});
-        if (d.details) specs.push({icon: 'fa-info-circle', label: 'Details', value: d.details});
+        var sp = d.specs || {};
+        var specIconMap = {
+            'Category': 'fa-layer-group', 'Processor': 'fa-microchip', 'Memory': 'fa-memory',
+            'GPU': 'fa-display', 'Storage': 'fa-hdd', 'Monitor Size': 'fa-expand',
+            'Printer Type': 'fa-print', 'Connectivity': 'fa-wifi', 'IP Address': 'fa-network-wired',
+            'Resolution': 'fa-desktop', 'Details': 'fa-info-circle'
+        };
+        for (var specKey in sp) {
+            if (sp.hasOwnProperty(specKey) && sp[specKey] && specKey !== 'Maintenance Date' && specKey !== 'Next Maintenance Date') {
+                specs.push({icon: specIconMap[specKey] || 'fa-cog', label: specKey, value: sp[specKey]});
+            }
+        }
 
         if (specs.length > 0) {
             html += '<div class="view-section">';
@@ -564,25 +730,27 @@ var EqUnified = (function() {
         }
 
         // ── Maintenance Section ──
-        var hasLastMaint = d.maintenanceDate;
-        var hasNextMaint = d.nextMaintenanceDate;
+        var hasLastMaint = d.maintenanceDate || (d.specs && d.specs['Maintenance Date']);
+        var hasNextMaint = d.nextMaintenanceDate || (d.specs && d.specs['Next Maintenance Date']);
         if (hasLastMaint || hasNextMaint) {
             html += '<div class="view-section">';
             html += '<div class="view-section-title"><i class="fas fa-tools"></i> Maintenance</div>';
             html += '<div class="view-maint-row">';
             if (hasLastMaint) {
+                var lastMaintDate = d.maintenanceDate || d.specs['Maintenance Date'];
                 html += '<div class="view-maint-card">';
                 html += '<div class="view-maint-icon last"><i class="fas fa-check-circle"></i></div>';
                 html += '<div><div class="view-maint-label">Last Maintenance</div>';
-                html += '<div class="view-maint-date">' + escapeHtml(formatDate(d.maintenanceDate)) + '</div></div>';
+                html += '<div class="view-maint-date">' + escapeHtml(formatDate(lastMaintDate)) + '</div></div>';
                 html += '</div>';
             }
             if (hasNextMaint) {
-                var isOverdue = new Date(d.nextMaintenanceDate) < new Date();
+                var nextMaintDate = d.nextMaintenanceDate || d.specs['Next Maintenance Date'];
+                var isOverdue = new Date(nextMaintDate) < new Date();
                 html += '<div class="view-maint-card' + (isOverdue ? ' overdue' : '') + '">';
                 html += '<div class="view-maint-icon next' + (isOverdue ? ' overdue' : '') + '"><i class="fas ' + (isOverdue ? 'fa-exclamation-triangle' : 'fa-calendar-check') + '"></i></div>';
                 html += '<div><div class="view-maint-label">' + (isOverdue ? 'Overdue' : 'Next Scheduled') + '</div>';
-                html += '<div class="view-maint-date">' + escapeHtml(formatDate(d.nextMaintenanceDate)) + '</div></div>';
+                html += '<div class="view-maint-date">' + escapeHtml(formatDate(nextMaintDate)) + '</div></div>';
                 html += '</div>';
             }
             html += '</div></div>';
@@ -599,15 +767,105 @@ var EqUnified = (function() {
         if (d.employeeName) {
             html += '<div class="view-assignment"><i class="fas fa-user-check text-primary"></i> <strong>' + escapeHtml(d.employeeName) + '</strong></div>';
         }
-        if (d.location_name) {
-            html += '<div class="view-assignment"><i class="fas fa-map-marker-alt text-danger"></i> ' + escapeHtml(d.location_name) + '</div>';
+        if (d.locationName || d.location_name) {
+            html += '<div class="view-assignment"><i class="fas fa-map-marker-alt text-danger"></i> ' + escapeHtml(d.locationName || d.location_name) + '</div>';
         }
-        if (!d.employeeName && !d.location_name) {
+        if (!d.employeeName && !d.locationName && !d.location_name) {
             html += '<div class="view-assignment text-muted"><i class="fas fa-minus-circle"></i> Not assigned to any employee or location</div>';
         }
         html += '</div>';
 
+        // ── Assignment History Section ──
+        var eqId = d.equipment_id || '';
+        html += '<div class="view-section">';
+        html += '<div class="view-section-title" style="cursor:pointer;user-select:none;" onclick="EqUnified.toggleHistorySection(this)">';
+        html += '<i class="fas fa-history"></i> Assignment History';
+        html += '<i class="fas fa-chevron-down" style="margin-left:auto;font-size:0.7rem;transition:transform .2s;"></i>';
+        html += '</div>';
+        html += '<div id="assignmentHistoryContent" data-equipment-id="' + eqId + '">';
+        html += '<div class="text-center py-3"><i class="fas fa-spinner fa-spin text-muted"></i> Loading history…</div>';
+        html += '</div>';
+        html += '</div>';
+
         return html;
+    }
+
+    /**
+     * Toggle the assignment history collapsible section
+     */
+    function toggleHistorySection(titleEl) {
+        var container = titleEl.nextElementSibling;
+        var chevron = titleEl.querySelector('.fa-chevron-down, .fa-chevron-up');
+        if (container.style.display === 'none') {
+            container.style.display = '';
+            if (chevron) { chevron.classList.remove('fa-chevron-up'); chevron.classList.add('fa-chevron-down'); }
+        } else {
+            container.style.display = 'none';
+            if (chevron) { chevron.classList.remove('fa-chevron-down'); chevron.classList.add('fa-chevron-up'); }
+        }
+    }
+
+    /**
+     * Fetch and render assignment history after the detail modal opens
+     */
+    function loadAssignmentHistory(equipmentId) {
+        var container = document.getElementById('assignmentHistoryContent');
+        if (!container || !equipmentId) return;
+
+        fetch('../ajax/get_assignment_history.php?equipment_id=' + encodeURIComponent(equipmentId))
+            .then(function(r) { 
+                if (!r.ok) throw new Error('HTTP Status ' + r.status);
+                return r.json(); 
+            })
+            .then(function(resp) {
+                // Check for server-reported query errors
+                if (resp.success === false) {
+                    container.innerHTML = '<div class="text-center py-3 text-danger"><i class="fas fa-exclamation-triangle"></i> ' + escapeHtml(resp.message) + '</div>';
+                    return;
+                }
+
+                // Check for legitimate empty history
+                if (!resp.data || resp.data.length === 0) {
+                    container.innerHTML = '<div class="text-center py-3 text-muted"><i class="fas fa-inbox"></i> No assignment history recorded yet.</div>';
+                    return;
+                }
+
+                // Render Table securely
+                var rows = resp.data;
+                var html = '<table class="table table-sm table-hover mb-0" style="font-size:0.82rem;">';
+                html += '<thead><tr>'
+                    + '<th style="width:35%;">Employee</th>'
+                    + '<th style="width:20%;">Action</th>'
+                    + '<th style="width:30%;">Date</th>'
+                    + '<th style="width:15%;">By</th>'
+                    + '</tr></thead><tbody>';
+
+                for (var i = 0; i < rows.length; i++) {
+                    var r = rows[i];
+                    var actionBadge = '';
+                    if (r.action === 'assigned') {
+                        actionBadge = '<span class="badge bg-success bg-opacity-10 text-white" style="font-size:0.75rem;"><i class="fas fa-arrow-right"></i> Assigned</span>';
+                    } else if (r.action === 'unassigned') {
+                        actionBadge = '<span class="badge bg-secondary bg-opacity-10" style="font-size:0.75rem; color: var(-border-color)"><i class="fas fa-user-minus"></i> Unassigned</span>';
+                    } else {
+                        actionBadge = '<span class="badge bg-info bg-opacity-10 text-info" style="font-size:0.75rem;"><i class="fas fa-exchange-alt"></i> Transferred</span>';
+                    }
+
+                    var dateStr = r.assigned_at ? escapeHtml(formatDate(r.assigned_at)) : (r.unassigned_at ? escapeHtml(formatDate(r.unassigned_at)) : escapeHtml(formatDate(r.created_at)));
+
+                    html += '<tr>'
+                        + '<td><i class="fas fa-user-circle text-muted me-1"></i>' + escapeHtml(r.employeeName) + '</td>'
+                        + '<td>' + actionBadge + '</td>'
+                        + '<td>' + dateStr + '</td>'
+                        + '<td>' + (r.performedByName ? escapeHtml(r.performedByName) : '—') + '</td>'
+                        + '</tr>';
+                }
+                html += '</tbody></table>';
+                container.innerHTML = html;
+            })
+            .catch(function(err) {
+                container.innerHTML = '<div class="text-center py-3 text-danger"><i class="fas fa-wifi"></i> Request failed: ' + escapeHtml(err.message) + '</div>';
+            });
     }
 
     // Initialize on load
@@ -626,6 +884,9 @@ var EqUnified = (function() {
         loadLocationTree: loadLocationTree,
         toggleSection: toggleSection,
         filterLocationResults: filterLocationResults,
-        viewEquipment: viewEquipment
+        viewEquipment: viewEquipment,
+        toggleHistorySection: toggleHistorySection,
+        openBatchSchedule: openBatchSchedule,
+        executeBatchSchedule: executeBatchSchedule
     };
 })();

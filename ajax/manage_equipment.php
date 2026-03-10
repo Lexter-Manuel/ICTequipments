@@ -10,6 +10,7 @@ require_once '../config/session-guard.php';
 require_once '../config/database.php';
 require_once '../config/config.php';
 require_once '../includes/maintenanceHelper.php';
+require_once '../includes/assignmentHistoryHelper.php';
 
 header('Content-Type: application/json');
 
@@ -377,6 +378,11 @@ function createEquipment($db) {
     $stmt->execute([$typeId]);
     $typeName = $stmt->fetchColumn();
 
+    // Record initial assignment history if created with an employee
+    if ($employeeId) {
+        recordAssignmentChange($db, $newId, null, $employeeId);
+    }
+
     logActivity(ACTION_CREATE, MODULE_COMPUTERS,
         "Added {$typeName} — Brand: {$brand}, Serial: {$serial}, Year: {$year}."
         . ($employeeId ? " Assigned to employee ID {$employeeId}." : ""));
@@ -400,11 +406,12 @@ function updateEquipment($db) {
     $id = filter_var($_POST['equipment_id'] ?? $_POST['id'] ?? null, FILTER_VALIDATE_INT);
     if (!$id) throw new Exception('Equipment ID is required');
     
-    // Check exists
-    $stmt = $db->prepare("SELECT type_id FROM tbl_equipment WHERE equipment_id = ?");
+    // Check exists & get current assignment
+    $stmt = $db->prepare("SELECT type_id, employee_id FROM tbl_equipment WHERE equipment_id = ?");
     $stmt->execute([$id]);
     $existing = $stmt->fetch(PDO::FETCH_ASSOC);
     if (!$existing) throw new Exception('Equipment not found');
+    $oldEmployeeId = $existing['employee_id'] ? (int)$existing['employee_id'] : null;
     
     $typeId     = !empty($_POST['type_id']) ? validateTypeId($db, $_POST['type_id']) : $existing['type_id'];
     $brand      = validateBrand($_POST['brand'] ?? '');
@@ -452,6 +459,9 @@ function updateEquipment($db) {
     // Update specs
     $specs = parseSpecsFromPost();
     saveSpecs($db, $id, $specs);
+
+    // Record assignment history if the employee changed
+    recordAssignmentChange($db, $id, $oldEmployeeId, $employeeId);
 
     $stmt = $db->prepare("SELECT typeName FROM tbl_equipment_type_registry WHERE typeId = ?");
     $stmt->execute([$typeId]);

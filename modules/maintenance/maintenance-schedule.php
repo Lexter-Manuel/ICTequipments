@@ -20,9 +20,6 @@ require_once '../../config/session-guard.php';
             </div>
         </div>
         <div class="mnt-header-right">
-            <button class="btn btn-success btn-sm" id="btnBatchInit" onclick="openBatchInitModal()" title="Initialize schedules for a unit/section">
-                <i class="fas fa-magic"></i> Batch Initialize
-            </button>
             <div class="mnt-view-toggle" id="mainViewToggle">
                 <button class="mnt-toggle-btn active" id="btnDetailed" onclick="switchView('detailed')">
                     <i class="fas fa-list"></i> Specific Equipment

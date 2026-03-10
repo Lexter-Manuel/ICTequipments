@@ -7,6 +7,7 @@ require_once '../config/session-guard.php';
 require_once '../config/database.php';
 require_once '../config/config.php';
 require_once '../includes/maintenanceHelper.php';
+require_once '../includes/assignmentHistoryHelper.php';
 
 header('Content-Type: application/json');
 if (session_status() === PHP_SESSION_NONE) session_start();
@@ -113,6 +114,13 @@ function createItem($db) {
 function updateItem($db) {
     global $TYPE_ID;
     $id = $_POST['allinone_id'] ?? null; if (!$id) throw new Exception('All-in-One ID is required');
+
+    // Fetch old employee_id for history tracking
+    $oldStmt = $db->prepare("SELECT employee_id FROM tbl_equipment WHERE equipment_id = ?");
+    $oldStmt->execute([$id]);
+    $oldRow = $oldStmt->fetch(PDO::FETCH_ASSOC);
+    $oldEmployeeId = $oldRow ? ($oldRow['employee_id'] ? (int)$oldRow['employee_id'] : null) : null;
+
     $brand = trim($_POST['brand'] ?? ''); $serial = trim($_POST['serial'] ?? $_POST['allinoneSerial'] ?? '');
     $prop = trim($_POST['property_number'] ?? ''); $year = $_POST['year_acquired'] ?? $_POST['year'] ?? null;
     $empId = $_POST['employee_id'] ?? null;
@@ -126,6 +134,10 @@ function updateItem($db) {
     $db->prepare("UPDATE tbl_equipment SET brand=:brand, serial_number=:serial, property_number=:prop, year_acquired=:year, employee_id=:eid, location_id=:lid WHERE equipment_id=:id AND type_id=:tid")
        ->execute([':brand'=>$brand,':serial'=>$serial?:null,':prop'=>$prop?:null,':year'=>$year?:null,':eid'=>$empId?:null,':lid'=>$locId?:null,':id'=>$id,':tid'=>$TYPE_ID]);
     saveSpecs($db, $id, ['Processor'=>$proc, 'Memory'=>$mem, 'GPU'=>$gpu, 'Storage'=>$storage, 'Maintenance Date'=>$maintDate, 'Next Maintenance Date'=>$nextMaintDate]);
+
+    $newEmployeeId = $empId ? (int)$empId : null;
+    recordAssignmentChange($db, (int)$id, $oldEmployeeId, $newEmployeeId);
+
     $db->commit();
     logActivity(ACTION_UPDATE, MODULE_COMPUTERS, "Updated All-in-One (ID: {$id}) — Brand: {$brand}.");
     echo json_encode(['success' => true, 'message' => 'All-in-One updated successfully']);

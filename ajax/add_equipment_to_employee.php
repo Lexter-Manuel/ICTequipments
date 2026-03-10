@@ -9,6 +9,7 @@ require_once '../config/session-guard.php';
 if (session_status() === PHP_SESSION_NONE) session_start();
 
 require_once '../config/database.php';
+require_once '../includes/assignmentHistoryHelper.php';
 header('Content-Type: application/json');
 
 $db   = Database::getInstance()->getConnection();
@@ -53,6 +54,9 @@ try {
         if (isset($typeMapping[$equipmentType])) {
             $stmt = $db->prepare("UPDATE tbl_equipment SET employee_id = :eid, location_id = NULL, status = 'In Use' WHERE equipment_id = :id AND employee_id IS NULL");
             $stmt->execute([':eid' => $employeeId, ':id' => $equipmentId]);
+            if ($stmt->rowCount() > 0) {
+                recordAssignmentChange($db, $equipmentId, null, $employeeId);
+            }
         } elseif ($equipmentType === 'otherequipment') {
             $stmt = $db->prepare("UPDATE tbl_otherequipment SET employeeId = :eid, status = 'In Use' WHERE otherEquipmentId = :id AND employeeId IS NULL");
             $stmt->execute([':eid' => $employeeId, ':id' => $equipmentId]);
@@ -104,6 +108,7 @@ try {
                 foreach ($specs as $k => $v) {
                     if ($v !== '') $specStmt->execute([$newId, $k, $v]);
                 }
+                recordAssignmentChange($db, $newId, null, $employeeId);
                 break;
 
             case 'allinone':
@@ -131,6 +136,7 @@ try {
                 foreach ($specs as $k => $v) {
                     if ($v !== '') $specStmt->execute([$newId, $k, $v]);
                 }
+                recordAssignmentChange($db, $newId, null, $employeeId);
                 break;
 
             case 'monitor':
@@ -152,6 +158,7 @@ try {
                     $db->prepare("INSERT INTO tbl_equipment_specs (equipment_id, spec_key, spec_value) VALUES (?, 'Monitor Size', ?)")
                        ->execute([$newId, $post['monitorSize']]);
                 }
+                recordAssignmentChange($db, $newId, null, $employeeId);
                 break;
 
             case 'printer':
@@ -168,6 +175,8 @@ try {
                     ':serial' => $post['printerSerial'] ?? '',
                     ':year'   => $post['yearAcquired'] ?? date('Y'),
                 ]);
+                $printerId = $db->lastInsertId();
+                recordAssignmentChange($db, $printerId, null, $employeeId);
                 break;
 
             case 'otherequipment':

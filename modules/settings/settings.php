@@ -60,7 +60,7 @@ function sv($key) {
 // Get system stats for the dashboard cards
 $accountCount = $db->query("SELECT COUNT(*) FROM tbl_accounts")->fetchColumn();
 $activeAccounts = $db->query("SELECT COUNT(*) FROM tbl_accounts WHERE status = 'Active'")->fetchColumn();
-$logCount = $db->query("SELECT COUNT(*) FROM tbl_activity_logs")->fetchColumn();
+$logCount = $db->query("SELECT COUNT(*) FROM activity_log")->fetchColumn();
 $equipmentCount = $db->query("
     SELECT COUNT(*) FROM tbl_equipment WHERE is_archived = 0
 ")->fetchColumn();
@@ -101,19 +101,19 @@ $equipmentCount = $db->query("
 
     <!-- Settings Tabs -->
     <div class="toggle-nav ps-settings-tabs" id="settingsTabs">
-        <button class="toggle-btn active" onclick="switchSettingsTab('organization', this)">
+        <button class="toggle-btn active settings-tab-btn" data-target="organization">
             <i class="fas fa-building"></i> Organization
         </button>
-        <button class="toggle-btn" onclick="switchSettingsTab('security', this)">
+        <button class="toggle-btn settings-tab-btn" data-target="security">
             <i class="fas fa-shield-alt"></i> Security
         </button>
-        <button class="toggle-btn" onclick="switchSettingsTab('maintenance', this)">
+        <button class="toggle-btn settings-tab-btn" data-target="maintenance">
             <i class="fas fa-tools"></i> Maintenance
         </button>
-        <button class="toggle-btn" onclick="switchSettingsTab('system', this)">
+        <button class="toggle-btn settings-tab-btn" data-target="system">
             <i class="fas fa-sliders-h"></i> System
         </button>
-        <button class="toggle-btn" onclick="switchSettingsTab('data', this)">
+        <button class="toggle-btn settings-tab-btn" data-target="data">
             <i class="fas fa-database"></i> Data
         </button>
     </div>
@@ -133,7 +133,7 @@ $equipmentCount = $db->query("
                 </div>
             </div>
             <div class="ps-card-body">
-                <form id="formOrganization" onsubmit="return settingsAction.saveGroup(event, 'organization')">
+                <form id="formOrganization" data-group="organization">
                     <div class="ps-form-row">
                         <div class="ps-form-group">
                             <label class="ps-label">Organization Name</label>
@@ -179,7 +179,7 @@ $equipmentCount = $db->query("
                 </div>
             </div>
             <div class="ps-card-body">
-                <form id="formSecurity" onsubmit="return settingsAction.saveGroup(event, 'security')">
+                <form id="formSecurity" data-group="security">
                     <div class="ps-form-row">
                         <div class="ps-form-group">
                             <label class="ps-label">Session Timeout</label>
@@ -241,7 +241,7 @@ $equipmentCount = $db->query("
                 </div>
             </div>
             <div class="ps-card-body">
-                <form id="formMaintenance" onsubmit="return settingsAction.saveGroup(event, 'maintenance')">
+                <form id="formMaintenance" data-group="maintenance">
                     <div class="ps-form-row">
                         <div class="ps-form-group">
                             <label class="ps-label">Default Frequency</label>
@@ -308,7 +308,7 @@ $equipmentCount = $db->query("
                 </div>
             </div>
             <div class="ps-card-body">
-                <form id="formSystem" onsubmit="return settingsAction.saveGroup(event, 'system')">
+                <form id="formSystem" data-group="system">
                     <div class="ps-form-row">
                         <div class="ps-form-group">
                             <label class="ps-label">Date Display Format</label>
@@ -430,7 +430,7 @@ $equipmentCount = $db->query("
                             <span class="ps-data-stat">
                                 <?php
                                 $retDays = intval(sv('backup_retention_days')) ?: 30;
-                                $oldCount = $db->prepare("SELECT COUNT(*) FROM tbl_activity_logs WHERE created_at < DATE_SUB(NOW(), INTERVAL ? DAY)");
+                                $oldCount = $db->prepare("SELECT COUNT(*) FROM activity_log WHERE timestamp < DATE_SUB(NOW(), INTERVAL ? DAY)");
                                 $oldCount->execute([$retDays]);
                                 echo $oldCount->fetchColumn() . ' eligible entries';
                                 ?>
@@ -476,17 +476,17 @@ $equipmentCount = $db->query("
 </div>
 
 <div class="ps-toast" id="settingsToast"></div>
-
 <script>
-function switchSettingsTab(name, btn) {
+// 1. Explicitly attach to the window object
+window.switchSettingsTab = function(name, btn) {
     document.querySelectorAll('.ps-settings-panel').forEach(function(p) { p.classList.remove('active'); });
     document.querySelectorAll('#settingsTabs .toggle-btn').forEach(function(b) { b.classList.remove('active'); });
     document.getElementById('panel-' + name).classList.add('active');
     btn.classList.add('active');
-}
+};
 
-var settingsAction = {
-
+// 2. Attach your settingsAction object to the window as well
+window.settingsAction = {
     showToast: function(msg, type) {
         var toast = document.getElementById('settingsToast');
         toast.textContent = msg;
@@ -502,7 +502,6 @@ var settingsAction = {
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
         btn.disabled = true;
 
-        // Collect form data as key-value pairs
         var settings = {};
         var inputs = form.querySelectorAll('input, select, textarea');
         inputs.forEach(function(input) {
@@ -524,19 +523,18 @@ var settingsAction = {
             btn.innerHTML = origHtml;
             btn.disabled = false;
             if (data.success) {
-                settingsAction.showToast(data.message || 'Settings saved successfully');
-                // If items_per_page was saved, update all equipment tables immediately
+                window.settingsAction.showToast(data.message || 'Settings saved successfully');
                 if (group === 'system' && settings['items_per_page']) {
-                    settingsAction.applyPerPageToEquipment(parseInt(settings['items_per_page']));
+                    window.settingsAction.applyPerPageToEquipment(parseInt(settings['items_per_page']));
                 }
             } else {
-                settingsAction.showToast(data.message || 'Failed to save', 'error');
+                window.settingsAction.showToast(data.message || 'Failed to save', 'error');
             }
         })
         .catch(function() {
             btn.innerHTML = origHtml;
             btn.disabled = false;
-            settingsAction.showToast('Network error', 'error');
+            window.settingsAction.showToast('Network error', 'error');
         });
         return false;
     },
@@ -550,10 +548,10 @@ var settingsAction = {
         })
         .then(function(r) { return r.json(); })
         .then(function(data) {
-            settingsAction.showToast(data.message || (data.success ? 'Logs purged' : 'Error'), data.success ? 'success' : 'error');
-            if (data.success) reloadCurrentPage();
+            window.settingsAction.showToast(data.message || (data.success ? 'Logs purged' : 'Error'), data.success ? 'success' : 'error');
+            if (data.success && typeof reloadCurrentPage === 'function') reloadCurrentPage();
         })
-        .catch(function() { settingsAction.showToast('Network error', 'error'); });
+        .catch(function() { window.settingsAction.showToast('Network error', 'error'); });
     },
 
     clearLoginAttempts: function() {
@@ -565,26 +563,23 @@ var settingsAction = {
         })
         .then(function(r) { return r.json(); })
         .then(function(data) {
-            settingsAction.showToast(data.message || (data.success ? 'Cleared' : 'Error'), data.success ? 'success' : 'error');
-            if (data.success) reloadCurrentPage();
+            window.settingsAction.showToast(data.message || (data.success ? 'Cleared' : 'Error'), data.success ? 'success' : 'error');
+            if (data.success && typeof reloadCurrentPage === 'function') reloadCurrentPage();
         })
-        .catch(function() { settingsAction.showToast('Network error', 'error'); });
+        .catch(function() { window.settingsAction.showToast('Network error', 'error'); });
     },
 
     clearPageCache: function() {
         if (window.dashboardApp) {
             window.dashboardApp.pageCache = {};
-            settingsAction.showToast('Page cache cleared');
+            window.settingsAction.showToast('Page cache cleared');
         }
     },
 
-    // Push a new items_per_page value to all equipment table pagination controls
-    // if the equipment page is currently loaded in the dashboard
     applyPerPageToEquipment: function(newPP) {
         if (!newPP || isNaN(newPP)) return;
         var pp = String(newPP);
 
-        // Update each select and re-run its changePerPage function if it exists
         var tables = [
             { selectId: 'suPerPageSelect',    changeFn: 'changePerPageSU',    varName: 'suPerPage'      },
             { selectId: 'monPerPageSelect',   changeFn: 'changePerPageMon',   varName: 'monPerPage'     },
@@ -593,25 +588,21 @@ var settingsAction = {
             { selectId: 'otherPerPageSelect', changeFn: 'changePerPageOther', varName: 'otherPerPage'   }
         ];
 
-        var anyUpdated = false;
         tables.forEach(function(t) {
             var el = document.getElementById(t.selectId);
             if (!el) return;
             var opt = el.querySelector('option[value="' + pp + '"]');
             if (opt) {
                 el.value = pp;
-                // Also update the JS variable directly if accessible
                 if (typeof window[t.varName] !== 'undefined') {
                     window[t.varName] = newPP;
                 }
                 if (typeof window[t.changeFn] === 'function') {
                     window[t.changeFn]();
                 }
-                anyUpdated = true;
             }
         });
 
-        // Also update defaultPerPage for future table inits
         if (typeof window.defaultPerPage !== 'undefined') {
             window.defaultPerPage = newPP;
         }

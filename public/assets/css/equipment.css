@@ -792,6 +792,20 @@
     white-space: nowrap;
 }
 
+.loc-schedule-btn {
+    font-size: var(--text-xs);
+    padding: 3px 10px;
+    white-space: nowrap;
+    border-radius: var(--radius-sm);
+    opacity: 0.7;
+    transition: opacity var(--transition-fast);
+}
+
+.loc-section-header:hover .loc-schedule-btn,
+.loc-unit-header:hover .loc-schedule-btn {
+    opacity: 1;
+}
+
 .loc-section-body {
     padding: var(--space-3) var(--space-4);
 }

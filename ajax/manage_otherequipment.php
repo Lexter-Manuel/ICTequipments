@@ -8,6 +8,7 @@ require_once '../config/session-guard.php';
 require_once '../config/database.php';
 require_once '../config/config.php';
 require_once '../includes/maintenanceHelper.php';
+require_once '../includes/assignmentHistoryHelper.php';
 
 header('Content-Type: application/json');
 if (session_status() === PHP_SESSION_NONE) session_start();
@@ -196,6 +197,13 @@ function createEquipment($db) {
 function updateEquipment($db) {
     $id = $_POST['otherEquipmentId'] ?? null;
     if (!$id) throw new Exception("ID required");
+
+    // Fetch old employee_id for history tracking
+    $oldStmt = $db->prepare("SELECT employee_id FROM tbl_equipment WHERE equipment_id = ?");
+    $oldStmt->execute([$id]);
+    $oldRow = $oldStmt->fetch(PDO::FETCH_ASSOC);
+    $oldEmployeeId = $oldRow ? ($oldRow['employee_id'] ? (int)$oldRow['employee_id'] : null) : null;
+
     $type = sanitizeString($_POST['type'] ?? '');
     $brand = sanitizeString($_POST['brand'] ?? '');
     if (empty($brand)) throw new Exception("Brand name cannot be empty");
@@ -225,6 +233,9 @@ function updateEquipment($db) {
     $maintDate = trim($_POST['maintenance_date'] ?? '');
     $nextMaintDate = trim($_POST['next_maintenance_date'] ?? '');
     saveSpecs($db, $id, ['Details' => $details, 'Maintenance Date' => $maintDate, 'Next Maintenance Date' => $nextMaintDate]);
+
+    recordAssignmentChange($db, (int)$id, $oldEmployeeId, $employeeId);
+
     $db->commit();
 
     logActivity(ACTION_UPDATE, MODULE_OTHER_EQUIPMENT,

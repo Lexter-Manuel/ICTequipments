@@ -44,11 +44,23 @@ if (!empty($_GET['location_stats'])) {
         $countStmt->execute($params);
         $total = (int)$countStmt->fetchColumn();
 
+        // Count how many of those have active maintenance schedules
+        $schedStmt = $db->prepare("
+            SELECT COUNT(DISTINCT eq.equipment_id) as scheduled
+            FROM tbl_equipment eq
+            LEFT JOIN tbl_employee e ON eq.employee_id = e.employeeId
+            INNER JOIN tbl_maintenance_schedule ms ON ms.equipmentId = eq.equipment_id AND ms.isActive = 1
+            WHERE eq.is_archived = 0
+              AND (eq.location_id IN ($ph) OR e.location_id IN ($ph))
+        ");
+        $schedStmt->execute($params);
+        $scheduled = (int)$schedStmt->fetchColumn();
+
         echo json_encode([
             'success' => true,
             'total' => $total,
-            'scheduled' => 0,
-            'unscheduled' => $total
+            'scheduled' => $scheduled,
+            'unscheduled' => $total - $scheduled
         ]);
     } catch (Exception $e) {
         echo json_encode(['success' => false, 'message' => $e->getMessage()]);
@@ -137,6 +149,7 @@ try {
     $eqIds = array_column($allEquipment, 'equipment_id');
     $specsByEq = [];
     $nextDueByEq = [];
+    $scheduledEqIds = [];
     if (!empty($eqIds)) {
         $spPh = implode(',', array_fill(0, count($eqIds), '?'));
         $spStmt = $db->prepare("SELECT equipment_id, spec_key, spec_value FROM tbl_equipment_specs WHERE equipment_id IN ($spPh) AND spec_key IN ('Maintenance Date', 'Next Maintenance Date')");
@@ -147,6 +160,13 @@ try {
             } else {
                 $nextDueByEq[(int)$sr['equipment_id']] = $sr['spec_value'];
             }
+        }
+
+        // Bulk-load active schedule IDs
+        $schStmt = $db->prepare("SELECT DISTINCT equipmentId FROM tbl_maintenance_schedule WHERE equipmentId IN ($spPh) AND isActive = 1");
+        $schStmt->execute($eqIds);
+        while ($sid = $schStmt->fetchColumn()) {
+            $scheduledEqIds[(int)$sid] = true;
         }
     }
 
@@ -165,15 +185,32 @@ try {
             'employeeName' => $eq['employeeName'],
             'lastMaint'    => $specsByEq[(int)$eq['equipment_id']] ?? null,
             'nextDue'      => $nextDueByEq[(int)$eq['equipment_id']] ?? null,
+            'hasSchedule'  => isset($scheduledEqIds[(int)$eq['equipment_id']]),
         ];
     }
 
-    // 6. Assign equipment to sections/units
+    // 6. Assign equipment to sections/units + compute schedule stats
     foreach ($sectionData as &$sec) {
         $sec['equipment'] = $eqByLoc[$sec['location_id']] ?? [];
+        $secTotal = count($sec['equipment']);
+        $secScheduled = count(array_filter($sec['equipment'], fn($e) => $e['hasSchedule']));
         foreach ($sec['units'] as &$unit) {
             $unit['equipment'] = $eqByLoc[$unit['location_id']] ?? [];
+            $unitTotal = count($unit['equipment']);
+            $unitScheduled = count(array_filter($unit['equipment'], fn($e) => $e['hasSchedule']));
+            $unit['schedule_stats'] = [
+                'total' => $unitTotal,
+                'scheduled' => $unitScheduled,
+                'unscheduled' => $unitTotal - $unitScheduled
+            ];
+            $secTotal += $unitTotal;
+            $secScheduled += $unitScheduled;
         }
+        $sec['schedule_stats'] = [
+            'total' => $secTotal,
+            'scheduled' => $secScheduled,
+            'unscheduled' => $secTotal - $secScheduled
+        ];
     }
     unset($sec, $unit);
 

@@ -7,6 +7,7 @@ require_once '../config/session-guard.php';
 require_once '../config/database.php';
 require_once '../config/config.php';
 require_once '../includes/maintenanceHelper.php';
+require_once '../includes/assignmentHistoryHelper.php';
 
 header('Content-Type: application/json');
 if (session_status() === PHP_SESSION_NONE) session_start();
@@ -105,6 +106,13 @@ function createItem($db) {
 function updateItem($db) {
     global $TYPE_ID;
     $id = $_POST['printer_id'] ?? null; if (!$id) throw new Exception('Printer ID is required');
+
+    // Fetch old employee_id for history tracking
+    $oldStmt = $db->prepare("SELECT employee_id FROM tbl_equipment WHERE equipment_id = ?");
+    $oldStmt->execute([$id]);
+    $oldRow = $oldStmt->fetch(PDO::FETCH_ASSOC);
+    $oldEmployeeId = $oldRow ? ($oldRow['employee_id'] ? (int)$oldRow['employee_id'] : null) : null;
+
     $brand = trim($_POST['brand'] ?? ''); $model = trim($_POST['model'] ?? '');
     $serial = trim($_POST['serial_number'] ?? $_POST['serial'] ?? ''); $year = $_POST['year_acquired'] ?? $_POST['year'] ?? null;
     $empId = $_POST['employee_id'] ?? null;
@@ -115,6 +123,10 @@ function updateItem($db) {
     $db->prepare("UPDATE tbl_equipment SET brand=:brand, model=:model, serial_number=:serial, year_acquired=:year, employee_id=:eid, location_id=:lid WHERE equipment_id=:id AND type_id=:tid")
        ->execute([':brand'=>$brand,':model'=>$model?:null,':serial'=>$serial?:null,':year'=>$year?:null,':eid'=>$empId?:null,':lid'=>$locId?:null,':id'=>$id,':tid'=>$TYPE_ID]);
     saveSpecs($db, $id, ['Maintenance Date' => $maintDate, 'Next Maintenance Date' => $nextMaintDate]);
+
+    $newEmployeeId = $empId ? (int)$empId : null;
+    recordAssignmentChange($db, (int)$id, $oldEmployeeId, $newEmployeeId);
+
     logActivity(ACTION_UPDATE, MODULE_COMPUTERS, "Updated Printer (ID: {$id}) — Brand: {$brand}.");
     echo json_encode(['success' => true, 'message' => 'Printer updated successfully']);
 }
