@@ -535,60 +535,136 @@ foreach ($equipmentRecords as $entry) {
         $pdf->SetY(36);
     }
 
-    $sigY  = $pdf->GetY() + 12;
-    $halfW = $contentW / 2;
-    $lineStr = '______________________________';
-    $lineW   = $pdf->GetStringWidth($lineStr);
+    $preparedName  = trim($_SESSION['full_name'] ?? $_SESSION['user_name'] ?? $rec['preparedBy'] ?? '');
+    $preparedTitle = 'ICT Staff';
+
+    $endUserName   = trim($empFullName);
+    $endUserTitle  = trim($employee['position'] ?? '');
+
+    $checkedName   = trim($rec['checkedBy'] ?? ($signatories['verifiedByName'] ?? ''));
+    $checkedTitle  = trim($signatories['verifiedByTitle'] ?? 'Sr. Supply Officer');
+
+    $notedName     = trim($rec['notedBy'] ?? ($signatories['notedByName'] ?? ''));
+    $notedTitle    = trim($signatories['notedByTitle'] ?? 'Division Manager, AdFin');
+
+    drawChecklistSignatories(
+        $pdf,
+        $lm,
+        $contentW,
+        $preparedName,
+        $preparedTitle,
+        $endUserName,
+        $endUserTitle,
+        $checkedName,
+        $checkedTitle,
+        $notedName,
+        $notedTitle
+    );
+}
+
+function drawChecklistSignatories(
+    TCPDF $pdf,
+    float $lm,
+    float $contentW,
+    string $preparedName,
+    string $preparedTitle,
+    string $endUserName,
+    string $endUserTitle,
+    string $checkedName,
+    string $checkedTitle,
+    string $notedName,
+    string $notedTitle
+): void {
+    $pageH = $pdf->getPageHeight();
+
+    if ($pdf->GetY() + 52 > $pageH - 45) {
+        $pdf->AddPage();
+        $pdf->SetY(36);
+    }
+
+    $startY = $pdf->GetY() + 10;
+
+    $leftW  = $contentW * 0.48;
+    $rightW = $contentW * 0.48;
+    $gap    = $contentW * 0.04;
+
+    $leftX  = $lm;
+    $rightX = $lm + $leftW + $gap;
+
+    $lineW  = 62;
+    $labelH = 4;
+    $nameH  = 4;
+    $titleH = 4;
+    $blockGap = 12;
+
+    $leftLineX  = $leftX + 2;
+    $rightLineX = $rightX + ($rightW - $lineW - 2);
+
+    // LEFT COLUMN
+    $pdf->SetFont('helvetica', '', 8);
+    $pdf->SetXY($leftX, $startY);
+    $pdf->Cell($leftW, $labelH, 'Prepared/Conducted By:', 0, 1, 'L');
+
+    $lineY = $startY + 9;
+    $pdf->Line($leftLineX, $lineY, $leftLineX + $lineW, $lineY);
 
     $pdf->SetFont('helvetica', 'B', 8);
-    $pdf->SetXY($lm, $sigY);
-    $pdf->Cell($halfW, 4, 'Prepared/Conducted by:', 0, 0, 'L');
-    $pdf->Cell($halfW, 4, 'Checked by:', 0, 1, 'R');
+    $pdf->SetXY($leftLineX, $lineY - 3.5);
+    $pdf->Cell($lineW, $nameH, $preparedName, 0, 1, 'C');
 
-    $pdf->Ln(8);
-    $pdf->SetFont('helvetica', '', 9);
-    $pdf->SetX($lm);
-    $pdf->Cell($halfW, 4, $lineStr, 0, 0, 'L');
-    $pdf->Cell($halfW, 4, $lineStr, 0, 1, 'R');
+    $pdf->SetFont('helvetica', '', 7.5);
+    $pdf->SetXY($leftLineX, $lineY + 1.5);
+    $pdf->Cell($lineW, $titleH, $preparedTitle, 0, 1, 'C');
 
-    $preparedName = $rec['preparedBy']  ?? 'ICT Staff';
-    $checkedName  = $rec['checkedBy']   ?? ($signatories['verifiedByName']  ?? '');
-    $checkedTitle = $signatories['verifiedByTitle'] ?? 'Sr. Supply Officer';
+    $endUserLabelY = $lineY + $blockGap;
+    $pdf->SetFont('helvetica', '', 8);
+    $pdf->SetXY($leftX, $endUserLabelY);
+    $pdf->Cell($leftW, $labelH, 'End User:', 0, 1, 'L');
 
-    $pdf->SetFont('helvetica', 'B', 8);
-    $pdf->SetX($lm);
-    $pdf->Cell($lineW, 4, $preparedName, 0, 0, 'C');
-    $pdf->SetX($lm + $contentW - $lineW);
-    $pdf->Cell($lineW, 4, $checkedName, 0, 1, 'C');
-
-    $pdf->SetFont('helvetica', 'I', 7);
-    $pdf->SetX($lm);
-    $pdf->Cell($lineW, 4, 'ICT Staff', 0, 0, 'C');
-    $pdf->SetX($lm + $contentW - $lineW);
-    $pdf->Cell($lineW, 4, $checkedTitle, 0, 1, 'C');
-
-    $pdf->Ln(8);
+    $endUserLineY = $endUserLabelY + 9;
+    $pdf->Line($leftLineX, $endUserLineY, $leftLineX + $lineW, $endUserLineY);
 
     $pdf->SetFont('helvetica', 'B', 8);
-    $pdf->SetX($lm + $halfW);
-    $pdf->Cell($halfW, 4, 'Noted by:', 0, 1, 'R');
+    $pdf->SetXY($leftLineX, $endUserLineY - 3.5);
+    $pdf->Cell($lineW, $nameH, $endUserName, 0, 1, 'C');
 
-    $pdf->Ln(8);
+    $pdf->SetFont('helvetica', '', 7.5);
+    $pdf->SetXY($leftLineX, $endUserLineY + 1.5);
+    $pdf->Cell($lineW, $titleH, $endUserTitle, 0, 1, 'C');
 
-    $notedName  = $rec['notedBy'] ?? ($signatories['notedByName']  ?? '');
-    $notedTitle = $signatories['notedByTitle'] ?? 'Division Manager, AdFin';
+    // RIGHT COLUMN
+    $pdf->SetFont('helvetica', '', 8);
+    $pdf->SetXY($rightX, $startY);
+    $pdf->Cell($rightW, $labelH, 'Checked By:', 0, 1, 'L');
 
-    $pdf->SetFont('helvetica', '', 9);
-    $pdf->SetX($lm + $contentW - $lineW);
-    $pdf->Cell($lineW, 4, $lineStr, 0, 1, 'C');
+    $rightLineY = $startY + 9;
+    $pdf->Line($rightLineX, $rightLineY, $rightLineX + $lineW, $rightLineY);
 
     $pdf->SetFont('helvetica', 'B', 8);
-    $pdf->SetX($lm + $contentW - $lineW);
-    $pdf->Cell($lineW, 4, $notedName, 0, 1, 'C');
+    $pdf->SetXY($rightLineX, $rightLineY - 3.5);
+    $pdf->Cell($lineW, $nameH, $checkedName, 0, 1, 'C');
 
-    $pdf->SetFont('helvetica', 'I', 7);
-    $pdf->SetX($lm + $contentW - $lineW);
-    $pdf->Cell($lineW, 4, $notedTitle, 0, 1, 'C');
+    $pdf->SetFont('helvetica', '', 7.5);
+    $pdf->SetXY($rightLineX, $rightLineY + 1.5);
+    $pdf->Cell($lineW, $titleH, $checkedTitle, 0, 1, 'C');
+
+    $notedLabelY = $rightLineY + $blockGap;
+    $pdf->SetFont('helvetica', '', 8);
+    $pdf->SetXY($rightX, $notedLabelY);
+    $pdf->Cell($rightW, $labelH, 'Noted By:', 0, 1, 'L');
+
+    $notedLineY = $notedLabelY + 9;
+    $pdf->Line($rightLineX, $notedLineY, $rightLineX + $lineW, $notedLineY);
+
+    $pdf->SetFont('helvetica', 'B', 8);
+    $pdf->SetXY($rightLineX, $notedLineY - 3.5);
+    $pdf->Cell($lineW, $nameH, $notedName, 0, 1, 'C');
+
+    $pdf->SetFont('helvetica', '', 7.5);
+    $pdf->SetXY($rightLineX, $notedLineY + 1.5);
+    $pdf->Cell($lineW, $titleH, $notedTitle, 0, 1, 'C');
+
+    $pdf->SetY(max($endUserLineY, $notedLineY) + 10);
 }
 
 // ─── Output ───────────────────────────────────────────────────────────────────
