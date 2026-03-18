@@ -16,8 +16,8 @@ $user = $stmt->fetch();
 
 // Fetch recent activity logs
 $stmtLogs = $db->prepare("
-    SELECT action, details, ip_address, created_at
-    FROM tbl_activity_logs
+    SELECT action, description, ip_address, timestamp AS created_at
+    FROM activity_log
     WHERE user_id = ?
     ORDER BY created_at DESC
     LIMIT 10
@@ -230,8 +230,8 @@ $initials = strtoupper(substr($parts[0], 0, 1) . (isset($parts[1]) ? substr($par
                                     <div class="ps-activity-dot"></div>
                                     <div class="ps-activity-content">
                                         <span class="ps-activity-action"><?php echo htmlspecialchars($log['action']); ?></span>
-                                        <?php if ($log['details']): ?>
-                                            <span class="ps-activity-detail"><?php echo htmlspecialchars($log['details']); ?></span>
+                                        <?php if ($log['description']): ?>
+                                            <span class="ps-activity-detail"><?php echo htmlspecialchars($log['description']); ?></span>
                                         <?php endif; ?>
                                         <span class="ps-activity-time">
                                             <i class="fas fa-clock"></i>
