@@ -47,7 +47,7 @@ if (!empty($allIds)) {
 $unifiedRows = [];
 foreach ($allEquipment as $eq) {
     $specs = $specsMap[$eq['equipment_id']] ?? [];
-    $assignStatus = $eq['employee_id'] ? 'Active' : ($eq['status'] ?: 'Available');
+    $assignStatus = $eq['employee_id'] ? 'In Use' : ($eq['status'] ?: 'Available');
     $unifiedRows[] = [
         'id'            => (int)$eq['equipment_id'],
         'type_id'       => (int)$eq['type_id'],
@@ -131,7 +131,7 @@ $divisions = $stmtDiv->fetchAll(PDO::FETCH_ASSOC);
     </div>
     <div class="stat-card">
         <i class="stat-icon fas fa-user"></i>
-        <div class="stat-label">Active / In Use<div class="stat-value" id="statActive"><?php echo $totalActive; ?></div></div>
+        <div class="stat-label">In Use<div class="stat-value" id="statActive"><?php echo $totalActive; ?></div></div>
         
     </div>
     <div class="stat-card">
@@ -178,7 +178,7 @@ $divisions = $stmtDiv->fetchAll(PDO::FETCH_ASSOC);
             <div class="filter-group" id="statusFilterGroup" style="min-width:140px;flex:0 0 auto;">
                 <select id="statusFilter" onchange="EqUnified.applyFilters()">
                     <option value="">All Statuses</option>
-                    <option value="Active">Active</option>
+                    <!-- <option value="Active">Active</option> -->
                     <option value="Available">Available</option>
                     <option value="In Use">In Use</option>
                     <option value="Under Maintenance">Under Maintenance</option>

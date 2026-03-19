@@ -40,7 +40,7 @@ function listItems($db) {
             WHERE eq.type_id = :tid AND eq.is_archived = 0";
     $params = [':tid' => $TYPE_ID];
 
-    if ($status === 'Active')    $sql .= " AND eq.employee_id IS NOT NULL";
+    if ($status === 'In Use') $sql .= " AND eq.employee_id IS NOT NULL";
     if ($status === 'Available') $sql .= " AND eq.employee_id IS NULL";
     if ($search !== '') {
         $sql .= " AND (eq.brand LIKE :s OR eq.model LIKE :s2 OR eq.serial_number LIKE :s3 OR e.firstName LIKE :s4 OR e.lastName LIKE :s5)";
@@ -55,7 +55,7 @@ function listItems($db) {
             'printerId' => $r['equipment_id'], 'printerBrand' => $r['brand'],
             'printerModel' => $r['model'], 'printerSerial' => $r['serial_number'],
             'yearAcquired' => $r['year_acquired'], 'employeeId' => $r['employee_id'],
-            'employeeName' => $r['employeeName'], 'status' => $r['employee_id'] ? 'Active' : 'Available',
+            'employeeName' => $r['employeeName'], 'status' => $r['employee_id'] ? 'In Use' : 'Available',
         ];
     }, $rows);
     echo json_encode(['success' => true, 'data' => $data]);
@@ -79,7 +79,7 @@ function getItem($db) {
         'employeeName' => $r['employeeName'], 'location_id' => $r['location_id'],
         'maintenanceDate' => $sp['Maintenance Date'] ?? null,
         'nextMaintenanceDate' => $sp['Next Maintenance Date'] ?? null,
-        'status' => $r['employee_id'] ? 'Active' : 'Available',
+        'status' => $r['employee_id'] ? 'In Use' : 'Available',
     ]]);
 }
 
@@ -91,11 +91,12 @@ function createItem($db) {
     $locId = $_POST['location_id'] ?? null;
     $maintDate = trim($_POST['maintenance_date'] ?? '');
     $nextMaintDate = trim($_POST['next_maintenance_date'] ?? '');
+    $status = $empId ? 'In Use' : 'Available';
     if (empty($brand)) throw new Exception('Brand is required');
 
     $db->beginTransaction();
-    $stmt = $db->prepare("INSERT INTO tbl_equipment (type_id, employee_id, location_id, brand, model, serial_number, status, year_acquired) VALUES (:tid,:eid,:lid,:brand,:model,:serial,'Active',:year)");
-    $stmt->execute([':tid'=>$TYPE_ID,':eid'=>$empId?:null,':lid'=>$locId?:null,':brand'=>$brand,':model'=>$model?:null,':serial'=>$serial?:null,':year'=>$year?:null]);
+    $stmt = $db->prepare("INSERT INTO tbl_equipment (type_id, employee_id, location_id, brand, model, serial_number, status, year_acquired) VALUES (:tid,:eid,:lid,:brand,:model,:serial,:status,:year)");
+    $stmt->execute([':tid'=>$TYPE_ID,':eid'=>$empId?:null,':lid'=>$locId?:null,':brand'=>$brand,':model'=>$model?:null,':serial'=>$serial?:null,':status'=>$status,':year'=>$year?:null]);
     $newId = $db->lastInsertId();
     saveSpecs($db, $newId, ['Maintenance Date' => $maintDate, 'Next Maintenance Date' => $nextMaintDate]);
     $db->commit();

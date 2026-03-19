@@ -1,12 +1,10 @@
 <?php
-// ajax/manage_division.php
 require_once '../config/session-guard.php';
 require_once '../config/database.php';
 require_once '../config/config.php';
 
 header('Content-Type: application/json');
 
-// Check if user is logged in
 if (!isLoggedIn()) {
     echo json_encode(['success' => false, 'message' => 'Unauthorized access']);
     exit();
@@ -15,16 +13,19 @@ if (!isLoggedIn()) {
 $db = Database::getInstance()->getConnection();
 $action = $_POST['action'] ?? '';
 
+function sanitizeString($input) {
+    return trim(htmlspecialchars(strip_tags($input), ENT_QUOTES, 'UTF-8'));
+}
+
 try {
     switch ($action) {
         case 'create':
-            $divisionName = sanitize($_POST['divisionName'] ?? '');
+            $divisionName = sanitizeString($_POST['divisionName'] ?? '');
             
             if (empty($divisionName)) {
                 throw new Exception('Division name is required');
             }
             
-            // Check if division name already exists
             $stmt = $db->prepare("
                 SELECT location_id FROM location 
                 WHERE location_name = ? AND location_type_id = 1 AND is_deleted = '0'
@@ -35,7 +36,6 @@ try {
                 throw new Exception('Division name already exists');
             }
             
-            // Insert new division (location_type_id = 1 for Division)
             $stmt = $db->prepare("
                 INSERT INTO location (location_name, location_type_id, parent_location_id, created_at, is_deleted) 
                 VALUES (?, 1, NULL, NOW(), '0')
@@ -58,7 +58,6 @@ try {
                 throw new Exception('All fields are required');
             }
             
-            // Check if division name already exists (excluding current division)
             $stmt = $db->prepare("
                 SELECT location_id FROM location 
                 WHERE location_name = ? AND location_type_id = 1 AND location_id != ? AND is_deleted = '0'
@@ -92,7 +91,6 @@ try {
                 throw new Exception('Invalid division ID');
             }
             
-            // Check if division has sections
             $stmt = $db->prepare("
                 SELECT COUNT(*) as count FROM location 
                 WHERE parent_location_id = ? AND location_type_id = 2 AND is_deleted = '0'
@@ -104,12 +102,10 @@ try {
                 throw new Exception('Cannot delete division with existing sections. Please delete or reassign sections first.');
             }
             
-            // Get division name for logging
             $stmt = $db->prepare("SELECT location_name FROM location WHERE location_id = ?");
             $stmt->execute([$divisionId]);
             $division = $stmt->fetch();
             
-            // Soft delete division (set is_deleted = '1')
             $stmt = $db->prepare("UPDATE location SET is_deleted = '1' WHERE location_id = ?");
             $stmt->execute([$divisionId]);
             

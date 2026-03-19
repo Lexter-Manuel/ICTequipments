@@ -15,10 +15,14 @@ if (!isLoggedIn()) {
 $db = Database::getInstance()->getConnection();
 $action = $_POST['action'] ?? '';
 
+function sanitizeString($input) {
+    return trim(htmlspecialchars(strip_tags($input), ENT_QUOTES, 'UTF-8'));
+}
+
 try {
     switch ($action) {
         case 'create':
-            $sectionName = sanitize($_POST['sectionName'] ?? '');
+            $sectionName = sanitizeString($_POST['sectionName'] ?? '');
             $divisionId = intval($_POST['divisionId'] ?? 0);
             
             if (empty($sectionName) || empty($divisionId)) {
